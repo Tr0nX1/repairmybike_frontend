@@ -1,5 +1,5 @@
 pluginManagement {
-    // Resolve plugins from local mirror first, then public portals
+    // Resolve plugins from public portals in CI
     resolutionStrategy {
         eachPlugin {
             if (requested.id.id == "org.gradle.kotlin.kotlin-dsl" && requested.version == "5.1.2") {
@@ -19,9 +19,6 @@ pluginManagement {
     includeBuild("$flutterSdkPath/packages/flutter_tools/gradle")
 
     repositories {
-        // Local offline mirror containing kotlin-dsl plugin
-        maven { url = uri("gradle/local-maven") }
-        // Public repositories (used when network is available)
         gradlePluginPortal()
         google()
         mavenCentral()

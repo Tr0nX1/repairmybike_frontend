@@ -45,3 +45,10 @@ app.*.map.json
 /android/app/release
 /backend/
 /backend2/
+# Android/Gradle cache and binaries (avoid large files in repo)
+android/gradle/gradle-*-bin.zip
+android/gradle/local-maven/
+
+# Android signing (keep secrets out of git)
+release.jks
+android/key.properties
