@@ -63,20 +63,22 @@ jobs:
           # Create gradlew script if absent
           if [ ! -f android/gradlew ]; then
             cat > android/gradlew << 'EOS'
-#!/usr/bin/env sh
-APP_HOME="$(cd "$(dirname "$0")"; pwd)"
-CLASSPATH="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
-exec java -Dorg.gradle.appname=gradlew -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
+  #!/usr/bin/env sh
+  APP_HOME="$(cd "$(dirname "$0")"; pwd)"
+  CLASSPATH="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
+  exec java -Dorg.gradle.appname=gradlew -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
 EOS
+            sed -i 's/^  //' android/gradlew
           fi
           # Create Windows gradlew.bat if absent
           if [ ! -f android/gradlew.bat ]; then
             cat > android/gradlew.bat << 'EOS'
-@IF "%DEBUG%"=="" @ECHO OFF
-SET DIR=%~dp0
-SET CLASSPATH=%DIR%gradle\wrapper\gradle-wrapper.jar
-"java" -Dorg.gradle.appname=gradlew -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
+  @IF "%DEBUG%"=="" @ECHO OFF
+  SET DIR=%~dp0
+  SET CLASSPATH=%DIR%gradle\wrapper\gradle-wrapper.jar
+  "java" -Dorg.gradle.appname=gradlew -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
 EOS
+            sed -i 's/^  //' android/gradlew.bat
           fi
           chmod +x android/gradlew
 
@@ -93,6 +95,7 @@ EOS
           keyAlias=${ANDROID_KEY_ALIAS}
           keyPassword=${ANDROID_KEY_PASSWORD}
           EOF
+          sed -i 's/^ *//' android/key.properties
           echo "Wrote android/key.properties"
 
       - name: Build Android App Bundle (release)
