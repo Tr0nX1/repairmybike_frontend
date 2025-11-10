@@ -36,6 +36,17 @@ jobs:
       - name: Flutter Pub Get
         run: flutter pub get
 
+      - name: Load .env configuration
+        shell: bash
+        run: |
+          if [ -f .env ]; then
+            echo "Loading .env into workflow environment"
+            # Export lines like NAME=VALUE while ignoring comments/blank lines
+            grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env | sed 's/\r$//' >> "$GITHUB_ENV"
+          else
+            echo ".env not found at repo root; proceeding without it"
+          fi
+
       - name: Ensure Gradle wrapper on CI
         shell: bash
         run: |
@@ -70,17 +81,17 @@ EOS
           chmod +x android/gradlew
 
       - name: Prepare Android keystore and signing config
-        if: ${{ secrets.ANDROID_KEYSTORE_BASE64 != '' }}
+        if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
         shell: bash
         run: |
           echo "Decoding keystore from base64"
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > release.jks
+          echo "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > release.jks
           mkdir -p android
           cat > android/key.properties << 'EOF'
           storeFile=../../release.jks
-          storePassword=${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
-          keyAlias=${{ secrets.ANDROID_KEY_ALIAS }}
-          keyPassword=${{ secrets.ANDROID_KEY_PASSWORD }}
+          storePassword=${ANDROID_KEYSTORE_PASSWORD}
+          keyAlias=${ANDROID_KEY_ALIAS}
+          keyPassword=${ANDROID_KEY_PASSWORD}
           EOF
           echo "Wrote android/key.properties"
 
