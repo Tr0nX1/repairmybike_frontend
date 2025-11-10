@@ -1,0 +1,31 @@
+class Category {
+  final int id;
+  final String name;
+  final String description;
+  final String icon; // emoji string
+  final int serviceCount;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+
+  Category({
+    required this.id,
+    required this.name,
+    required this.description,
+    required this.icon,
+    required this.serviceCount,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+
+  factory Category.fromJson(Map<String, dynamic> json) {
+    return Category(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String,
+      description: json['description'] as String? ?? '',
+      icon: json['icon'] as String? ?? '🔧',
+      serviceCount: (json['service_count'] as num?)?.toInt() ?? 0,
+      createdAt: DateTime.parse(json['created_at'] as String),
+      updatedAt: DateTime.parse(json['updated_at'] as String),
+    );
+  }
+}

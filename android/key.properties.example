@@ -1,0 +1,12 @@
+## Copy this file to android/key.properties and fill with your keystore values.
+# Path is relative to project root or absolute; e.g., ../keystore/release.jks
+storeFile=../keystore/release.jks
+storePassword=CHANGE_ME
+keyAlias=repairmybike
+keyPassword=CHANGE_ME
+
+# How to generate:
+# keytool -genkeypair -v -keystore release.jks -keyalg RSA -keysize 2048 -validity 36500 \
+#   -alias repairmybike -dname "CN=RepairMyBike, OU=Engineering, O=RepairMyBike, L=City, S=State, C=IN"
+
+# Keep this file and the JKS private. Do NOT commit android/key.properties.
