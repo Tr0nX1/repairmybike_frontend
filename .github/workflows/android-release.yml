@@ -1,3 +1,113 @@
+# name: Android Release AAB
+
+# on:
+#   push:
+#     tags:
+#       - 'v*'
+#   workflow_dispatch:
+
+# jobs:
+#   build-release:
+#     runs-on: ubuntu-latest
+#     env:
+#       JAVA_VERSION: '17'
+#       FLUTTER_VERSION: '3.35.1'
+#     steps:
+#       - name: Checkout
+#         uses: actions/checkout@v4
+
+#       - name: Setup Java
+#         uses: actions/setup-java@v4
+#         with:
+#           distribution: 'temurin'
+#           java-version: ${{ env.JAVA_VERSION }}
+
+#       - name: Setup Flutter
+#         uses: subosito/flutter-action@v2
+#         with:
+#           flutter-version: ${{ env.FLUTTER_VERSION }}
+#           channel: 'stable'
+
+#       - name: Accept Android SDK Licenses
+#         shell: bash
+#         run: |
+#           yes | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --licenses || true
+
+#       - name: Flutter Pub Get
+#         run: flutter pub get
+
+#       - name: Load .env configuration
+#         shell: bash
+#         run: |
+#           if [ -f .env ]; then
+#             echo "Loading .env into workflow environment"
+#             # Export lines like NAME=VALUE while ignoring comments/blank lines
+#             grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env | sed 's/\r$//' >> "$GITHUB_ENV"
+#           else
+#             echo ".env not found at repo root; proceeding without it"
+#           fi
+
+#       - name: Ensure Gradle wrapper on CI
+#         shell: bash
+#         run: |
+#           set -euo pipefail
+#           echo "Ensuring Gradle wrapper jar and scripts exist"
+#           mkdir -p android/gradle/wrapper
+#           # Download Gradle distribution to extract wrapper jar if missing
+#           if [ ! -f android/gradle/wrapper/gradle-wrapper.jar ]; then
+#             echo "Downloading Gradle 8.12 to extract wrapper jar"
+#             curl -sSL -o /tmp/gradle-8.12-bin.zip https://services.gradle.org/distributions/gradle-8.12-bin.zip
+#             unzip -q /tmp/gradle-8.12-bin.zip -d /tmp/gradle_dist
+#             cp /tmp/gradle_dist/gradle-8.12/lib/gradle-wrapper.jar android/gradle/wrapper/gradle-wrapper.jar
+#           fi
+#           # Create gradlew script if absent
+#           if [ ! -f android/gradlew ]; then
+#             cat > android/gradlew << 'EOS'
+#   #!/usr/bin/env sh
+#   APP_HOME="$(cd "$(dirname "$0")"; pwd)"
+#   CLASSPATH="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
+#   exec java -Dorg.gradle.appname=gradlew -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
+# EOS
+#             sed -i 's/^  //' android/gradlew
+#           fi
+#           # Create Windows gradlew.bat if absent
+#           if [ ! -f android/gradlew.bat ]; then
+#             cat > android/gradlew.bat << 'EOS'
+#   @IF "%DEBUG%"=="" @ECHO OFF
+#   SET DIR=%~dp0
+#   SET CLASSPATH=%DIR%gradle\wrapper\gradle-wrapper.jar
+#   "java" -Dorg.gradle.appname=gradlew -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
+# EOS
+#             sed -i 's/^  //' android/gradlew.bat
+#           fi
+#           chmod +x android/gradlew
+
+#       - name: Prepare Android keystore and signing config
+#         if: ${{ env.ANDROID_KEYSTORE_BASE64 != '' }}
+#         shell: bash
+#         run: |
+#           echo "Decoding keystore from base64"
+#           echo "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > release.jks
+#           mkdir -p android
+#           cat > android/key.properties << 'EOF'
+#           storeFile=../../release.jks
+#           storePassword=${ANDROID_KEYSTORE_PASSWORD}
+#           keyAlias=${ANDROID_KEY_ALIAS}
+#           keyPassword=${ANDROID_KEY_PASSWORD}
+#           EOF
+#           sed -i 's/^ *//' android/key.properties
+#           echo "Wrote android/key.properties"
+
+#       - name: Build Android App Bundle (release)
+#         run: flutter build appbundle --release
+
+#       - name: Upload AAB artifact
+#         uses: actions/upload-artifact@v4
+#         with:
+#           name: app-release-aab
+#           path: build/app/outputs/bundle/release/app-release.aab
+
+
 name: Android Release AAB
 
 on:
@@ -41,7 +151,6 @@ jobs:
         run: |
           if [ -f .env ]; then
             echo "Loading .env into workflow environment"
-            # Export lines like NAME=VALUE while ignoring comments/blank lines
             grep -E '^[A-Za-z_][A-Za-z0-9_]*=' .env | sed 's/\r$//' >> "$GITHUB_ENV"
           else
             echo ".env not found at repo root; proceeding without it"
@@ -63,22 +172,20 @@ jobs:
           # Create gradlew script if absent
           if [ ! -f android/gradlew ]; then
             cat > android/gradlew << 'EOS'
-  #!/usr/bin/env sh
-  APP_HOME="$(cd "$(dirname "$0")"; pwd)"
-  CLASSPATH="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
-  exec java -Dorg.gradle.appname=gradlew -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
+#!/usr/bin/env sh
+APP_HOME="$(cd "$(dirname "$0")"; pwd)"
+CLASSPATH="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
+exec java -Dorg.gradle.appname=gradlew -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
 EOS
-            sed -i 's/^  //' android/gradlew
           fi
           # Create Windows gradlew.bat if absent
           if [ ! -f android/gradlew.bat ]; then
             cat > android/gradlew.bat << 'EOS'
-  @IF "%DEBUG%"=="" @ECHO OFF
-  SET DIR=%~dp0
-  SET CLASSPATH=%DIR%gradle\wrapper\gradle-wrapper.jar
-  "java" -Dorg.gradle.appname=gradlew -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
+@IF "%DEBUG%"=="" @ECHO OFF
+SET DIR=%~dp0
+SET CLASSPATH=%DIR%gradle\wrapper\gradle-wrapper.jar
+"java" -Dorg.gradle.appname=gradlew -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
 EOS
-            sed -i 's/^  //' android/gradlew.bat
           fi
           chmod +x android/gradlew
 
@@ -90,12 +197,11 @@ EOS
           echo "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > release.jks
           mkdir -p android
           cat > android/key.properties << 'EOF'
-          storeFile=../../release.jks
-          storePassword=${ANDROID_KEYSTORE_PASSWORD}
-          keyAlias=${ANDROID_KEY_ALIAS}
-          keyPassword=${ANDROID_KEY_PASSWORD}
-          EOF
-          sed -i 's/^ *//' android/key.properties
+storeFile=../../release.jks
+storePassword=${ANDROID_KEYSTORE_PASSWORD}
+keyAlias=${ANDROID_KEY_ALIAS}
+keyPassword=${ANDROID_KEY_PASSWORD}
+EOF
           echo "Wrote android/key.properties"
 
       - name: Build Android App Bundle (release)
