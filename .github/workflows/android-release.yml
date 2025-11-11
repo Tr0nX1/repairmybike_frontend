@@ -62,20 +62,24 @@ jobs:
           # Create gradlew script if absent
           if [ ! -f android/gradlew ]; then
             cat > android/gradlew << 'EOS'
-#!/usr/bin/env sh
-APP_HOME="$(cd "$(dirname "$0")"; pwd)"
-CLASSPATH="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
-exec java -Dorg.gradle.appname=gradlew -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
+  #!/usr/bin/env sh
+  APP_HOME="$(cd "$(dirname "$0")"; pwd)"
+  CLASSPATH="$APP_HOME/gradle/wrapper/gradle-wrapper.jar"
+  exec java -Dorg.gradle.appname=gradlew -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
 EOS
+            # Remove YAML-friendly leading spaces from the script
+            sed -i 's/^  //' android/gradlew
           fi
           # Create Windows gradlew.bat if absent
           if [ ! -f android/gradlew.bat ]; then
             cat > android/gradlew.bat << 'EOS'
-@IF "%DEBUG%"=="" @ECHO OFF
-SET DIR=%~dp0
-SET CLASSPATH=%DIR%gradle\wrapper\gradle-wrapper.jar
-"java" -Dorg.gradle.appname=gradlew -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
+  @IF "%DEBUG%"=="" @ECHO OFF
+  SET DIR=%~dp0
+  SET CLASSPATH=%DIR%gradle\wrapper\gradle-wrapper.jar
+  "java" -Dorg.gradle.appname=gradlew -classpath "%CLASSPATH%" org.gradle.wrapper.GradleWrapperMain %*
 EOS
+            # Remove YAML-friendly leading spaces from the batch file
+            sed -i 's/^  //' android/gradlew.bat
           fi
           chmod +x android/gradlew
 
@@ -87,11 +91,13 @@ EOS
             mkdir -p android
             echo "${ANDROID_KEYSTORE_BASE64}" | base64 --decode > android/release.jks
             cat > android/key.properties << EOF
-storeFile=../release.jks
-storePassword=${ANDROID_KEYSTORE_PASSWORD}
-keyAlias=${ANDROID_KEY_ALIAS}
-keyPassword=${ANDROID_KEY_PASSWORD}
+  storeFile=../release.jks
+  storePassword=${ANDROID_KEYSTORE_PASSWORD}
+  keyAlias=${ANDROID_KEY_ALIAS}
+  keyPassword=${ANDROID_KEY_PASSWORD}
 EOF
+            # Normalize leading spaces added for YAML-safe heredoc indentation
+            sed -i 's/^  //' android/key.properties
             echo "Wrote android/key.properties for release signing"
           else
             echo "ANDROID_KEYSTORE_BASE64 not set; will build with debug signing"
