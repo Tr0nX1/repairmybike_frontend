@@ -4,8 +4,8 @@
     <base-config cleartextTrafficPermitted="true" />
     <domain-config cleartextTrafficPermitted="true">
         <domain includeSubdomains="true">localhost</domain>
-        <domain>127.0.0.1</domain>
+        <domain includeSubdomains="true">127.0.0.1</domain>
         <!-- Android emulator host mapping -->
-        <domain>10.0.2.2</domain>
+        <domain includeSubdomains="true">10.0.2.2</domain>
     </domain-config>
 </network-security-config>

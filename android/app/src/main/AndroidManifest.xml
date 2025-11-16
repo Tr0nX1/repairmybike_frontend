@@ -2,7 +2,7 @@
     <!-- Allow network access for fetching images from backend -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="RepairMyBike"
+        android:label="repairmybike"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         android:usesCleartextTraffic="false"
