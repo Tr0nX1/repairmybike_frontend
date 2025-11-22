@@ -14,6 +14,7 @@ import '../data/app_state.dart';
 import '../providers/category_provider.dart' as providers;
 import '../models/service.dart';
 import '../utils/url_utils.dart';
+import '../providers/theme_provider.dart';
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -62,114 +63,170 @@ class _HomePageState extends ConsumerState<HomePage> {
           child: Padding(
             padding: EdgeInsets.fromLTRB(horizontalPad, 16, horizontalPad, 24),
             child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const _HeroBanner(),
-              const SizedBox(height: 12),
-              const _QuickActionsRow(),
-              const SizedBox(height: 24),
-              _LikedServicesSection(),
-              const SizedBox(height: 24),
-              Text(
-                'Explore Services',
-                style: TextStyle(color: Colors.white, fontSize: isPhone ? 24 : 28, fontWeight: FontWeight.w800),
-              ),
-            const SizedBox(height: 8),
-            const Text(
-              'Professional Scooter repair at your doorstep',
-              style: TextStyle(color: Colors.white70),
-            ),
-            const SizedBox(height: 16),
-
-            const SizedBox(height: 20),
-            Text(
-              'Categories',
-              style: TextStyle(color: Colors.white, fontSize: isPhone ? 20 : 22, fontWeight: FontWeight.w800),
-            ),
-            const SizedBox(height: 12),
-
-            asyncCategories.when(
-              loading: () => const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: card,
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: border),
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Theme.of(context).colorScheme.primary,
+                        ),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.network(
+                        Uri.base
+                            .resolve(
+                              'build/flutter_assets/logo/repairmybike_logo.jpeg',
+                            )
+                            .toString(),
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stack) {
+                          return Center(
+                            child: Icon(
+                              Icons.pedal_bike,
+                              color: Theme.of(context).colorScheme.primary,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                    const Spacer(),
+                    const _ThemeToggleButton(),
+                  ],
                 ),
-                child: Text('Failed to load: ${err.toString()}',
-                    style: const TextStyle(color: Colors.redAccent)),
-              ),
-              data: (categories) {
-                if (categories.isEmpty) {
-                  return const Text('No categories', style: TextStyle(color: Colors.white70));
-                }
-                // Force 4 columns grid per requirement
-                const crossAxisCount = 4;
-                final visible = _showAllCategories
-                    ? categories
-                    : categories.take(8).toList();
-                // Make tiles taller on phones to avoid vertical overflow
-                final isPhone = MediaQuery.of(context).size.width < 600;
-                final tileRatio = isPhone ? 0.75 : 0.95; // width/height
-                return GridView.builder(
-                  physics: const NeverScrollableScrollPhysics(),
-                  shrinkWrap: true,
-                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: crossAxisCount,
-                    mainAxisSpacing: 12,
-                    crossAxisSpacing: 12,
-                    childAspectRatio: tileRatio,
-                  ),
-                  itemCount: visible.length,
-                  itemBuilder: (context, index) {
-                    final category = visible[index];
-                    return _CategoryCard(category: category);
-                  },
-                );
-              },
-            ),
-
-            const SizedBox(height: 16),
-            Center(
-              child: SizedBox(
-                height: 46,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: accent,
-                    side: const BorderSide(color: accent),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  ),
-                  onPressed: () {
-                    setState(() {
-                      _showAllCategories = !_showAllCategories;
-                    });
-                  },
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(_showAllCategories ? 'Show Less' : 'Show More',
-                          style: const TextStyle(fontWeight: FontWeight.w700)),
-                      const SizedBox(width: 8),
-                      Icon(_showAllCategories ? Icons.expand_less : Icons.expand_more),
-                    ],
+                const SizedBox(height: 8),
+                const _HeroBanner(),
+                const SizedBox(height: 12),
+                const _QuickActionsRow(),
+                const SizedBox(height: 24),
+                _LikedServicesSection(),
+                const SizedBox(height: 24),
+                Text(
+                  'Explore Services',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isPhone ? 24 : 28,
+                    fontWeight: FontWeight.w800,
                   ),
                 ),
-              ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Professional Scooter repair at your doorstep',
+                  style: TextStyle(color: Colors.white70),
+                ),
+                const SizedBox(height: 16),
+
+                const SizedBox(height: 20),
+                Text(
+                  'Categories',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: isPhone ? 20 : 22,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+                const SizedBox(height: 12),
+
+                asyncCategories.when(
+                  loading: () =>
+                      const Center(child: CircularProgressIndicator()),
+                  error: (err, _) => Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: card,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: border),
+                    ),
+                    child: Text(
+                      'Failed to load: ${err.toString()}',
+                      style: const TextStyle(color: Colors.redAccent),
+                    ),
+                  ),
+                  data: (categories) {
+                    if (categories.isEmpty) {
+                      return const Text(
+                        'No categories',
+                        style: TextStyle(color: Colors.white70),
+                      );
+                    }
+                    // Force 4 columns grid per requirement
+                    const crossAxisCount = 4;
+                    final visible = _showAllCategories
+                        ? categories
+                        : categories.take(8).toList();
+                    // Make tiles taller on phones to avoid vertical overflow
+                    final isPhone = MediaQuery.of(context).size.width < 600;
+                    final tileRatio = isPhone ? 0.75 : 0.95; // width/height
+                    return GridView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      shrinkWrap: true,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: crossAxisCount,
+                        mainAxisSpacing: 12,
+                        crossAxisSpacing: 12,
+                        childAspectRatio: tileRatio,
+                      ),
+                      itemCount: visible.length,
+                      itemBuilder: (context, index) {
+                        final category = visible[index];
+                        return _CategoryCard(category: category);
+                      },
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 16),
+                Center(
+                  child: SizedBox(
+                    height: 46,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: accent,
+                        side: const BorderSide(color: accent),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _showAllCategories = !_showAllCategories;
+                        });
+                      },
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            _showAllCategories ? 'Show Less' : 'Show More',
+                            style: const TextStyle(fontWeight: FontWeight.w700),
+                          ),
+                          const SizedBox(width: 8),
+                          Icon(
+                            _showAllCategories
+                                ? Icons.expand_less
+                                : Icons.expand_more,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
+                const SizedBox(height: 24),
+                const SubscriptionSection(),
+
+                const SizedBox(height: 24),
+                if (_loadPartsSection) const SparePartsSection(),
+                const SizedBox(height: 24),
+              ],
             ),
-
-            const SizedBox(height: 24),
-            const SubscriptionSection(),
-
-            const SizedBox(height: 24),
-            if (_loadPartsSection) const SparePartsSection(),
-            const SizedBox(height: 24),
-          ],
+          ),
         ),
       ),
-    ),
-  ),
-);
+    );
   }
 }
 
@@ -207,69 +264,72 @@ class _CategoryCard extends StatelessWidget {
           ),
         );
       },
-      child: LayoutBuilder(builder: (context, constraints) {
-        final w = constraints.maxWidth;
-        final iconSize = w < 88 ? 28.0 : 36.0;
-        final nameSize = w < 88 ? 12.0 : 14.0;
-        final countSize = w < 88 ? 10.0 : 12.0;
-        final gap = w < 88 ? 8.0 : 12.0;
-        final isAndroid = Theme.of(context).platform == TargetPlatform.android;
-        final scale = isAndroid ? 0.95 : 1.0; // slightly reduce text on Android to fit
-        final accentColor = accentFor(category);
-        return Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: accentColor.withOpacity(0.55)),
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                cardColor,
-                accentColor.withOpacity(0.20),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final w = constraints.maxWidth;
+          final iconSize = w < 88 ? 28.0 : 36.0;
+          final nameSize = w < 88 ? 12.0 : 14.0;
+          final countSize = w < 88 ? 10.0 : 12.0;
+          final gap = w < 88 ? 8.0 : 12.0;
+          final isAndroid =
+              Theme.of(context).platform == TargetPlatform.android;
+          final scale = isAndroid
+              ? 0.95
+              : 1.0; // slightly reduce text on Android to fit
+          final accentColor = accentFor(category);
+          return Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: accentColor.withOpacity(0.55)),
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [cardColor, accentColor.withOpacity(0.20)],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.25),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                ),
               ],
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.25),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(_iconForCategory(category), size: iconSize, color: accentColor),
-              SizedBox(height: gap),
-              Flexible(
-                child: Text(
-                  category.name,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w600,
-                    fontSize: nameSize,
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  _iconForCategory(category),
+                  size: iconSize,
+                  color: accentColor,
+                ),
+                SizedBox(height: gap),
+                Flexible(
+                  child: Text(
+                    category.name,
+                    textAlign: TextAlign.center,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                      fontSize: nameSize,
+                    ),
+                    textScaleFactor: scale,
                   ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  '${category.serviceCount} services',
+                  style: TextStyle(color: Colors.white60, fontSize: countSize),
                   textScaleFactor: scale,
                 ),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                '${category.serviceCount} services',
-                style: TextStyle(
-                  color: Colors.white60,
-                  fontSize: countSize,
-                ),
-                textScaleFactor: scale,
-              ),
-            ],
-          ),
-        );
-      }),
+              ],
+            ),
+          );
+        },
+      ),
     );
   }
 
@@ -277,15 +337,18 @@ class _CategoryCard extends StatelessWidget {
     final n = c.name.toLowerCase();
     if (n.contains('air') && n.contains('filter')) return Icons.filter_alt;
     if (n.contains('oil') && n.contains('filter')) return Icons.oil_barrel;
-    if (n.contains('spark') && n.contains('plug')) return Icons.electrical_services;
+    if (n.contains('spark') && n.contains('plug'))
+      return Icons.electrical_services;
     if (n.contains('clutch')) return Icons.settings_input_component;
     if (n.contains('suspension') || n.contains('shock')) return Icons.compress;
     if (n.contains('mirror')) return Icons.flip_camera_android;
-    if (n.contains('light') || n.contains('lamp') || n.contains('head')) return Icons.lightbulb;
+    if (n.contains('light') || n.contains('lamp') || n.contains('head'))
+      return Icons.lightbulb;
     if (n.contains('indicator')) return Icons.priority_high;
     if (n.contains('horn')) return Icons.volume_up;
     if (n.contains('cable')) return Icons.cable;
-    if (n.contains('carb') || n.contains('fuel')) return Icons.local_gas_station;
+    if (n.contains('carb') || n.contains('fuel'))
+      return Icons.local_gas_station;
     if (n.contains('radiator') || n.contains('cool')) return Icons.ac_unit;
     if (n.contains('exhaust') || n.contains('silencer')) return Icons.cloud;
     if (n.contains('body') || n.contains('paint')) return Icons.color_lens;
@@ -293,8 +356,10 @@ class _CategoryCard extends StatelessWidget {
     if (n.contains('brake')) return Icons.stop_circle;
     if (n.contains('drive') || n.contains('gear')) return Icons.settings;
     if (n.contains('battery')) return Icons.battery_full;
-    if (n.contains('wash') || n.contains('clean')) return Icons.cleaning_services;
-    if (n.contains('engine') || n.contains('motor')) return Icons.precision_manufacturing;
+    if (n.contains('wash') || n.contains('clean'))
+      return Icons.cleaning_services;
+    if (n.contains('engine') || n.contains('motor'))
+      return Icons.precision_manufacturing;
     if (n.contains('inspect') || n.contains('diagn')) return Icons.search;
     if (n.contains('chain')) return Icons.link;
     return Icons.handyman;
@@ -333,7 +398,11 @@ class _HeroBanner extends StatelessWidget {
               children: const [
                 Text(
                   'Fast scooter repair, right at home',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 20,
+                    fontWeight: FontWeight.w800,
+                    color: Colors.white,
+                  ),
                 ),
                 SizedBox(height: 8),
                 Text(
@@ -360,27 +429,27 @@ class _QuickActionsRow extends StatelessWidget {
         icon: Icons.qr_code_scanner,
         label: 'Scan QR',
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => QrScannerPage()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => QrScannerPage()));
         },
       ),
       (
         icon: Icons.search,
         label: 'Search Parts',
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => SearchPage()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => SearchPage()));
         },
       ),
       (
         icon: Icons.construction,
         label: 'View Parts',
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => SparePartsPage()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => SparePartsPage()));
         },
       ),
       (
@@ -388,9 +457,9 @@ class _QuickActionsRow extends StatelessWidget {
         label: 'Subscriptions',
         onTap: () {
           // Scroll intent could be added; for now, open Search as placeholder
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => SearchPage()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => SearchPage()));
         },
       ),
     ];
@@ -408,7 +477,9 @@ class _QuickActionsRow extends StatelessWidget {
             style: OutlinedButton.styleFrom(
               foregroundColor: Colors.white,
               side: BorderSide(color: Theme.of(context).dividerColor),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
             ),
             icon: Icon(it.icon, size: 18),
             label: Text(it.label),
@@ -432,14 +503,20 @@ class _LikedServicesSection extends ConsumerWidget {
       children: [
         const Text(
           'Your Likes',
-          style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 8),
         asyncAll.when(
           loading: () => const LinearProgressIndicator(minHeight: 2),
           error: (e, _) => const SizedBox.shrink(),
           data: (services) {
-            final liked = services.where((s) => likedIds.contains(s.id)).toList();
+            final liked = services
+                .where((s) => likedIds.contains(s.id))
+                .toList();
             if (liked.isEmpty) return const SizedBox.shrink();
             return SizedBox(
               height: 160,
@@ -468,11 +545,15 @@ class _LikedCard extends StatelessWidget {
   Widget build(BuildContext context) {
     const card = Color(0xFF1C1C1C);
     const border = Color(0xFF2A2A2A);
-    final imageUrl = buildImageUrl(service.images.isNotEmpty ? service.images.first : null);
+    final imageUrl = buildImageUrl(
+      service.images.isNotEmpty ? service.images.first : null,
+    );
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => ServiceDetailPage(service: service)),
+          MaterialPageRoute(
+            builder: (_) => ServiceDetailPage(service: service),
+          ),
         );
       },
       child: Container(
@@ -488,7 +569,9 @@ class _LikedCard extends StatelessWidget {
             SizedBox(
               height: 100,
               child: imageUrl == null
-                  ? const Center(child: Icon(Icons.handyman, color: Colors.white54))
+                  ? const Center(
+                      child: Icon(Icons.handyman, color: Colors.white54),
+                    )
                   : ClipRRect(
                       borderRadius: const BorderRadius.only(
                         topLeft: Radius.circular(16),
@@ -511,16 +594,42 @@ class _LikedCard extends StatelessWidget {
                     service.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                   const SizedBox(height: 6),
-                  Text('₹${service.price}.00', style: const TextStyle(color: Color(0xFF01C9F5))),
+                  Text(
+                    '₹${service.price}.00',
+                    style: const TextStyle(color: Color(0xFF01C9F5)),
+                  ),
                 ],
               ),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _ThemeToggleButton extends ConsumerWidget {
+  const _ThemeToggleButton();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mode = ref.watch(themeModeProvider);
+    final isDark = mode == ThemeMode.dark;
+    return IconButton(
+      tooltip: isDark ? 'Switch to Light' : 'Switch to Dark',
+      onPressed: () {
+        ref.read(themeModeProvider.notifier).toggle();
+      },
+      icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
+      color: Theme.of(context).colorScheme.primary,
+      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
+      padding: const EdgeInsets.all(0),
     );
   }
 }

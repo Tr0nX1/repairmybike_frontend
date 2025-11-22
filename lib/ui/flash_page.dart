@@ -48,60 +48,40 @@ class _FlashPageState extends State<FlashPage> {
 
   @override
   Widget build(BuildContext context) {
-    const accent = Color(0xFF01C9F5);
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: const Color(0xFF0F0F0F),
+      backgroundColor: scheme.surface,
       body: SafeArea(
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 96,
-                height: 96,
-                decoration: const BoxDecoration(
-                  color: accent,
-                  shape: BoxShape.circle,
+          child: Container(
+            width: 140,
+            height: 140,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              color: scheme.surface,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.20),
+                  blurRadius: 12,
+                  offset: const Offset(0, 6),
                 ),
-                child: const Icon(Icons.pedal_bike, size: 56, color: Colors.black),
-              ),
-              const SizedBox(height: 16),
-              const Text(
-                'RepairMyBike',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontSize: 24,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              const SizedBox(height: 8),
-              const Text(
-                'Fast, reliable bike service near you',
-                style: TextStyle(color: Colors.white54),
-              ),
-              const SizedBox(height: 24),
-              OutlinedButton(
-                onPressed: () {
-                  if (!mounted) return;
-                  _timer?.cancel();
-                  if (AppState.isAuthenticated && (AppState.fullName?.isNotEmpty ?? false)) {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const MainShell()),
-                    );
-                  } else {
-                    Navigator.of(context).pushReplacement(
-                      MaterialPageRoute(builder: (_) => const VehicleTypePage()),
-                    );
-                  }
-                },
-                style: OutlinedButton.styleFrom(
-                  foregroundColor: accent,
-                  side: const BorderSide(color: accent),
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                ),
-                child: const Text('Skip'),
-              ),
-            ],
+              ],
+              border: Border.all(color: scheme.primary, width: 2),
+            ),
+            clipBehavior: Clip.antiAlias,
+            child: Image.network(
+              Uri.base.resolve('build/flutter_assets/logo/repairmybike_logo.png').toString(),
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stack) {
+                return Center(
+                  child: Icon(
+                    Icons.pedal_bike,
+                    size: 64,
+                    color: scheme.primary,
+                  ),
+                );
+              },
+            ),
           ),
         ),
       ),

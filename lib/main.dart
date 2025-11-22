@@ -2,78 +2,92 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'ui/main_shell.dart';
 import 'ui/flash_page.dart';
+import 'providers/theme_provider.dart';
 
 void main() {
   runApp(const ProviderScope(child: MyApp()));
 }
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
-    final ThemeData lightTheme = ThemeData(
+  Widget build(BuildContext context, WidgetRef ref) {
+    final mode = ref.watch(themeModeProvider);
+    const Color brandSeed = Color(0xFF01C9F5);
+    final ColorScheme lightScheme = ColorScheme.fromSeed(
+      seedColor: brandSeed,
       brightness: Brightness.light,
+    );
+    final ColorScheme darkScheme = ColorScheme.fromSeed(
+      seedColor: brandSeed,
+      brightness: Brightness.dark,
+    );
+
+    final ThemeData lightTheme = ThemeData(
       useMaterial3: true,
-      colorScheme: const ColorScheme(
-        brightness: Brightness.light,
-        primary: Colors.black,
-        onPrimary: Colors.white,
-        secondary: Colors.black,
-        onSecondary: Colors.white,
-        error: Colors.red,
-        onError: Colors.white,
-        background: Colors.white,
-        onBackground: Colors.black,
-        surface: Colors.white,
-        onSurface: Colors.black,
-        tertiary: Colors.black,
-        onTertiary: Colors.white,
-      ),
-      scaffoldBackgroundColor: Colors.white,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.white,
-        foregroundColor: Colors.black,
+      colorScheme: lightScheme,
+      scaffoldBackgroundColor: lightScheme.surface,
+      appBarTheme: AppBarTheme(
+        backgroundColor: lightScheme.surface,
+        foregroundColor: lightScheme.onSurface,
         elevation: 0,
       ),
-      cardColor: Colors.white,
-      dividerColor: const Color(0xFFE5E5E5),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: lightScheme.surface,
+        selectedItemColor: lightScheme.primary,
+        unselectedItemColor: lightScheme.onSurface,
+        showUnselectedLabels: true,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+      ),
+      textTheme: ThemeData().textTheme.apply(
+            bodyColor: lightScheme.onSurface,
+            displayColor: lightScheme.onSurface,
+          ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: WidgetStatePropertyAll(lightScheme.primary),
+          side: WidgetStatePropertyAll(BorderSide(color: lightScheme.primary)),
+        ),
+      ),
     );
 
     final ThemeData darkTheme = ThemeData(
-      brightness: Brightness.dark,
       useMaterial3: true,
-      colorScheme: const ColorScheme(
-        brightness: Brightness.dark,
-        primary: Colors.white,
-        onPrimary: Colors.black,
-        secondary: Colors.white,
-        onSecondary: Colors.black,
-        error: Colors.redAccent,
-        onError: Colors.black,
-        background: Colors.black,
-        onBackground: Colors.white,
-        surface: Color(0xFF121212),
-        onSurface: Colors.white,
-        tertiary: Colors.white,
-        onTertiary: Colors.black,
-      ),
-      scaffoldBackgroundColor: Colors.black,
-      appBarTheme: const AppBarTheme(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
+      colorScheme: darkScheme,
+      scaffoldBackgroundColor: darkScheme.surface,
+      appBarTheme: AppBarTheme(
+        backgroundColor: darkScheme.surface,
+        foregroundColor: darkScheme.onSurface,
         elevation: 0,
       ),
-      cardColor: const Color(0xFF121212),
-      dividerColor: const Color(0xFF2A2A2A),
+      bottomNavigationBarTheme: BottomNavigationBarThemeData(
+        backgroundColor: darkScheme.surface,
+        selectedItemColor: darkScheme.primary,
+        unselectedItemColor: darkScheme.onSurface,
+        showUnselectedLabels: true,
+        selectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w500),
+      ),
+      textTheme: ThemeData().textTheme.apply(
+            bodyColor: darkScheme.onSurface,
+            displayColor: darkScheme.onSurface,
+          ),
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: ButtonStyle(
+          foregroundColor: WidgetStatePropertyAll(darkScheme.primary),
+          side: WidgetStatePropertyAll(BorderSide(color: darkScheme.primary)),
+        ),
+      ),
     );
 
     return MaterialApp(
       title: 'RepairMyBike',
       theme: lightTheme,
       darkTheme: darkTheme,
-      themeMode: ThemeMode.system,
+      themeMode: mode,
       home: const FlashPage(),
       debugShowCheckedModeBanner: false,
     );

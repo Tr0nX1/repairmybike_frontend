@@ -14,9 +14,6 @@ class MainShell extends StatefulWidget {
 }
 
 class _MainShellState extends State<MainShell> {
-  static const Color bg = Color(0xFF0F0F0F);
-  static const Color accent = Color(0xFF01C9F5);
-
   int _currentIndex = 0;
 
   List<Widget> get _pages => [
@@ -29,16 +26,17 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: scheme.surface,
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
         onTap: (i) => setState(() => _currentIndex = i),
         type: BottomNavigationBarType.fixed,
-        backgroundColor: const Color(0xFF121212),
-        selectedItemColor: accent,
-        unselectedItemColor: Colors.white70,
+        backgroundColor: scheme.surface,
+        selectedItemColor: scheme.primary,
+        unselectedItemColor: scheme.onSurface,
         showUnselectedLabels: true,
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
@@ -57,33 +55,29 @@ class _PlaceholderPage extends StatelessWidget {
   final IconData icon;
   const _PlaceholderPage({required this.title, required this.icon});
 
-  static const Color bg = Color(0xFF0F0F0F);
-  static const Color card = Color(0xFF1C1C1C);
-  static const Color border = Color(0xFF2A2A2A);
-  static const Color accent = Color(0xFF01C9F5);
-
   @override
   Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: scheme.surface,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF071A1D),
+        backgroundColor: scheme.surface,
         title: Text(title),
       ),
       body: Center(
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: card,
+            color: scheme.surface,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: border),
+            border: Border.all(color: scheme.outlineVariant),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(Icons.info_outline, color: accent),
-              SizedBox(width: 8),
-              Text('Coming soon', style: TextStyle(color: Colors.white70)),
+            children: [
+              Icon(Icons.info_outline, color: scheme.primary),
+              const SizedBox(width: 8),
+              Text('Coming soon', style: TextStyle(color: scheme.onSurface.withOpacity(0.7))),
             ],
           ),
         ),
