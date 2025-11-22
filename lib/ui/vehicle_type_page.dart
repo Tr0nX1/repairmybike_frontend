@@ -47,7 +47,7 @@ class _VehicleTypePageState extends State<VehicleTypePage> {
   void _select(VehicleTypeItem item) {
     final typeName = item.name.trim().isEmpty ? 'vehicle' : item.name.trim();
     AppState.setVehicleType(typeName);
-    Navigator.of(context).pushReplacement(
+    Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => VehicleBrandPage(
           phone: widget.phone,
@@ -66,7 +66,8 @@ class _VehicleTypePageState extends State<VehicleTypePage> {
         backgroundColor: const Color(0xFF071A1D),
         title: const Text('Select Vehicle Type'),
       ),
-      body: Center(
+      body: Align(
+        alignment: Alignment.topCenter,
         child: Container(
           constraints: const BoxConstraints(maxWidth: 680),
           padding: const EdgeInsets.all(16),
@@ -95,9 +96,9 @@ class _VehicleTypePageState extends State<VehicleTypePage> {
                     )
                   : GridView.builder(
                       shrinkWrap: true,
-                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 3,
-                        childAspectRatio: 0.9,
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: MediaQuery.of(context).size.width < 600 ? 2 : 3,
+                        childAspectRatio: 0.95,
                         crossAxisSpacing: 12,
                         mainAxisSpacing: 12,
                       ),
@@ -124,8 +125,12 @@ class _VehicleTypePageState extends State<VehicleTypePage> {
                                           borderRadius: BorderRadius.circular(8),
                                           child: Image.network(
                                             imgUrl,
-                                            fit: BoxFit.contain,
+                                            fit: BoxFit.cover,
                                             alignment: Alignment.center,
+                                            loadingBuilder: (context, child, progress) {
+                                              if (progress == null) return child;
+                                              return const Center(child: CircularProgressIndicator());
+                                            },
                                             errorBuilder: (_, __, ___) => const Icon(Icons.two_wheeler, color: Colors.white54, size: 48),
                                           ),
                                         )

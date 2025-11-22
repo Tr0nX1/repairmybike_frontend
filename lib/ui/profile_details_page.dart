@@ -20,6 +20,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
   final _emailCtrl = TextEditingController(text: AppState.email ?? '');
   final _avatarCtrl = TextEditingController(text: AppState.avatarUrl ?? '');
   final _vehicleCtrl = TextEditingController(text: AppState.vehicleName ?? '');
+  final _phoneCtrl = TextEditingController(text: AppState.phoneNumber ?? '');
 
   bool _saving = false;
 
@@ -30,6 +31,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
     _emailCtrl.dispose();
     _avatarCtrl.dispose();
     _vehicleCtrl.dispose();
+    _phoneCtrl.dispose();
     super.dispose();
   }
 
@@ -73,7 +75,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
           constraints: const BoxConstraints(maxWidth: 520),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: card,
+            color: card.withOpacity(0.12),
             borderRadius: BorderRadius.circular(16),
             border: Border.all(color: border),
           ),
@@ -82,6 +84,8 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               _field('Full name', _nameCtrl, Icons.person),
+              const SizedBox(height: 12),
+              _field('Phone (from login)', _phoneCtrl, Icons.phone, enabled: false),
               const SizedBox(height: 12),
               _field('Address', _addrCtrl, Icons.home, minLines: 2, maxLines: 4),
               const SizedBox(height: 12),
@@ -94,8 +98,10 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
               ElevatedButton(
                 onPressed: _saving ? null : _save,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: accent,
-                  foregroundColor: Colors.black,
+                  backgroundColor: Colors.transparent,
+                  foregroundColor: accent,
+                  elevation: 0,
+                  side: const BorderSide(color: accent),
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
                 child: const Text('Continue'),
@@ -108,11 +114,12 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
   }
 
   Widget _field(String hint, TextEditingController ctrl, IconData icon,
-      {int minLines = 1, int maxLines = 1}) {
+      {int minLines = 1, int maxLines = 1, bool enabled = true}) {
     return TextField(
       controller: ctrl,
       minLines: minLines,
       maxLines: maxLines,
+      enabled: enabled,
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: hint,

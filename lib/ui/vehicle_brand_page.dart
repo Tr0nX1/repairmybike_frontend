@@ -3,6 +3,7 @@ import '../data/app_state.dart';
 import '../data/vehicles_api.dart';
 import '../utils/url_utils.dart';
 import 'vehicle_name_page.dart';
+import 'widgets/rm_app_bar.dart';
 
 class VehicleBrandPage extends StatefulWidget {
   const VehicleBrandPage({super.key, this.phone, required this.vehicleTypeId, required this.vehicleTypeName});
@@ -42,7 +43,12 @@ class _VehicleBrandPageState extends State<VehicleBrandPage> {
   }
 
   void _select(VehicleBrandItem item) {
-    AppState.setVehicleBrand(item.name);
+    final phone = widget.phone ?? AppState.phoneNumber ?? AppState.lastCustomerPhone ?? '';
+    if (phone.isNotEmpty) {
+      AppState.setVehicleForPhone(phone: phone, brand: item.name);
+    } else {
+      AppState.setVehicleBrand(item.name);
+    }
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -59,22 +65,7 @@ class _VehicleBrandPageState extends State<VehicleBrandPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Select ${widget.vehicleTypeName.toUpperCase()} Brand',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
+      appBar: RMAppBar(title: 'Select ${widget.vehicleTypeName.toUpperCase()} Brand'),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -102,9 +93,9 @@ class _VehicleBrandPageState extends State<VehicleBrandPage> {
                           ],
                         )
                       : GridView.builder(
-                          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: 2,
-                            childAspectRatio: 0.9,
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: MediaQuery.of(context).size.width < 600 ? 2 : 3,
+                            childAspectRatio: 0.95,
                             crossAxisSpacing: 15,
                             mainAxisSpacing: 15,
                           ),
@@ -130,8 +121,12 @@ class _VehicleBrandPageState extends State<VehicleBrandPage> {
                                               borderRadius: BorderRadius.circular(8),
                                               child: Image.network(
                                                 img,
-                                                fit: BoxFit.contain,
+                                                fit: BoxFit.cover,
                                                 alignment: Alignment.center,
+                                                loadingBuilder: (context, child, progress) {
+                                                  if (progress == null) return child;
+                                                  return const Center(child: CircularProgressIndicator());
+                                                },
                                                 errorBuilder: (_, __, ___) => const Icon(Icons.factory, color: Colors.white54, size: 40),
                                               ),
                                             )

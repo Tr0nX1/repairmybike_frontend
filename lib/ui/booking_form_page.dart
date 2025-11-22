@@ -39,6 +39,13 @@ class _BookingFormPageState extends State<BookingFormPage> {
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
   bool _submitting = false;
+  bool _autoName = false;
+  bool _autoPhone = false;
+  bool _autoEmail = false;
+  bool _autoAddress = false;
+  bool _autoType = false;
+  bool _autoBrand = false;
+  bool _autoModel = false;
 
   @override
   void initState() {
@@ -48,10 +55,23 @@ class _BookingFormPageState extends State<BookingFormPage> {
     if (widget.initialLocation == 'home' || widget.initialLocation == 'shop') {
       _serviceLocation = widget.initialLocation!;
     }
-    // Prefill phone from authenticated session if available
+    // Autofill from AppState
     final authPhone = AppState.phoneNumber;
     if (authPhone != null && authPhone.isNotEmpty) {
       _phoneCtrl.text = authPhone;
+      _autoPhone = true;
+    }
+    if ((AppState.fullName ?? '').isNotEmpty) {
+      _nameCtrl.text = AppState.fullName!;
+      _autoName = true;
+    }
+    if ((AppState.email ?? '').isNotEmpty) {
+      _emailCtrl.text = AppState.email!;
+      _autoEmail = true;
+    }
+    if ((AppState.address ?? '').isNotEmpty) {
+      _addressCtrl.text = AppState.address!;
+      _autoAddress = true;
     }
   }
 
@@ -61,6 +81,21 @@ class _BookingFormPageState extends State<BookingFormPage> {
       setState(() {
         _vehicleTypes = items;
       });
+      // Try auto-select type
+      final vt = AppState.vehicleType;
+      if (vt != null && vt.isNotEmpty) {
+        final match = _vehicleTypes.firstWhere(
+          (t) => t.name.toLowerCase() == vt.toLowerCase(),
+          orElse: () => _vehicleTypes.isNotEmpty ? _vehicleTypes.first : null as VehicleTypeItem,
+        );
+        if (match != null) {
+          setState(() {
+            _selectedType = match;
+            _autoType = true;
+          });
+          await _loadVehicleBrands(match.id);
+        }
+      }
     } catch (e) {
       _showSnack('Failed to load vehicle types: $e');
     }
@@ -72,6 +107,20 @@ class _BookingFormPageState extends State<BookingFormPage> {
       setState(() {
         _vehicleBrands = items;
       });
+      final vb = AppState.vehicleBrand;
+      if (vb != null && vb.isNotEmpty) {
+        final match = _vehicleBrands.firstWhere(
+          (b) => b.name.toLowerCase() == vb.toLowerCase(),
+          orElse: () => _vehicleBrands.isNotEmpty ? _vehicleBrands.first : null as VehicleBrandItem,
+        );
+        if (match != null) {
+          setState(() {
+            _selectedBrand = match;
+            _autoBrand = true;
+          });
+          await _loadVehicleModels(match.id);
+        }
+      }
     } catch (e) {
       _showSnack('Failed to load vehicle brands: $e');
     }
@@ -83,6 +132,19 @@ class _BookingFormPageState extends State<BookingFormPage> {
       setState(() {
         _vehicleModels = items;
       });
+      final vm = AppState.vehicleName;
+      if (vm != null && vm.isNotEmpty) {
+        final match = _vehicleModels.firstWhere(
+          (m) => m.name.toLowerCase() == vm.toLowerCase(),
+          orElse: () => _vehicleModels.isNotEmpty ? _vehicleModels.first : null as VehicleModelItem,
+        );
+        if (match != null) {
+          setState(() {
+            _selectedModel = match;
+            _autoModel = true;
+          });
+        }
+      }
     } catch (e) {
       _showSnack('Failed to load vehicle models: $e');
     }
@@ -188,6 +250,18 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
       // Remember phone so Bookings tab can auto-fetch.
       await AppState.setLastCustomerPhone(effectivePhone);
+      // Persist current vehicle/profile for consistency
+      await AppState.setVehicleForPhone(
+        phone: effectivePhone,
+        type: _selectedType?.name,
+        brand: _selectedBrand?.name,
+        name: _selectedModel?.name,
+      );
+      await AppState.setProfile(
+        name: _nameCtrl.text.trim(),
+        addr: _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
+        mail: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
+      );
 
       Navigator.of(context).pop();
     } catch (e) {
@@ -420,7 +494,24 @@ class _BookingFormPageState extends State<BookingFormPage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+          Row(
+            children: [
+              Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+              const SizedBox(width: 8),
+              if ((title == 'Vehicle Type' && _autoType) ||
+                  (title == 'Vehicle Brand' && _autoBrand) ||
+                  (title == 'Vehicle Model' && _autoModel))
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0x331EC8FF),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: accent),
+                  ),
+                  child: const Text('Auto-filled', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                ),
+            ],
+          ),
           const SizedBox(height: 10),
           child,
         ],
@@ -446,11 +537,18 @@ class _BookingFormPageState extends State<BookingFormPage> {
   }
 
   Widget _textField(TextEditingController ctrl, String hint, {TextInputType? keyboardType}) {
+    // Visual indicator for auto-populated fields
+    final isAuto = (ctrl == _nameCtrl && _autoName) ||
+        (ctrl == _phoneCtrl && _autoPhone) ||
+        (ctrl == _emailCtrl && _autoEmail) ||
+        (ctrl == _addressCtrl && _autoAddress);
     return TextField(
       controller: ctrl,
       keyboardType: keyboardType,
       style: const TextStyle(color: Colors.white),
-      decoration: _inputDecoration(hint),
+      decoration: _inputDecoration(hint).copyWith(
+        suffixIcon: isAuto ? const Icon(Icons.auto_awesome, color: Colors.cyan) : null,
+      ),
     );
   }
 

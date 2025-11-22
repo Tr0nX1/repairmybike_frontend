@@ -2,8 +2,9 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/app_state.dart';
 import 'auth_page.dart';
-import 'vehicle_type_page.dart';
 import 'main_shell.dart';
+import 'profile_details_page.dart';
+import 'vehicle_type_page.dart';
 
 class FlashPage extends StatefulWidget {
   const FlashPage({super.key});
@@ -12,35 +13,62 @@ class FlashPage extends StatefulWidget {
   State<FlashPage> createState() => _FlashPageState();
 }
 
-class _FlashPageState extends State<FlashPage> {
+class _FlashPageState extends State<FlashPage>
+    with SingleTickerProviderStateMixin {
   Timer? _timer;
+  late final AnimationController _controller;
+  late final Animation<double> _fade;
 
   @override
   void initState() {
     super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 900),
+    );
+    _fade = CurvedAnimation(parent: _controller, curve: Curves.easeInOut);
     _initAndNavigate();
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _controller.dispose();
     super.dispose();
   }
 
   Future<void> _initAndNavigate() async {
-    // Ensure persisted state is loaded
     await AppState.init();
-    // Keep splash visible for ~2s for a smooth experience
-    _timer = Timer(const Duration(seconds: 2), () {
+    if (mounted) _controller.forward();
+    _timer = Timer(const Duration(milliseconds: 2500), () {
       if (!mounted) return;
-      if (AppState.isAuthenticated && (AppState.fullName?.isNotEmpty ?? false)) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainShell()),
-        );
+      if (AppState.isAuthenticated) {
+        final hasVehicle =
+            (AppState.vehicleBrand?.isNotEmpty ?? false) &&
+            (AppState.vehicleName?.isNotEmpty ?? false);
+        final hasProfile =
+            (AppState.fullName?.isNotEmpty ?? false) &&
+            (AppState.address?.isNotEmpty ?? false);
+        if (!hasVehicle) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => VehicleTypePage(phone: AppState.phoneNumber),
+            ),
+          );
+        } else if (!hasProfile) {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const ProfileDetailsPage()),
+          );
+        } else {
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(builder: (_) => const MainShell()),
+          );
+        }
       } else {
-        // Go straight to authentication -> details flow as requested
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AuthPage(toDetailsOnFinish: true)),
+          MaterialPageRoute(
+            builder: (_) => const AuthPage(toDetailsOnFinish: true),
+          ),
         );
       }
     });
@@ -50,37 +78,24 @@ class _FlashPageState extends State<FlashPage> {
   Widget build(BuildContext context) {
     final scheme = Theme.of(context).colorScheme;
     return Scaffold(
-      backgroundColor: scheme.surface,
+      backgroundColor: const Color(0xFF0F0F0F),
       body: SafeArea(
         child: Center(
-          child: Container(
-            width: 140,
-            height: 140,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: scheme.surface,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.20),
-                  blurRadius: 12,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-              border: Border.all(color: scheme.primary, width: 2),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Image.network(
-              Uri.base.resolve('build/flutter_assets/logo/repairmybike_logo.png').toString(),
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stack) {
-                return Center(
-                  child: Icon(
-                    Icons.pedal_bike,
-                    size: 64,
-                    color: scheme.primary,
-                  ),
-                );
-              },
+          child: FadeTransition(
+            opacity: _fade,
+            child: Container(
+              width: 220,
+              height: 220,
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                color: Colors.white,
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Image.asset(
+                'assets/images/logo/repairmybike_newlogo.jpeg',
+                fit: BoxFit.cover,
+                filterQuality: FilterQuality.high,
+              ),
             ),
           ),
         ),

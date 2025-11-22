@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'search_page.dart';
+import 'widgets/rm_app_bar.dart';
 
 class QrScannerPage extends StatefulWidget {
   const QrScannerPage({super.key});
@@ -21,10 +22,7 @@ class _QrScannerPageState extends State<QrScannerPage> {
             defaultTargetPlatform == TargetPlatform.macOS);
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF071A1D),
-        title: const Text('Scan QR Code'),
-      ),
+      appBar: const RMAppBar(title: 'Scan QR Code'),
       body: Stack(
         fit: StackFit.expand,
         children: [

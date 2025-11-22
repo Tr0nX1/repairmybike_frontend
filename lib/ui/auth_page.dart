@@ -229,13 +229,7 @@ class _AuthPageState extends State<AuthPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF071A1D),
         title: const Text('Welcome Back'),
-        actions: [
-          if (authenticated)
-            TextButton(
-              onPressed: _loading ? null : _logout,
-              child: const Text('Logout'),
-            )
-        ],
+        actions: const [],
       ),
       body: Center(
         child: Container(
@@ -328,7 +322,7 @@ class _AuthPageState extends State<AuthPage> {
                       ? null
                       : () {
                           final phone = _phoneCtrl.text.trim();
-                          Navigator.of(context).pushReplacement(
+                          Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (_) => VehicleTypePage(
                                 phone: phone.isEmpty ? null : phone,
@@ -356,24 +350,6 @@ class _AuthPageState extends State<AuthPage> {
                   'Signed in',
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white70, fontSize: 18),
-                ),
-                const SizedBox(height: 12),
-                _InfoRow(label: 'Phone', value: AppState.phoneNumber ?? ''),
-                const SizedBox(height: 4),
-                _InfoRow(
-                    label: 'Session',
-                    value: (AppState.sessionToken ?? '').isEmpty
-                        ? '—'
-                        : 'Active'),
-                const SizedBox(height: 16),
-                ElevatedButton(
-                  onPressed: _loading ? null : _logout,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: accent,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  child: const Text('Logout'),
                 ),
               ]
             ],

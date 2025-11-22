@@ -77,21 +77,33 @@ class _HomePageState extends ConsumerState<HomePage> {
                         ),
                       ),
                       clipBehavior: Clip.antiAlias,
-                      child: Image.network(
-                        Uri.base
-                            .resolve(
-                              'build/flutter_assets/logo/repairmybike_logo.jpeg',
-                            )
-                            .toString(),
+                      child: Image.asset(
+                        'assets/images/logo/repairmybike_newlogo.jpe',
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stack) {
-                          return Center(
-                            child: Icon(
-                              Icons.pedal_bike,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                          return Image.asset(
+                            'assets/images/logo/repairmybike_newlogo.jpeg',
+                            fit: BoxFit.cover,
                           );
                         },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      (() {
+                        final b = AppState.vehicleBrand;
+                        final m = AppState.vehicleName;
+                        if ((b == null || b.isEmpty) &&
+                            (m == null || m.isEmpty)) {
+                          return 'Select Vehicle';
+                        }
+                        if (b == null || b.isEmpty) return m!;
+                        if (m == null || m.isEmpty) return b!;
+                        return "$b - $m";
+                      })(),
+                      style: TextStyle(
+                        color: Theme.of(context).colorScheme.onSurface,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     const Spacer(),
@@ -108,15 +120,15 @@ class _HomePageState extends ConsumerState<HomePage> {
                 Text(
                   'Explore Services',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: isPhone ? 24 : 28,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
                 const SizedBox(height: 8),
-                const Text(
+                Text(
                   'Professional Scooter repair at your doorstep',
-                  style: TextStyle(color: Colors.white70),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                 ),
                 const SizedBox(height: 16),
 
@@ -124,7 +136,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 Text(
                   'Categories',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     fontSize: isPhone ? 20 : 22,
                     fontWeight: FontWeight.w800,
                   ),
@@ -148,9 +160,9 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ),
                   data: (categories) {
                     if (categories.isEmpty) {
-                      return const Text(
+                      return Text(
                         'No categories',
-                        style: TextStyle(color: Colors.white70),
+                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
                       );
                     }
                     // Force 4 columns grid per requirement
@@ -181,16 +193,16 @@ class _HomePageState extends ConsumerState<HomePage> {
 
                 const SizedBox(height: 16),
                 Center(
-                  child: SizedBox(
-                    height: 46,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: accent,
-                        side: const BorderSide(color: accent),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                    child: SizedBox(
+                      height: 46,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          foregroundColor: Theme.of(context).colorScheme.primary,
+                          side: BorderSide(color: Theme.of(context).colorScheme.primary),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
-                      ),
                       onPressed: () {
                         setState(() {
                           _showAllCategories = !_showAllCategories;
@@ -464,6 +476,7 @@ class _QuickActionsRow extends StatelessWidget {
       ),
     ];
 
+    final cs = Theme.of(context).colorScheme;
     return SizedBox(
       height: 44,
       child: ListView.separated(
@@ -475,8 +488,8 @@ class _QuickActionsRow extends StatelessWidget {
           return OutlinedButton.icon(
             onPressed: it.onTap,
             style: OutlinedButton.styleFrom(
-              foregroundColor: Colors.white,
-              side: BorderSide(color: Theme.of(context).dividerColor),
+              foregroundColor: cs.onSurface,
+              side: BorderSide(color: cs.outline),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -501,10 +514,10 @@ class _LikedServicesSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Your Likes',
           style: TextStyle(
-            color: Colors.white,
+            color: Theme.of(context).colorScheme.onSurface,
             fontSize: 20,
             fontWeight: FontWeight.w800,
           ),

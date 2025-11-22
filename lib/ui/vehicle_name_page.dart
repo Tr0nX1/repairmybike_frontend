@@ -4,6 +4,7 @@ import '../data/vehicles_api.dart';
 import '../utils/url_utils.dart';
 import 'main_shell.dart';
 import 'profile_details_page.dart';
+import 'widgets/rm_app_bar.dart';
 
 class VehicleNamePage extends StatefulWidget {
   const VehicleNamePage({super.key, this.phone, required this.vehicleBrandId, required this.vehicleBrandName});
@@ -47,22 +48,7 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
 
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
-          onPressed: () => Navigator.pop(context),
-        ),
-        title: Text(
-          'Select ${widget.vehicleBrandName} Model',
-          style: const TextStyle(
-            color: Colors.white,
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
+      appBar: RMAppBar(title: 'Select ${widget.vehicleBrandName} Model'),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -89,11 +75,17 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
                             OutlinedButton(onPressed: _loadModels, child: const Text('Retry')),
                           ],
                         )
-                      : ListView.builder(
+                      : GridView.builder(
+                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: MediaQuery.of(context).size.width < 600 ? 2 : 3,
+                            childAspectRatio: 0.95,
+                            crossAxisSpacing: 15,
+                            mainAxisSpacing: 15,
+                          ),
                           itemCount: _models.length,
                           itemBuilder: (context, index) {
                             final item = _models[index];
-                            return _buildModelCard(context, item);
+                            return _buildModelTile(context, item);
                           },
                         ),
             ),
@@ -106,13 +98,11 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
     );
   }
 
-  Widget _buildModelCard(BuildContext context, VehicleModelItem item) {
+  Widget _buildModelTile(BuildContext context, VehicleModelItem item) {
     final model = item.name;
     final img = buildImageUrl(item.image);
-    return Container(
-      margin: const EdgeInsets.only(bottom: 15),
-      child: GestureDetector(
-        onTap: () async {
+    return GestureDetector(
+      onTap: () async {
           await AppState.setVehicleName(model);
           if (widget.phone != null && widget.phone!.isNotEmpty) {
             await AppState.setVehicleForPhone(
@@ -130,50 +120,40 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
             (route) => false,
           );
         },
-        child: Container(
-          padding: const EdgeInsets.all(20),
-          decoration: BoxDecoration(
-            color: Colors.grey[900],
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: Colors.grey[700]!,
-              width: 1,
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.grey[900],
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: Colors.grey[700]!, width: 1),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: img != null
+                  ? ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        img,
+                        fit: BoxFit.cover,
+                        alignment: Alignment.center,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return const Center(child: CircularProgressIndicator());
+                        },
+                        errorBuilder: (_, __, ___) => const Icon(Icons.directions_bike, color: Colors.white54, size: 40),
+                      ),
+                    )
+                  : const Icon(Icons.directions_bike, color: Colors.white54, size: 40),
             ),
-          ),
-          child: Row(
-            children: [
-              if (img != null)
-                Padding(
-                  padding: const EdgeInsets.only(right: 12),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: Image.network(
-                      img,
-                      width: 56,
-                      height: 56,
-                      fit: BoxFit.contain,
-                      alignment: Alignment.center,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.directions_bike, color: Colors.white54),
-                    ),
-                  ),
-                ),
-              Expanded(
-                child: Text(
-                  model,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              const Icon(
-                Icons.arrow_forward_ios,
-                color: Colors.white54,
-                size: 16,
-              ),
-            ],
-          ),
+            const SizedBox(height: 8),
+            Text(
+              model,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+            ),
+          ],
         ),
       ),
     );

@@ -51,12 +51,13 @@ class AppState {
     refreshToken = prefs.getString(_kRefresh);
     isStaff = prefs.getBool(_kIsStaff) ?? false;
     staffUsername = prefs.getString(_kUsername);
-    fullName = prefs.getString(_kFullName);
-    address = prefs.getString(_kAddress);
-    email = prefs.getString(_kEmail);
-    vehicleType = prefs.getString(_kVehicleType);
-    vehicleBrand = prefs.getString(_kVehicleBrand);
-    vehicleName = prefs.getString(_kVehicleName);
+    // Do NOT hydrate global profile/vehicle; use phone-scoped values only
+    fullName = null;
+    address = null;
+    email = null;
+    vehicleType = null;
+    vehicleBrand = null;
+    vehicleName = null;
     avatarUrl = prefs.getString(_kAvatarUrl);
     lastCustomerPhone = prefs.getString(_kLastCustomerPhone);
 
@@ -73,9 +74,15 @@ class AppState {
       final tPhone = prefs.getString('$_kVehicleType' '_' '$p');
       final bPhone = prefs.getString('$_kVehicleBrand' '_' '$p');
       final nPhone = prefs.getString('$_kVehicleName' '_' '$p');
+      final fPhone = prefs.getString('$_kFullName' '_' '$p');
+      final aPhone = prefs.getString('$_kAddress' '_' '$p');
+      final ePhone = prefs.getString('$_kEmail' '_' '$p');
       if (tPhone != null) vehicleType = tPhone;
       if (bPhone != null) vehicleBrand = bPhone;
       if (nPhone != null) vehicleName = nPhone;
+      if (fPhone != null) fullName = fPhone;
+      if (aPhone != null) address = aPhone;
+      if (ePhone != null) email = ePhone;
     }
   }
 
@@ -96,13 +103,19 @@ class AppState {
     await prefs.setBool(_kIsStaff, false);
     await prefs.remove(_kUsername);
 
-    // Load phone-specific vehicle selection when user signs in
+    // Load phone-specific vehicle and profile when user signs in
     final tPhone = prefs.getString('$_kVehicleType' '_' '$phone');
     final bPhone = prefs.getString('$_kVehicleBrand' '_' '$phone');
     final nPhone = prefs.getString('$_kVehicleName' '_' '$phone');
-    if (tPhone != null) vehicleType = tPhone;
-    if (bPhone != null) vehicleBrand = bPhone;
-    if (nPhone != null) vehicleName = nPhone;
+    vehicleType = tPhone; // may be null for first-time
+    vehicleBrand = bPhone;
+    vehicleName = nPhone;
+    final fPhone = prefs.getString('$_kFullName' '_' '$phone');
+    final aPhone = prefs.getString('$_kAddress' '_' '$phone');
+    final ePhone = prefs.getString('$_kEmail' '_' '$phone');
+    fullName = fPhone;
+    address = aPhone;
+    email = ePhone;
   }
 
   static Future<void> clearAuth() async {
@@ -111,6 +124,12 @@ class AppState {
     refreshToken = null;
     isStaff = false;
     staffUsername = null;
+    fullName = null;
+    address = null;
+    email = null;
+    vehicleType = null;
+    vehicleBrand = null;
+    vehicleName = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kPhone);
     await prefs.remove(_kSession);
@@ -146,19 +165,28 @@ class AppState {
   static Future<void> setVehicleType(String type) async {
     vehicleType = type;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kVehicleType, type);
+    final phone = phoneNumber ?? lastCustomerPhone;
+    if (phone != null && phone.isNotEmpty) {
+      await prefs.setString('$_kVehicleType' '_' '$phone', type);
+    }
   }
 
   static Future<void> setVehicleBrand(String brand) async {
     vehicleBrand = brand;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kVehicleBrand, brand);
+    final phone = phoneNumber ?? lastCustomerPhone;
+    if (phone != null && phone.isNotEmpty) {
+      await prefs.setString('$_kVehicleBrand' '_' '$phone', brand);
+    }
   }
 
   static Future<void> setVehicleName(String name) async {
     vehicleName = name;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kVehicleName, name);
+    final phone = phoneNumber ?? lastCustomerPhone;
+    if (phone != null && phone.isNotEmpty) {
+      await prefs.setString('$_kVehicleName' '_' '$phone', name);
+    }
   }
 
   // Persist vehicle selection keyed by mobile number
@@ -179,9 +207,12 @@ class AppState {
     address = addr ?? address;
     email = mail ?? email;
     final prefs = await SharedPreferences.getInstance();
-    if (name != null) await prefs.setString(_kFullName, name);
-    if (addr != null) await prefs.setString(_kAddress, addr);
-    if (mail != null) await prefs.setString(_kEmail, mail);
+    final phone = phoneNumber ?? lastCustomerPhone;
+    if (phone != null && phone.isNotEmpty) {
+      if (name != null) await prefs.setString('$_kFullName' '_' '$phone', name);
+      if (addr != null) await prefs.setString('$_kAddress' '_' '$phone', addr);
+      if (mail != null) await prefs.setString('$_kEmail' '_' '$phone', mail);
+    }
   }
 
   static Future<void> setAvatarUrl(String? url) async {

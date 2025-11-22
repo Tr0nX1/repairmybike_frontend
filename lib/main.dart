@@ -15,13 +15,44 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mode = ref.watch(themeModeProvider);
-    const Color brandSeed = Color(0xFF01C9F5);
+    const Color brandPrimary = Color(0xFF01C9F5);
+    const Color brandOnPrimary = Color(0xFF0B0F12);
+    const Color brandSecondary = Color(0xFF005B8E);
+    const Color brandOnSecondary = Color(0xFFFFFFFF);
+    const Color brandBackground = Color(0xFFFFFFFF);
+    const Color brandOnBackground = Color(0xFF0F1A1D);
+    const Color brandSurface = Color(0xFFF7F9FB);
+    const Color brandOnSurface = Color(0xFF0F1A1D);
+    const Color brandSurfaceVariant = Color(0xFFEEF2F6);
+    const Color brandOnSurfaceVariant = Color(0xFF33424D);
+    const Color brandOutline = Color(0xFFCBD5E1);
+    const Color brandError = Color(0xFFE83C3C);
+    const Color brandOnError = Color(0xFFFFFFFF);
+    const Color brandTertiary = Color(0xFF1BBE7B);
+    const Color brandOnTertiary = Color(0xFF0B0F12);
+
     final ColorScheme lightScheme = ColorScheme.fromSeed(
-      seedColor: brandSeed,
+      seedColor: brandPrimary,
       brightness: Brightness.light,
+    ).copyWith(
+      primary: brandPrimary,
+      onPrimary: brandOnPrimary,
+      secondary: brandSecondary,
+      onSecondary: brandOnSecondary,
+      background: brandBackground,
+      onBackground: brandOnBackground,
+      surface: brandSurface,
+      onSurface: brandOnSurface,
+      surfaceVariant: brandSurfaceVariant,
+      onSurfaceVariant: brandOnSurfaceVariant,
+      outline: brandOutline,
+      error: brandError,
+      onError: brandOnError,
+      tertiary: brandTertiary,
+      onTertiary: brandOnTertiary,
     );
     final ColorScheme darkScheme = ColorScheme.fromSeed(
-      seedColor: brandSeed,
+      seedColor: brandPrimary,
       brightness: Brightness.dark,
     );
 

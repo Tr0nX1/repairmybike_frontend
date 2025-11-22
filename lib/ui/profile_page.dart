@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
 import 'auth_page.dart';
@@ -31,8 +33,12 @@ class _ProfilePageState extends State<ProfilePage> {
       await AppState.clearAuth();
       await AppState.setLastCustomerPhone(null);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Logged out')));
-      setState(() {});
+      // Close app after logout per requirement
+      Future.delayed(const Duration(milliseconds: 200), () {
+        if (!kIsWeb) {
+          SystemNavigator.pop();
+        }
+      });
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
@@ -63,7 +69,9 @@ class _ProfilePageState extends State<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final isAuth = AppState.isAuthenticated;
-    final name = AppState.fullName ?? 'Guest User';
+    final name = isAuth
+        ? ((AppState.fullName?.isNotEmpty ?? false) ? AppState.fullName! : 'User')
+        : 'Guest User';
     final email = (AppState.email?.isNotEmpty == true) ? AppState.email! : 'Add email';
     return Scaffold(
       backgroundColor: bg,

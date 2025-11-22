@@ -12,7 +12,7 @@ class VehicleTypeItem {
     return VehicleTypeItem(
       id: (json['id'] as num).toInt(),
       name: json['name'] as String? ?? '',
-      image: json['image'] as String?,
+      image: (json['image'] as String?) ?? (json['logo'] as String?) ?? (json['icon'] as String?),
     );
   }
 }
@@ -38,7 +38,7 @@ class VehicleBrandItem {
       vehicleTypeId: (json['vehicle_type'] as num).toInt(),
       vehicleTypeName: json['vehicle_type_name'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      image: json['image'] as String?,
+      image: (json['image'] as String?) ?? (json['logo'] as String?) ?? (json['icon'] as String?),
     );
   }
 }
@@ -67,7 +67,7 @@ class VehicleModelItem {
       brandName: json['brand_name'] as String? ?? '',
       vehicleTypeName: json['vehicle_type_name'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      image: json['image'] as String?,
+      image: (json['image'] as String?) ?? (json['logo'] as String?) ?? (json['icon'] as String?),
     );
   }
 }
