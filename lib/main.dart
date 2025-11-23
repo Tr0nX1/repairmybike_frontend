@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'ui/main_shell.dart';
 import 'ui/flash_page.dart';
 import 'providers/theme_provider.dart';
+import 'utils/api_config.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+  debugPrint('🔥 BACKEND BASE URL: ${resolveBackendBase()}');
   runApp(const ProviderScope(child: MyApp()));
 }
 

@@ -5,6 +5,7 @@ import '../models/spare_part.dart';
 import 'spare_parts_page.dart';
 import 'spare_part_detail_page.dart';
 import '../utils/url_utils.dart';
+import '../providers/cart_provider.dart';
 
 final sparePartsProvider = FutureProvider.autoDispose<List<SparePartListItem>>((ref) async {
   final api = SparePartsApi();
@@ -85,14 +86,14 @@ class SparePartsSection extends ConsumerWidget {
   }
 }
 
-class _PartCard extends StatelessWidget {
+class _PartCard extends ConsumerWidget {
   final SparePartListItem part;
   const _PartCard({required this.part});
 
   // Colors are driven by Theme.
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
     final cs = theme.colorScheme;
     final symbol = part.currency.toUpperCase() == 'INR' ? '₹' : part.currency;
@@ -233,11 +234,26 @@ class _PartCard extends StatelessWidget {
                     ],
                   ),
                   const SizedBox(height: 10),
-                  SizedBox(
-                    height: 34,
-                    child: OutlinedButton.icon(
-                      onPressed: () {
-                        // Future: integrate add-to-cart
+                SizedBox(
+                  height: 34,
+                  child: OutlinedButton.icon(
+                      onPressed: () async {
+                        if (!part.inStock) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Out of stock')),
+                          );
+                          return;
+                        }
+                        try {
+                          await ref.read(cartProvider.notifier).addItem(partId: part.id, quantity: 1);
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Added to cart')),
+                          );
+                        } catch (e) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Failed to add: $e')),
+                          );
+                        }
                       },
                       icon: const Icon(Icons.shopping_cart, size: 18),
                       label: const Text('Add'),

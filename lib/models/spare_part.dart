@@ -19,6 +19,11 @@ class SparePartListItem {
   final num ratingAverage;
   final int ratingCount;
   final String? thumbnail;
+  final List<String> images;
+  final String? description;
+  final Map<String, dynamic> specs;
+  final Map<String, dynamic> dimensions;
+  final String? brandLogoUrl;
 
   SparePartListItem({
     required this.id,
@@ -41,9 +46,21 @@ class SparePartListItem {
     required this.ratingAverage,
     required this.ratingCount,
     this.thumbnail,
+    this.images = const [],
+    this.description,
+    this.specs = const {},
+    this.dimensions = const {},
+    this.brandLogoUrl,
   });
 
   factory SparePartListItem.fromJson(Map<String, dynamic> json) {
+    List<String> normalizeImages(dynamic v) {
+      final list = (v as List?) ?? const [];
+      return list.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+    }
+    Map<String, dynamic> normalizeMap(dynamic v) {
+      return (v as Map<String, dynamic>?) ?? <String, dynamic>{};
+    }
     return SparePartListItem(
       id: (json['id'] as num).toInt(),
       name: json['name'] as String? ?? '',
@@ -67,6 +84,11 @@ class SparePartListItem {
           : num.tryParse(json['rating_average']?.toString() ?? '0') ?? 0,
       ratingCount: (json['rating_count'] as num?)?.toInt() ?? 0,
       thumbnail: json['thumbnail'] as String?,
+      images: normalizeImages(json['images'] ?? json['gallery'] ?? json['image_urls']),
+      description: json['description'] as String?,
+      specs: normalizeMap(json['specs'] ?? json['specifications'] ?? json['attributes']),
+      dimensions: normalizeMap(json['dimensions']),
+      brandLogoUrl: json['brand_logo_url'] as String? ?? json['brand_logo'] as String?,
     );
   }
 }

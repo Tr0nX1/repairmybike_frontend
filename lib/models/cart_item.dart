@@ -1,41 +1,52 @@
 class CartItem {
-  final int itemId;
+  final int id;
   final int productId;
   final String name;
   final String brandName;
-  final int unitPrice; // in minor units (e.g., INR paise) if backend uses ints
+  final int price;
   final int quantity;
   final String? imageUrl;
 
   CartItem({
-    required this.itemId,
+    required this.id,
     required this.productId,
     required this.name,
     required this.brandName,
-    required this.unitPrice,
+    required this.price,
     required this.quantity,
     this.imageUrl,
   });
 
   factory CartItem.fromJson(Map<String, dynamic> json) {
+    final idVal = (json['item_id'] as num?)?.toInt() ?? (json['id'] as num?)?.toInt() ?? 0;
+    final prodVal = (json['product_id'] as num?)?.toInt() ?? (json['spare_part'] as num?)?.toInt() ?? (json['spare_part_id'] as num?)?.toInt() ?? 0;
+    int _toInt(dynamic v) {
+      if (v is num) return v.toInt();
+      if (v is String) {
+        final d = double.tryParse(v);
+        if (d != null) return d.round();
+      }
+      return 0;
+    }
+    final priceVal = _toInt(json['unit_price'] ?? json['price']);
     return CartItem(
-      itemId: (json['item_id'] ?? json['id'] as num).toInt(),
-      productId: (json['product_id'] ?? json['spare_part_id'] as num).toInt(),
-      name: json['name'] as String? ?? '',
+      id: idVal,
+      productId: prodVal,
+      name: json['part_name'] as String? ?? (json['name'] as String? ?? ''),
       brandName: json['brand_name'] as String? ?? (json['brand'] as String? ?? ''),
-      unitPrice: (json['unit_price'] ?? json['price'] as num?)?.toInt() ?? 0,
-      quantity: (json['qty'] ?? json['quantity'] as num?)?.toInt() ?? 1,
+      price: priceVal,
+      quantity: (json['qty'] as num?)?.toInt() ?? (json['quantity'] as num?)?.toInt() ?? 1,
       imageUrl: json['image_url'] as String?,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'item_id': itemId,
+      'item_id': id,
       'product_id': productId,
       'name': name,
       'brand_name': brandName,
-      'unit_price': unitPrice,
+      'unit_price': price,
       'qty': quantity,
       'image_url': imageUrl,
     };

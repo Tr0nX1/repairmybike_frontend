@@ -1,6 +1,6 @@
 import 'package:dio/dio.dart';
-import '../models/cart.dart';
 import '../utils/api_config.dart';
+import '../models/cart.dart';
 
 class CartApi {
   final Dio _dio;
@@ -16,14 +16,10 @@ class CartApi {
         ),
         baseUrl = base ?? apiBaseSpareParts;
 
-  Future<Cart> getCart({String? cartKey, String? sessionToken}) async {
+  Future<Cart> getCart({required String sessionId}) async {
     final resp = await _dio.get(
       '$baseUrl/cart/',
-      options: Options(headers: {
-        if (cartKey != null && cartKey.isNotEmpty) 'Cart-Key': cartKey,
-        if (sessionToken != null && sessionToken.isNotEmpty)
-          'Authorization': 'Bearer $sessionToken',
-      }),
+      queryParameters: {'session_id': sessionId},
     );
     final data = resp.data;
     if (data is Map<String, dynamic>) {
@@ -39,21 +35,16 @@ class CartApi {
   Future<Cart> addItem({
     required int partId,
     int quantity = 1,
-    String? cartKey,
-    String? sessionToken,
+    required String sessionId,
   }) async {
     final payload = {
+      'session_id': sessionId,
       'spare_part_id': partId,
       'quantity': quantity,
     };
     final resp = await _dio.post(
       '$baseUrl/cart/add/',
       data: payload,
-      options: Options(headers: {
-        if (cartKey != null && cartKey.isNotEmpty) 'Cart-Key': cartKey,
-        if (sessionToken != null && sessionToken.isNotEmpty)
-          'Authorization': 'Bearer $sessionToken',
-      }),
     );
     final data = resp.data;
     if (data is Map<String, dynamic>) {
@@ -68,18 +59,16 @@ class CartApi {
   Future<Cart> updateItem({
     required int itemId,
     required int quantity,
-    String? cartKey,
-    String? sessionToken,
+    required String sessionId,
   }) async {
-    final payload = {'quantity': quantity};
+    final payload = {
+      'session_id': sessionId,
+      'item_id': itemId,
+      'quantity': quantity,
+    };
     final resp = await _dio.patch(
-      '$baseUrl/cart/items/$itemId/',
+      '$baseUrl/cart/update_item/',
       data: payload,
-      options: Options(headers: {
-        if (cartKey != null && cartKey.isNotEmpty) 'Cart-Key': cartKey,
-        if (sessionToken != null && sessionToken.isNotEmpty)
-          'Authorization': 'Bearer $sessionToken',
-      }),
     );
     final data = resp.data;
     if (data is Map<String, dynamic>) {
@@ -93,16 +82,29 @@ class CartApi {
 
   Future<Cart> removeItem({
     required int itemId,
-    String? cartKey,
-    String? sessionToken,
+    required String sessionId,
   }) async {
     final resp = await _dio.delete(
-      '$baseUrl/cart/items/$itemId/',
-      options: Options(headers: {
-        if (cartKey != null && cartKey.isNotEmpty) 'Cart-Key': cartKey,
-        if (sessionToken != null && sessionToken.isNotEmpty)
-          'Authorization': 'Bearer $sessionToken',
-      }),
+      '$baseUrl/cart/remove_item/',
+      queryParameters: {
+        'session_id': sessionId,
+        'item_id': itemId,
+      },
+    );
+    final data = resp.data;
+    if (data is Map<String, dynamic>) {
+      final cartCandidate = data['data'] ?? data['cart'] ?? data;
+      if (cartCandidate is Map<String, dynamic>) {
+        return Cart.fromJson(cartCandidate);
+      }
+    }
+    return Cart.empty();
+  }
+
+  Future<Cart> clear({required String sessionId}) async {
+    final resp = await _dio.delete(
+      '$baseUrl/cart/clear/',
+      queryParameters: {'session_id': sessionId},
     );
     final data = resp.data;
     if (data is Map<String, dynamic>) {

@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../models/service.dart';
 import '../utils/api_config.dart';
 
@@ -6,13 +7,40 @@ class ServiceApi {
   final Dio _dio;
 
   ServiceApi()
-      : _dio = Dio(
-          BaseOptions(
-            baseUrl: backendBase,
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 15),
-          ),
-        );
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: resolveBackendBase(),
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 15),
+        ),
+      ) {
+    assert(() {
+      _dio.interceptors.add(
+        LogInterceptor(request: true, responseBody: false, error: true),
+      );
+      _dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (o, h) {
+            debugPrint('➡️ ${o.method} ${o.uri}');
+            h.next(o);
+          },
+          onResponse: (r, h) {
+            debugPrint(
+              '✅ ${r.requestOptions.method} ${r.requestOptions.uri} -> ${r.statusCode}',
+            );
+            h.next(r);
+          },
+          onError: (e, h) {
+            debugPrint(
+              '❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message}',
+            );
+            h.next(e);
+          },
+        ),
+      );
+      return true;
+    }());
+  }
 
   Future<List<Service>> getServices({int? categoryId}) async {
     final res = await _dio.get(

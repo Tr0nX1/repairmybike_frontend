@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../utils/api_config.dart';
 
 class VehicleTypeItem {
@@ -78,11 +79,30 @@ class VehiclesApi {
   VehiclesApi()
       : _dio = Dio(
           BaseOptions(
-            baseUrl: resolveBackendBase(),
+            baseUrl: backendBase,
             connectTimeout: const Duration(seconds: 10),
             receiveTimeout: const Duration(seconds: 15),
           ),
-        );
+        ) {
+    assert(() {
+      _dio.interceptors.add(LogInterceptor(request: true, responseBody: false, error: true));
+      _dio.interceptors.add(InterceptorsWrapper(
+        onRequest: (o, h) {
+          debugPrint('➡️ ${o.method} ${o.uri}');
+          h.next(o);
+        },
+        onResponse: (r, h) {
+          debugPrint('✅ ${r.requestOptions.method} ${r.requestOptions.uri} -> ${r.statusCode}');
+          h.next(r);
+        },
+        onError: (e, h) {
+          debugPrint('❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message}');
+          h.next(e);
+        },
+      ));
+      return true;
+    }());
+  }
 
   Future<List<VehicleTypeItem>> getVehicleTypes() async {
     final res = await _dio.get('/api/vehicles/vehicle-types/');

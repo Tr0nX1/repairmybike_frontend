@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 import '../data/booking_api.dart';
+import '../data/order_api.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../data/app_state.dart';
 
 class BookingListPage extends StatefulWidget {
@@ -101,6 +103,7 @@ class _BookingListPageState extends State<BookingListPage> {
         sessionToken: AppState.sessionToken,
       );
       setState(() => _bookings = items);
+      await _loadSparePartsOrders();
       // NOTE: When subscription/spare parts endpoints are added, fetch and
       // assign to _subscriptionBookings and _sparePartsBookings similarly.
       // Start/refresh auto polling after a successful search.
@@ -113,6 +116,35 @@ class _BookingListPageState extends State<BookingListPage> {
       _showSnack('Failed to fetch bookings: $msg');
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadSparePartsOrders() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final sessionId = prefs.getString('session_id_v1');
+      if (sessionId == null || sessionId.isEmpty) {
+        setState(() => _sparePartsBookings = []);
+        return;
+      }
+      final api = OrderApi();
+      final orders = await api.listOrders(sessionId: sessionId);
+      final mapped = orders.map((o) => {
+            'id': o.id,
+            'total_amount': o.total,
+            'booking_status': o.status,
+            'payment_status': o.paymentStatus,
+            'created_at': DateTime.now().toIso8601String(),
+            'updated_at': null,
+            'customer': {'name': o.customerName},
+            'services': o.items.map((i) => {'name': i.name}).toList(),
+            'service_location': 'processing',
+            'appointment_date': null,
+            'appointment_time': null,
+          }).toList();
+      setState(() => _sparePartsBookings = mapped);
+    } catch (e) {
+      // Ignore; just don’t show spare parts section on failure
     }
   }
 

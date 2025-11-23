@@ -4,7 +4,7 @@ import 'package:flutter/foundation.dart';
 
 const String backendBase = String.fromEnvironment(
   'BACKEND_BASE',
-  defaultValue: 'https://repairmybikebackend-production.up.railway.app',
+  defaultValue: 'http://127.0.0.1:8000',
 );
 
 // Resolve base URL per platform (fixes Android emulator localhost mapping)
@@ -28,7 +28,7 @@ String resolveBackendBase() {
   return base;
 }
 
-// Convenience bases for common API groups
-const String apiBaseSpareParts = '$backendBase/api/spare-parts';
-const String apiBaseVehicles = '$backendBase/api/vehicles';
-const String apiBaseServices = '$backendBase/api/services';
+// Convenience bases for common API groups (dynamic to support local dev overrides)
+String get apiBaseSpareParts => '${resolveBackendBase()}/api/spare-parts';
+String get apiBaseVehicles => '${resolveBackendBase()}/api/vehicles';
+String get apiBaseServices => '${resolveBackendBase()}/api/services';

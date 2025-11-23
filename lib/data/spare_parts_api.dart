@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../utils/api_config.dart';
 import '../models/spare_part.dart';
 import '../models/spare_part_category.dart';
@@ -10,7 +11,26 @@ class SparePartsApi {
 
   SparePartsApi({Dio? dio, String? base})
       : _dio = dio ?? Dio(),
-        baseUrl = base ?? apiBaseSpareParts;
+        baseUrl = base ?? apiBaseSpareParts {
+    assert(() {
+      _dio.interceptors.add(LogInterceptor(request: true, responseBody: false, error: true));
+      _dio.interceptors.add(InterceptorsWrapper(
+        onRequest: (o, h) {
+          debugPrint('➡️ ${o.method} ${o.uri}');
+          h.next(o);
+        },
+        onResponse: (r, h) {
+          debugPrint('✅ ${r.requestOptions.method} ${r.requestOptions.uri} -> ${r.statusCode}');
+          h.next(r);
+        },
+        onError: (e, h) {
+          debugPrint('❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message}');
+          h.next(e);
+        },
+      ));
+      return true;
+    }());
+  }
 
   Future<List<SparePartListItem>> getParts({int? categoryId, int? brandId, bool? inStock, String? search}) async {
     final params = <String, dynamic>{};

@@ -16,22 +16,29 @@ class OrderItem {
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
+    int _toInt(dynamic v) {
+      if (v is num) return v.toInt();
+      if (v is String) {
+        final d = double.tryParse(v);
+        if (d != null) return d.round();
+      }
+      return 0;
+    }
     return OrderItem(
-      productId: (json['product_id'] ?? json['spare_part_id'] as num).toInt(),
-      name: json['name'] as String? ?? '',
-      unitPrice: (json['unit_price'] ?? json['price'] as num?)?.toInt() ?? 0,
-      quantity: (json['qty'] ?? json['quantity'] as num?)?.toInt() ?? 1,
-      lineTotal: (json['line_total'] as num?)?.toInt() ??
-          (((json['unit_price'] ?? json['price'] as num?)?.toInt() ?? 0) * ((json['qty'] ?? json['quantity'] as num?)?.toInt() ?? 1)),
+      productId: (json['spare_part'] as num?)?.toInt() ?? (json['spare_part_id'] as num?)?.toInt() ?? (json['product_id'] as num?)?.toInt() ?? 0,
+      name: json['part_name'] as String? ?? (json['name'] as String? ?? ''),
+      unitPrice: _toInt(json['unit_price'] ?? json['price']),
+      quantity: (json['quantity'] as num?)?.toInt() ?? (json['qty'] as num?)?.toInt() ?? 1,
+      lineTotal: _toInt(json['total_price'] ?? json['line_total']),
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
-      'product_id': productId,
+      'spare_part_id': productId,
       'name': name,
       'unit_price': unitPrice,
-      'qty': quantity,
+      'quantity': quantity,
       'line_total': lineTotal,
     };
   }
@@ -39,28 +46,28 @@ class OrderItem {
 
 class Order {
   final int id;
-  final String orderCode;
-  final String status; // pending_cash, confirmed, fulfilled, cancelled
-  final String paymentMethod; // "cash"
-  final int subtotal;
-  final int tax;
-  final int shippingFee;
+  final String sessionId;
+  final String status;
+  final String paymentMethod;
+  final String paymentStatus;
+  final String currency;
   final int total;
-  final String? shippingAddress;
-  final String? phone;
+  final String customerName;
+  final String phone;
+  final String address;
   final List<OrderItem> items;
 
   Order({
     required this.id,
-    required this.orderCode,
+    required this.sessionId,
     required this.status,
     required this.paymentMethod,
-    required this.subtotal,
-    required this.tax,
-    required this.shippingFee,
+    required this.paymentStatus,
+    required this.currency,
     required this.total,
-    this.shippingAddress,
-    this.phone,
+    required this.customerName,
+    required this.phone,
+    required this.address,
     required this.items,
   });
 
@@ -69,17 +76,25 @@ class Order {
         ? json['data'] as Map<String, dynamic>
         : json;
     final itemsList = (map['items'] ?? []) as List?;
+    int _toInt(dynamic v) {
+      if (v is num) return v.toInt();
+      if (v is String) {
+        final d = double.tryParse(v);
+        if (d != null) return d.round();
+      }
+      return 0;
+    }
     return Order(
       id: (map['id'] as num).toInt(),
-      orderCode: map['order_code'] as String? ?? (map['code'] as String? ?? ''),
-      status: map['status'] as String? ?? 'pending_cash',
+      sessionId: map['session_id'] as String? ?? '',
+      status: map['status'] as String? ?? 'created',
       paymentMethod: map['payment_method'] as String? ?? 'cash',
-      subtotal: (map['subtotal'] as num?)?.toInt() ?? 0,
-      tax: (map['tax'] as num?)?.toInt() ?? 0,
-      shippingFee: (map['shipping_fee'] as num?)?.toInt() ?? 0,
-      total: (map['total'] as num?)?.toInt() ?? 0,
-      shippingAddress: map['shipping_address'] as String?,
-      phone: map['phone'] as String?,
+      paymentStatus: map['payment_status'] as String? ?? 'cash_due',
+      currency: map['currency'] as String? ?? 'INR',
+      total: _toInt(map['amount_total'] ?? map['total']),
+      customerName: map['customer_name'] as String? ?? '',
+      phone: map['phone'] as String? ?? '',
+      address: map['address'] as String? ?? '',
       items: (itemsList ?? const [])
           .whereType<Map<String, dynamic>>()
           .map(OrderItem.fromJson)
@@ -90,15 +105,15 @@ class Order {
   Map<String, dynamic> toJson() {
     return {
       'id': id,
-      'order_code': orderCode,
+      'session_id': sessionId,
       'status': status,
       'payment_method': paymentMethod,
-      'subtotal': subtotal,
-      'tax': tax,
-      'shipping_fee': shippingFee,
-      'total': total,
-      'shipping_address': shippingAddress,
+      'payment_status': paymentStatus,
+      'currency': currency,
+      'amount_total': total,
+      'customer_name': customerName,
       'phone': phone,
+      'address': address,
       'items': items.map((e) => e.toJson()).toList(),
     };
   }

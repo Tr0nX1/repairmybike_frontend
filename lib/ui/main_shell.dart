@@ -3,7 +3,7 @@ import 'home_page.dart';
 // import 'services_page.dart';
 import 'booking_list_page.dart';
 import 'search_page.dart';
-import 'qr_scanner_page.dart';
+import 'cart_page.dart';
 import 'profile_page.dart';
 
 class MainShell extends StatefulWidget {
@@ -19,7 +19,7 @@ class _MainShellState extends State<MainShell> {
   List<Widget> get _pages => [
         const HomePage(),
         const SearchPage(),
-        const QrScannerPage(),
+        const CartPage(),
         const BookingListPage(),
         const ProfilePage(),
       ];
@@ -41,7 +41,7 @@ class _MainShellState extends State<MainShell> {
         items: const [
           BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Home'),
           BottomNavigationBarItem(icon: Icon(Icons.search), label: 'Search'),
-          BottomNavigationBarItem(icon: Icon(Icons.qr_code_2), label: 'Scan'),
+          BottomNavigationBarItem(icon: Icon(Icons.shopping_cart), label: 'Cart'),
           BottomNavigationBarItem(icon: Icon(Icons.shopping_bag), label: 'Bookings'),
           BottomNavigationBarItem(icon: Icon(Icons.person), label: 'Profile'),
         ],

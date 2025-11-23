@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 import '../models/order.dart';
 import '../utils/api_config.dart';
 
@@ -14,31 +15,40 @@ class OrderApi {
             receiveTimeout: const Duration(seconds: 15),
           ),
         ),
-        baseUrl = base ?? apiBaseSpareParts;
+        baseUrl = base ?? apiBaseSpareParts {
+    assert(() {
+      _dio.interceptors.add(LogInterceptor(request: true, responseBody: false, error: true));
+      _dio.interceptors.add(InterceptorsWrapper(
+        onRequest: (o, h) {
+          debugPrint('➡️ ${o.method} ${o.uri}');
+          h.next(o);
+        },
+        onResponse: (r, h) {
+          debugPrint('✅ ${r.requestOptions.method} ${r.requestOptions.uri} -> ${r.statusCode}');
+          h.next(r);
+        },
+        onError: (e, h) {
+          debugPrint('❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message}');
+          h.next(e);
+        },
+      ));
+      return true;
+    }());
+  }
 
   Future<Order> checkoutCash({
-    required String shippingAddress,
+    required String sessionId,
+    required String customerName,
     required String phone,
-    String? cartKey,
-    String? sessionToken,
-    String? idempotencyKey,
+    required String address,
   }) async {
     final payload = {
-      'shipping_address': shippingAddress,
+      'session_id': sessionId,
+      'customer_name': customerName,
       'phone': phone,
-      'payment_method': 'cash',
+      'address': address,
     };
-    final resp = await _dio.post(
-      '$baseUrl/cart/checkout/',
-      data: payload,
-      options: Options(headers: {
-        if (cartKey != null && cartKey.isNotEmpty) 'Cart-Key': cartKey,
-        if (sessionToken != null && sessionToken.isNotEmpty)
-          'Authorization': 'Bearer $sessionToken',
-        if (idempotencyKey != null && idempotencyKey.isNotEmpty)
-          'Idempotency-Key': idempotencyKey,
-      }),
-    );
+    final resp = await _dio.post('$baseUrl/cart/checkout/', data: payload);
     final body = resp.data;
     if (body is Map<String, dynamic>) {
       final orderCandidate = body['data'] ?? body['order'] ?? body;
@@ -47,5 +57,47 @@ class OrderApi {
       }
     }
     throw Exception('Unexpected response shape for checkout');
+  }
+
+  Future<Order> buyNow({
+    required String sessionId,
+    required int sparePartId,
+    required int quantity,
+    required String customerName,
+    required String phone,
+    required String address,
+  }) async {
+    final payload = {
+      'session_id': sessionId,
+      'spare_part_id': sparePartId,
+      'quantity': quantity,
+      'customer_name': customerName,
+      'phone': phone,
+      'address': address,
+    };
+    final resp = await _dio.post('$baseUrl/cart/buy_now/', data: payload);
+    final body = resp.data;
+    if (body is Map<String, dynamic>) {
+      final orderCandidate = body['data'] ?? body['order'] ?? body;
+      if (orderCandidate is Map<String, dynamic>) {
+        return Order.fromJson(orderCandidate);
+      }
+    }
+    throw Exception('Unexpected response shape for buy_now');
+  }
+
+  Future<List<Order>> listOrders({required String sessionId}) async {
+    final resp = await _dio.get('$baseUrl/orders/', queryParameters: {'session_id': sessionId});
+    final body = resp.data;
+    if (body is Map && body['data'] is List) {
+      return (body['data'] as List)
+          .whereType<Map<String, dynamic>>()
+          .map(Order.fromJson)
+          .toList();
+    }
+    if (body is List) {
+      return body.whereType<Map<String, dynamic>>().map(Order.fromJson).toList();
+    }
+    return [];
   }
 }

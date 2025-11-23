@@ -18,6 +18,7 @@ class AppState {
   static const _kLastCustomerPhone = 'lastCustomerPhone';
   static const _kLikedServices = 'likedServices';
   static const _kFeedbackPrefix = 'feedback_service_';
+  static const _kPendingAction = 'pending_action';
 
   static String? lastCustomerPhone;
   static Set<int> likedServiceIds = <int>{};
@@ -260,6 +261,28 @@ class AppState {
       _kLikedServices,
       likedServiceIds.map((e) => e.toString()).toList(),
     );
+  }
+
+  // Pending action persistence
+  static Future<void> setPendingAction(Map<String, dynamic>? action) async {
+    final prefs = await SharedPreferences.getInstance();
+    if (action == null) {
+      await prefs.remove(_kPendingAction);
+      return;
+    }
+    await prefs.setString(_kPendingAction, jsonEncode(action));
+  }
+
+  static Future<Map<String, dynamic>?> takePendingAction() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_kPendingAction);
+    if (raw == null) return null;
+    await prefs.remove(_kPendingAction);
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is Map<String, dynamic>) return decoded;
+    } catch (_) {}
+    return null;
   }
 
   // Feedback storage (local until backend endpoint exists)

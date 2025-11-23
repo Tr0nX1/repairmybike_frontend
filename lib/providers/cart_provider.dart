@@ -10,23 +10,29 @@ import '../data/app_state.dart';
 
 // Persistence keys
 const String _kCartJson = 'cart_json_v1';
-const String _kCartKey = 'cart_key_v1';
+const String _kCartKey = 'session_id_v1';
 
 String _generateCartKey() {
   final millis = DateTime.now().millisecondsSinceEpoch;
   final rand = Random().nextInt(1 << 31);
-  return 'ck_${millis}_$rand';
+  return 'sess_${millis}_$rand';
 }
 
 final cartApiProvider = Provider<CartApi>((ref) => CartApi());
 final orderApiProvider = Provider<OrderApi>((ref) => OrderApi());
 
-class CartNotifier extends StateNotifier<Cart> {
-  final CartApi _api;
+class CartNotifier extends Notifier<Cart> {
+  late final CartApi _api;
 
-  CartNotifier(this._api) : super(Cart.empty());
+  @override
+  Cart build() {
+    _api = ref.read(cartApiProvider);
+    // Kick off async load; keep initial empty state until it arrives
+    Future(() async => await load());
+    return Cart.empty();
+  }
 
-  Future<String> _ensureCartKey() async {
+  Future<String> _ensureSessionId() async {
     final prefs = await SharedPreferences.getInstance();
     var key = prefs.getString(_kCartKey);
     if (key == null || key.isEmpty) {
@@ -49,67 +55,62 @@ class CartNotifier extends StateNotifier<Cart> {
         // ignore decode errors and fetch from server
       }
     }
-    final cartKey = await _ensureCartKey();
-    final session = AppState.sessionToken;
-    final latest = await _api.getCart(cartKey: cartKey, sessionToken: session);
+    final sessionId = await _ensureSessionId();
+    final latest = await _api.getCart(sessionId: sessionId);
     state = latest;
     await _persist(latest);
   }
 
   Future<void> addItem({required int partId, int quantity = 1}) async {
-    final cartKey = await _ensureCartKey();
-    final session = AppState.sessionToken;
-    final updated = await _api.addItem(
-      partId: partId,
-      quantity: quantity,
-      cartKey: cartKey,
-      sessionToken: session,
-    );
+    final sessionId = await _ensureSessionId();
+    final updated = await _api.addItem(partId: partId, quantity: quantity, sessionId: sessionId);
     state = updated;
     await _persist(updated);
   }
 
   Future<void> updateItem({required int itemId, required int quantity}) async {
-    final cartKey = await _ensureCartKey();
-    final session = AppState.sessionToken;
-    final updated = await _api.updateItem(
-      itemId: itemId,
-      quantity: quantity,
-      cartKey: cartKey,
-      sessionToken: session,
-    );
+    final sessionId = await _ensureSessionId();
+    final updated = await _api.updateItem(itemId: itemId, quantity: quantity, sessionId: sessionId);
     state = updated;
     await _persist(updated);
   }
 
   Future<void> removeItem({required int itemId}) async {
-    final cartKey = await _ensureCartKey();
-    final session = AppState.sessionToken;
-    final updated = await _api.removeItem(
-      itemId: itemId,
-      cartKey: cartKey,
-      sessionToken: session,
-    );
+    final sessionId = await _ensureSessionId();
+    final updated = await _api.removeItem(itemId: itemId, sessionId: sessionId);
     state = updated;
     await _persist(updated);
   }
 
   Future<Order> checkoutCash({required String shippingAddress, required String phone}) async {
     final prefs = await SharedPreferences.getInstance();
-    final cartKey = await _ensureCartKey();
-    final session = AppState.sessionToken;
-    final idemKey = 'idem_${DateTime.now().millisecondsSinceEpoch}_${Random().nextInt(1 << 20)}';
+    final sessionId = await _ensureSessionId();
+    final name = AppState.fullName ?? 'Customer';
     final orderApi = OrderApi();
     final order = await orderApi.checkoutCash(
-      shippingAddress: shippingAddress,
+      sessionId: sessionId,
+      customerName: name,
       phone: phone,
-      cartKey: cartKey,
-      sessionToken: session,
-      idempotencyKey: idemKey,
+      address: shippingAddress,
     );
     // Clear cart on successful checkout
     state = Cart.empty();
     await prefs.remove(_kCartJson);
+    return order;
+  }
+
+  Future<Order> buyNow({required int sparePartId, int quantity = 1, required String shippingAddress, required String phone}) async {
+    final sessionId = await _ensureSessionId();
+    final name = AppState.fullName ?? 'Customer';
+    final orderApi = OrderApi();
+    final order = await orderApi.buyNow(
+      sessionId: sessionId,
+      sparePartId: sparePartId,
+      quantity: quantity,
+      customerName: name,
+      phone: phone,
+      address: shippingAddress,
+    );
     return order;
   }
 
@@ -119,10 +120,4 @@ class CartNotifier extends StateNotifier<Cart> {
   }
 }
 
-final cartProvider = StateNotifierProvider<CartNotifier, Cart>((ref) {
-  final api = ref.read(cartApiProvider);
-  final notifier = CartNotifier(api);
-  // Fire-and-forget initial load
-  notifier.load();
-  return notifier;
-});
+final cartProvider = NotifierProvider<CartNotifier, Cart>(CartNotifier.new);

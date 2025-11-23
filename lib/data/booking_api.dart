@@ -5,13 +5,13 @@ class BookingApi {
   final Dio _dio;
 
   BookingApi()
-      : _dio = Dio(
-          BaseOptions(
-            baseUrl: backendBase,
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 15),
-          ),
-        );
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: resolveBackendBase(),
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 15),
+        ),
+      );
 
   /// Create a booking using cash payment only.
   ///
@@ -108,7 +108,10 @@ class BookingApi {
 
   /// List bookings filtered by customer phone.
   /// Returns a list of booking summary maps per backend list serializer.
-  Future<List<Map<String, dynamic>>> getBookingsByPhone(String phone, {String? sessionToken}) async {
+  Future<List<Map<String, dynamic>>> getBookingsByPhone(
+    String phone, {
+    String? sessionToken,
+  }) async {
     try {
       final res = await _dio.get(
         '/api/bookings/bookings/',
@@ -122,10 +125,7 @@ class BookingApi {
       final body = res.data;
       // Accept plain list or wrapped map {data: [...]}
       if (body is List) {
-        return body
-            .whereType<Map<String, dynamic>>()
-            .map((e) => e)
-            .toList();
+        return body.whereType<Map<String, dynamic>>().map((e) => e).toList();
       }
       if (body is Map<String, dynamic>) {
         final error = body['error'] == true;
@@ -134,10 +134,7 @@ class BookingApi {
         }
         final data = body['data'] ?? body['results'];
         if (data is List) {
-          return data
-              .whereType<Map<String, dynamic>>()
-              .map((e) => e)
-              .toList();
+          return data.whereType<Map<String, dynamic>>().map((e) => e).toList();
         }
       }
       throw Exception('Unexpected response shape for bookings list');
@@ -145,7 +142,9 @@ class BookingApi {
       final code = e.response?.statusCode ?? 0;
       if (code == 429) {
         // Friendlier message for DRF throttling
-        throw Exception('Too many requests (429). Please wait a minute and try again.');
+        throw Exception(
+          'Too many requests (429). Please wait a minute and try again.',
+        );
       }
       // Bubble up original server message when available
       final data = e.response?.data;
@@ -166,7 +165,10 @@ class BookingApi {
       'appointment_date': appointmentDate,
       'appointment_time': appointmentTime,
     };
-    final res = await _dio.patch('/api/bookings/bookings/$bookingId/', data: payload);
+    final res = await _dio.patch(
+      '/api/bookings/bookings/$bookingId/',
+      data: payload,
+    );
     final body = res.data;
     if (body is Map<String, dynamic>) {
       final error = body['error'] == true;

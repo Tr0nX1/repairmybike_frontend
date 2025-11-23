@@ -7,7 +7,7 @@ class AuthApi {
   AuthApi()
       : _dio = Dio(
           BaseOptions(
-            baseUrl: backendBase,
+            baseUrl: resolveBackendBase(),
             connectTimeout: const Duration(seconds: 10),
             receiveTimeout: const Duration(seconds: 15),
           ),
