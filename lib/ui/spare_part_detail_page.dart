@@ -467,15 +467,6 @@ class _SpecsGrid extends StatelessWidget {
   }
 }
 
-class SpecsGridPreview extends StatelessWidget {
-  final Map<String, String> items;
-  const SpecsGridPreview({super.key, required this.items});
-  @override
-  Widget build(BuildContext context) {
-    return _SpecsGrid(items: items);
-  }
-}
-
 class _FitmentCard extends StatelessWidget {
   final SparePartListItem item;
   const _FitmentCard({required this.item});

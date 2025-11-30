@@ -82,73 +82,97 @@ class _VehicleTypePageState extends State<VehicleTypePage> {
                   child: CircularProgressIndicator(),
                 )
               : _error != null
-                  ? Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!, style: const TextStyle(color: Colors.white70)),
-                        const SizedBox(height: 12),
-                        OutlinedButton(
-                          onPressed: _loadTypes,
-                          style: OutlinedButton.styleFrom(side: const BorderSide(color: accent)),
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    )
-                  : GridView.builder(
-                      shrinkWrap: true,
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: MediaQuery.of(context).size.width < 600 ? 2 : 3,
-                        childAspectRatio: 0.95,
-                        crossAxisSpacing: 12,
-                        mainAxisSpacing: 12,
-                      ),
-                      itemCount: _types.length,
-                      itemBuilder: (context, index) {
-                        final item = _types[index];
-                        final imgUrl = buildImageUrl(item.image);
-                        return InkWell(
-                          onTap: () => _select(item),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: const Color(0xFF171717),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: border),
-                            ),
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.center,
-                              children: [
-                                Expanded(
-                                  child: imgUrl != null
-                                      ? ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: Image.network(
-                                            imgUrl,
-                                            fit: BoxFit.cover,
-                                            alignment: Alignment.center,
-                                            loadingBuilder: (context, child, progress) {
-                                              if (progress == null) return child;
-                                              return const Center(child: CircularProgressIndicator());
-                                            },
-                                            errorBuilder: (_, __, ___) => const Icon(Icons.two_wheeler, color: Colors.white54, size: 48),
-                                          ),
-                                        )
-                                      : const Icon(Icons.two_wheeler, color: Colors.white54, size: 48),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  item.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      _error!,
+                      style: const TextStyle(color: Colors.white70),
                     ),
+                    const SizedBox(height: 12),
+                    OutlinedButton(
+                      onPressed: _loadTypes,
+                      style: OutlinedButton.styleFrom(
+                        side: const BorderSide(color: accent),
+                      ),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                )
+              : GridView.builder(
+                  shrinkWrap: true,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: MediaQuery.of(context).size.width < 600
+                        ? 2
+                        : 3,
+                    childAspectRatio: 0.95,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                  ),
+                  itemCount: _types.length,
+                  itemBuilder: (context, index) {
+                    final item = _types[index];
+                    final imgUrl = buildImageUrl(item.image);
+                    return InkWell(
+                      onTap: () => _select(item),
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF171717),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(color: border),
+                        ),
+                        padding: const EdgeInsets.all(12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.center,
+                          children: [
+                            Expanded(
+                              child: imgUrl != null
+                                  ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(8),
+                                      child: Image.network(
+                                        imgUrl,
+                                        fit: BoxFit.cover,
+                                        alignment: Alignment.center,
+                                        loadingBuilder:
+                                            (context, child, progress) {
+                                              if (progress == null)
+                                                return child;
+                                              return const Center(
+                                                child:
+                                                    CircularProgressIndicator(),
+                                              );
+                                            },
+                                        errorBuilder: (_, __, ___) =>
+                                            const Icon(
+                                              Icons.two_wheeler,
+                                              color: Colors.white54,
+                                              size: 48,
+                                            ),
+                                      ),
+                                    )
+                                  : const Icon(
+                                      Icons.two_wheeler,
+                                      color: Colors.white54,
+                                      size: 48,
+                                    ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              item.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
         ),
       ),
     );

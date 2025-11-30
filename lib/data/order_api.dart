@@ -48,15 +48,30 @@ class OrderApi {
       'phone': phone,
       'address': address,
     };
-    final resp = await _dio.post('$baseUrl/cart/checkout/', data: payload);
-    final body = resp.data;
-    if (body is Map<String, dynamic>) {
-      final orderCandidate = body['data'] ?? body['order'] ?? body;
-      if (orderCandidate is Map<String, dynamic>) {
-        return Order.fromJson(orderCandidate);
+    try {
+      final resp = await _dio.post('$baseUrl/cart/checkout/', data: payload);
+      final body = resp.data;
+      if (body is Map<String, dynamic>) {
+        final orderCandidate = body['data'] ?? body['order'] ?? body;
+        if (orderCandidate is Map<String, dynamic>) {
+          return Order.fromJson(orderCandidate);
+        }
+        final err = body['message'] ?? body['error'] ?? 'Unexpected response';
+        throw Exception(err);
       }
+      throw Exception('Unexpected response shape for checkout');
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 404) {
+        throw Exception('Order endpoint unavailable (404). Please try again later.');
+      }
+      final data = e.response?.data;
+      var msg = 'Checkout failed';
+      if (data is Map && data['message'] is String) msg = data['message'];
+      if (data is Map && data['error'] is String) msg = data['error'];
+      if (data is String && data.isNotEmpty) msg = data;
+      throw Exception(msg);
     }
-    throw Exception('Unexpected response shape for checkout');
   }
 
   Future<Order> buyNow({
@@ -75,15 +90,30 @@ class OrderApi {
       'phone': phone,
       'address': address,
     };
-    final resp = await _dio.post('$baseUrl/cart/buy_now/', data: payload);
-    final body = resp.data;
-    if (body is Map<String, dynamic>) {
-      final orderCandidate = body['data'] ?? body['order'] ?? body;
-      if (orderCandidate is Map<String, dynamic>) {
-        return Order.fromJson(orderCandidate);
+    try {
+      final resp = await _dio.post('$baseUrl/cart/buy_now/', data: payload);
+      final body = resp.data;
+      if (body is Map<String, dynamic>) {
+        final orderCandidate = body['data'] ?? body['order'] ?? body;
+        if (orderCandidate is Map<String, dynamic>) {
+          return Order.fromJson(orderCandidate);
+        }
+        final err = body['message'] ?? body['error'] ?? 'Unexpected response';
+        throw Exception(err);
       }
+      throw Exception('Unexpected response shape for buy_now');
+    } on DioException catch (e) {
+      final status = e.response?.statusCode;
+      if (status == 404) {
+        throw Exception('Buy-now endpoint unavailable (404). Please try again later.');
+      }
+      final data = e.response?.data;
+      var msg = 'Buy now failed';
+      if (data is Map && data['message'] is String) msg = data['message'];
+      if (data is Map && data['error'] is String) msg = data['error'];
+      if (data is String && data.isNotEmpty) msg = data;
+      throw Exception(msg);
     }
-    throw Exception('Unexpected response shape for buy_now');
   }
 
   Future<List<Order>> listOrders({required String sessionId}) async {

@@ -30,8 +30,20 @@ class _BookingListPageState extends State<BookingListPage> {
   Timer? _autoRefreshTimer;
   DateTime? _backoffUntil;
 
-  String _monthName(int m) =>
-      const ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][m-1];
+  String _monthName(int m) => const [
+    'Jan',
+    'Feb',
+    'Mar',
+    'Apr',
+    'May',
+    'Jun',
+    'Jul',
+    'Aug',
+    'Sep',
+    'Oct',
+    'Nov',
+    'Dec',
+  ][m - 1];
 
   String _fmtDateTime(dynamic v) {
     if (v == null) return '';
@@ -41,8 +53,8 @@ class _BookingListPageState extends State<BookingListPage> {
     final d = dt.toLocal();
     final h = d.hour % 12 == 0 ? 12 : d.hour % 12;
     final ampm = d.hour >= 12 ? 'PM' : 'AM';
-    return '${d.day.toString().padLeft(2,'0')} ${_monthName(d.month)} ${d.year}, '
-           '${h.toString().padLeft(2,'0')}:${d.minute.toString().padLeft(2,'0')} $ampm';
+    return '${d.day.toString().padLeft(2, '0')} ${_monthName(d.month)} ${d.year}, '
+        '${h.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')} $ampm';
   }
 
   String _fmtDate(dynamic v) {
@@ -51,7 +63,7 @@ class _BookingListPageState extends State<BookingListPage> {
     final dt = DateTime.tryParse(s);
     if (dt != null) {
       final d = dt.toLocal();
-      return '${d.day.toString().padLeft(2,'0')} ${_monthName(d.month)} ${d.year}';
+      return '${d.day.toString().padLeft(2, '0')} ${_monthName(d.month)} ${d.year}';
     }
     // Fallback: expect YYYY-MM-DD
     final parts = s.split('-');
@@ -60,7 +72,7 @@ class _BookingListPageState extends State<BookingListPage> {
       final m = int.tryParse(parts[1]);
       final d = int.tryParse(parts[2]);
       if (y != null && m != null && d != null) {
-        return '${d.toString().padLeft(2,'0')} ${_monthName(m)} $y';
+        return '${d.toString().padLeft(2, '0')} ${_monthName(m)} $y';
       }
     }
     return s;
@@ -76,7 +88,7 @@ class _BookingListPageState extends State<BookingListPage> {
       final mm = int.tryParse(parts[1]) ?? 0;
       final h = hh % 12 == 0 ? 12 : hh % 12;
       final ampm = hh >= 12 ? 'PM' : 'AM';
-      return '${h.toString().padLeft(2,'0')}:${mm.toString().padLeft(2,'0')} $ampm';
+      return '${h.toString().padLeft(2, '0')}:${mm.toString().padLeft(2, '0')} $ampm';
     }
     return s;
   }
@@ -129,19 +141,23 @@ class _BookingListPageState extends State<BookingListPage> {
       }
       final api = OrderApi();
       final orders = await api.listOrders(sessionId: sessionId);
-      final mapped = orders.map((o) => {
-            'id': o.id,
-            'total_amount': o.total,
-            'booking_status': o.status,
-            'payment_status': o.paymentStatus,
-            'created_at': DateTime.now().toIso8601String(),
-            'updated_at': null,
-            'customer': {'name': o.customerName},
-            'services': o.items.map((i) => {'name': i.name}).toList(),
-            'service_location': 'processing',
-            'appointment_date': null,
-            'appointment_time': null,
-          }).toList();
+      final mapped = orders
+          .map(
+            (o) => {
+              'id': o.id,
+              'total_amount': o.total,
+              'booking_status': o.status,
+              'payment_status': o.paymentStatus,
+              'created_at': DateTime.now().toIso8601String(),
+              'updated_at': null,
+              'customer': {'name': o.customerName},
+              'services': o.items.map((i) => {'name': i.name}).toList(),
+              'service_location': 'processing',
+              'appointment_date': null,
+              'appointment_time': null,
+            },
+          )
+          .toList();
       setState(() => _sparePartsBookings = mapped);
     } catch (e) {
       // Ignore; just don’t show spare parts section on failure
@@ -152,8 +168,11 @@ class _BookingListPageState extends State<BookingListPage> {
     _autoRefreshTimer?.cancel();
     // Poll every 60 seconds to avoid DRF throttle (429).
     _autoRefreshTimer = Timer.periodic(const Duration(seconds: 60), (_) {
-      final inBackoff = _backoffUntil != null && DateTime.now().isBefore(_backoffUntil!);
-      if (!_loading && !inBackoff && ((AppState.phoneNumber ?? '').trim().isNotEmpty)) {
+      final inBackoff =
+          _backoffUntil != null && DateTime.now().isBefore(_backoffUntil!);
+      if (!_loading &&
+          !inBackoff &&
+          ((AppState.phoneNumber ?? '').trim().isNotEmpty)) {
         _search();
       }
     });
@@ -194,6 +213,7 @@ class _BookingListPageState extends State<BookingListPage> {
       ),
     );
   }
+
   Widget _loginPrompt() {
     return Container(
       width: double.infinity,
@@ -256,9 +276,7 @@ class _BookingListPageState extends State<BookingListPage> {
       }
     }
 
-    return ListView(
-      children: children,
-    );
+    return ListView(children: children);
   }
 
   Widget _chip(String text, Color textColor) {
@@ -272,7 +290,7 @@ class _BookingListPageState extends State<BookingListPage> {
       child: Text(text, style: TextStyle(color: textColor)),
     );
   }
-  
+
   // Color-coded status chip for clearer state after status changes.
   Widget _statusChip(String status) {
     Color textColor = Colors.white70;
@@ -318,7 +336,13 @@ class _BookingListPageState extends State<BookingListPage> {
       children: [
         Expanded(child: Container(height: 1, color: border)),
         const SizedBox(width: 8),
-        Text(label, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
         const SizedBox(width: 8),
         Expanded(child: Container(height: 1, color: border)),
       ],
@@ -364,24 +388,46 @@ class _BookingListPageState extends State<BookingListPage> {
           Row(
             children: [
               Expanded(
-                child: Text('Booking #$id',
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
+                child: Text(
+                  'Booking #$id',
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
               ),
-              Text('₹$total',
-                  style: const TextStyle(color: accent, fontWeight: FontWeight.w800)),
+              Text(
+                '₹$total',
+                style: const TextStyle(
+                  color: accent,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
             ],
           ),
           const SizedBox(height: 4),
           if (custName.isNotEmpty)
-            Text(custName, style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
+            Text(
+              custName,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           const SizedBox(height: 4),
           Wrap(
             spacing: 12,
             runSpacing: 8,
             children: [
-              Text(requestedLine, style: const TextStyle(color: Colors.white70)),
+              Text(
+                requestedLine,
+                style: const TextStyle(color: Colors.white70),
+              ),
               if (updatedLine.isNotEmpty)
-                Text(updatedLine, style: const TextStyle(color: Colors.white70)),
+                Text(
+                  updatedLine,
+                  style: const TextStyle(color: Colors.white70),
+                ),
             ],
           ),
           if (scheduleLine.isNotEmpty || locationLine.isNotEmpty) ...[
@@ -391,9 +437,15 @@ class _BookingListPageState extends State<BookingListPage> {
               runSpacing: 8,
               children: [
                 if (scheduleLine.isNotEmpty)
-                  Text(scheduleLine, style: const TextStyle(color: Colors.white70)),
+                  Text(
+                    scheduleLine,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
                 if (locationLine.isNotEmpty)
-                  Text(locationLine, style: const TextStyle(color: Colors.white70)),
+                  Text(
+                    locationLine,
+                    style: const TextStyle(color: Colors.white70),
+                  ),
               ],
             ),
           ],
@@ -455,7 +507,7 @@ class _BookingListPageState extends State<BookingListPage> {
       ),
     );
   }
-  
+
   Future<void> _editScheduleDialog(Map<String, dynamic> b) async {
     final id = b['id'];
     DateTime? selectedDate;
@@ -464,80 +516,98 @@ class _BookingListPageState extends State<BookingListPage> {
     await showDialog(
       context: context,
       builder: (ctx) {
-        return StatefulBuilder(builder: (ctx, setState) {
-          return AlertDialog(
-            title: const Text('Edit Schedule'),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.calendar_today),
-                    label: Text(selectedDate == null
-                        ? 'Select date'
-                        : '${selectedDate!.day.toString().padLeft(2,'0')}-${selectedDate!.month.toString().padLeft(2,'0')}-${selectedDate!.year}'),
-                    onPressed: () async {
-                      final res = await showDatePicker(
-                        context: ctx,
-                        initialDate: selectedDate ?? DateTime.now(),
-                        firstDate: DateTime.now().subtract(const Duration(days: 0)),
-                        lastDate: DateTime.now().add(const Duration(days: 365)),
-                      );
-                      if (res != null) setState(() => selectedDate = res);
-                    },
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            return AlertDialog(
+              title: const Text('Edit Schedule'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.calendar_today),
+                      label: Text(
+                        selectedDate == null
+                            ? 'Select date'
+                            : '${selectedDate!.day.toString().padLeft(2, '0')}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.year}',
+                      ),
+                      onPressed: () async {
+                        final res = await showDatePicker(
+                          context: ctx,
+                          initialDate: selectedDate ?? DateTime.now(),
+                          firstDate: DateTime.now().subtract(
+                            const Duration(days: 0),
+                          ),
+                          lastDate: DateTime.now().add(
+                            const Duration(days: 365),
+                          ),
+                        );
+                        if (res != null) setState(() => selectedDate = res);
+                      },
+                    ),
                   ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      icon: const Icon(Icons.access_time),
+                      label: Text(
+                        selectedTime == null
+                            ? 'Select time'
+                            : '${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}',
+                      ),
+                      onPressed: () async {
+                        final res = await showTimePicker(
+                          context: ctx,
+                          initialTime:
+                              selectedTime ??
+                              const TimeOfDay(hour: 10, minute: 0),
+                        );
+                        if (res != null) setState(() => selectedTime = res);
+                      },
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cancel'),
                 ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    icon: const Icon(Icons.access_time),
-                    label: Text(selectedTime == null
-                        ? 'Select time'
-                        : '${selectedTime!.hour.toString().padLeft(2,'0')}:${selectedTime!.minute.toString().padLeft(2,'0')}'),
-                    onPressed: () async {
-                      final res = await showTimePicker(
-                        context: ctx,
-                        initialTime: selectedTime ?? const TimeOfDay(hour: 10, minute: 0),
+                TextButton(
+                  onPressed: () async {
+                    if (selectedDate == null || selectedTime == null) {
+                      _showSnack('Please select date and time');
+                      return;
+                    }
+                    final date =
+                        '${selectedDate!.year.toString().padLeft(4, '0')}-${selectedDate!.month.toString().padLeft(2, '0')}-${selectedDate!.day.toString().padLeft(2, '0')}';
+                    final time =
+                        '${selectedTime!.hour.toString().padLeft(2, '0')}:${selectedTime!.minute.toString().padLeft(2, '0')}:00';
+                    try {
+                      await _bookingApi.updateBookingSchedule(
+                        bookingId: id,
+                        appointmentDate: date,
+                        appointmentTime: time,
                       );
-                      if (res != null) setState(() => selectedTime = res);
-                    },
-                  ),
+                      if (mounted) Navigator.of(ctx).pop();
+                      _showSnack('Schedule updated');
+                      _search();
+                    } catch (e) {
+                      _showSnack('Failed to update: $e');
+                    }
+                  },
+                  child: const Text('Save'),
                 ),
               ],
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
-              TextButton(
-                onPressed: () async {
-                  if (selectedDate == null || selectedTime == null) {
-                    _showSnack('Please select date and time');
-                    return;
-                  }
-                  final date = '${selectedDate!.year.toString().padLeft(4,'0')}-${selectedDate!.month.toString().padLeft(2,'0')}-${selectedDate!.day.toString().padLeft(2,'0')}';
-                  final time = '${selectedTime!.hour.toString().padLeft(2,'0')}:${selectedTime!.minute.toString().padLeft(2,'0')}:00';
-                  try {
-                    await _bookingApi.updateBookingSchedule(
-                      bookingId: id,
-                      appointmentDate: date,
-                      appointmentTime: time,
-                    );
-                    if (mounted) Navigator.of(ctx).pop();
-                    _showSnack('Schedule updated');
-                    _search();
-                  } catch (e) {
-                    _showSnack('Failed to update: $e');
-                  }
-                },
-                child: const Text('Save'),
-              ),
-            ],
-          );
-        });
+            );
+          },
+        );
       },
     );
   }
+
   @override
   void initState() {
     super.initState();
@@ -558,48 +628,61 @@ class _BookingListPageState extends State<BookingListPage> {
   }
 
   Future<void> _changeStatusDialog(int bookingId, String currentStatus) async {
-    final statuses = ['pending', 'confirmed', 'in_progress', 'completed', 'cancelled'];
+    final statuses = [
+      'pending',
+      'confirmed',
+      'in_progress',
+      'completed',
+      'cancelled',
+    ];
     String selected = currentStatus;
     await showDialog(
       context: context,
       builder: (ctx) {
-        return StatefulBuilder(builder: (ctx, setState) {
-          return AlertDialog(
-            title: const Text('Change Booking Status'),
-            content: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final s in statuses)
-                  ChoiceChip(
-                    label: Text(s),
-                    selected: selected == s,
-                    onSelected: (_) => setState(() => selected = s),
-                  ),
-              ],
-            ),
-            actions: [
-              TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('Cancel')),
-              ElevatedButton(
-                onPressed: () async {
-                  try {
-                    final updated = await _bookingApi.staffUpdateStatus(
-                      bookingId: bookingId,
-                      status: selected,
-                      sessionToken: AppState.sessionToken ?? '',
-                    );
-                    Navigator.of(ctx).pop();
-                    _showSnack('Status updated to ${updated['booking_status'] ?? selected}');
-                    _search();
-                  } catch (e) {
-                    _showSnack('Failed to update status: $e');
-                  }
-                },
-                child: const Text('Save'),
+        return StatefulBuilder(
+          builder: (ctx, setState) {
+            return AlertDialog(
+              title: const Text('Change Booking Status'),
+              content: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final s in statuses)
+                    ChoiceChip(
+                      label: Text(s),
+                      selected: selected == s,
+                      onSelected: (_) => setState(() => selected = s),
+                    ),
+                ],
               ),
-            ],
-          );
-        });
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      final updated = await _bookingApi.staffUpdateStatus(
+                        bookingId: bookingId,
+                        status: selected,
+                        sessionToken: AppState.sessionToken ?? '',
+                      );
+                      Navigator.of(ctx).pop();
+                      _showSnack(
+                        'Status updated to ${updated['booking_status'] ?? selected}',
+                      );
+                      _search();
+                    } catch (e) {
+                      _showSnack('Failed to update status: $e');
+                    }
+                  },
+                  child: const Text('Save'),
+                ),
+              ],
+            );
+          },
+        );
       },
     );
   }

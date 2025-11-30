@@ -128,7 +128,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                 const SizedBox(height: 8),
                 Text(
                   'Professional Scooter repair at your doorstep',
-                  style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                  style: TextStyle(
+                    color: Theme.of(
+                      context,
+                    ).colorScheme.onSurface.withOpacity(0.7),
+                  ),
                 ),
                 const SizedBox(height: 16),
 
@@ -162,7 +166,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                     if (categories.isEmpty) {
                       return Text(
                         'No categories',
-                        style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7)),
+                        style: TextStyle(
+                          color: Theme.of(
+                            context,
+                          ).colorScheme.onSurface.withOpacity(0.7),
+                        ),
                       );
                     }
                     // Force 4 columns grid per requirement
@@ -193,16 +201,18 @@ class _HomePageState extends ConsumerState<HomePage> {
 
                 const SizedBox(height: 16),
                 Center(
-                    child: SizedBox(
-                      height: 46,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: Theme.of(context).colorScheme.primary,
-                          side: BorderSide(color: Theme.of(context).colorScheme.primary),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
+                  child: SizedBox(
+                    height: 46,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: Theme.of(context).colorScheme.primary,
+                        side: BorderSide(
+                          color: Theme.of(context).colorScheme.primary,
                         ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
                       onPressed: () {
                         setState(() {
                           _showAllCategories = !_showAllCategories;

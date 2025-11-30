@@ -25,14 +25,18 @@ class _AuthPageState extends State<AuthPage> {
   final _phoneCtrl = TextEditingController(text: AppState.phoneNumber ?? '');
   final _otpCtrl = TextEditingController();
   final _api = AuthApi();
-  final _usernameCtrl = TextEditingController(text: AppState.staffUsername ?? '');
+  final _usernameCtrl = TextEditingController(
+    text: AppState.staffUsername ?? '',
+  );
   final _passwordCtrl = TextEditingController();
 
   bool _loading = false;
   bool _otpStep = false;
   int _secondsLeft = 0;
   Timer? _timer;
-  String _mode = AppState.isStaff ? 'staff' : 'customer'; // 'customer' | 'staff'
+  String _mode = AppState.isStaff
+      ? 'staff'
+      : 'customer'; // 'customer' | 'staff'
 
   @override
   void dispose() {
@@ -67,7 +71,11 @@ class _AuthPageState extends State<AuthPage> {
       final res = await _api.loginStaff(username: username, password: password);
       final session = (res['session_token'] ?? '') as String;
       final refresh = (res['refresh_token'] ?? '') as String?;
-      await AppState.setStaffAuth(username: username, session: session, refresh: refresh);
+      await AppState.setStaffAuth(
+        username: username,
+        session: session,
+        refresh: refresh,
+      );
       _showSnack('Signed in as staff');
       _finish();
     } catch (e) {
@@ -149,9 +157,7 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   void _showSnack(String msg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg)),
-    );
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
   String _extractError(Object e, {required String fallback}) {
@@ -162,8 +168,10 @@ class _AuthPageState extends State<AuthPage> {
       if (status == 429) {
         return 'Too many attempts. Please wait a minute and try again.';
       }
-      if (data is Map && data['message'] is String) return data['message'] as String;
-      if (data is Map && data['error'] is String) return data['error'] as String;
+      if (data is Map && data['message'] is String)
+        return data['message'] as String;
+      if (data is Map && data['error'] is String)
+        return data['error'] as String;
       if (data is String && data.isNotEmpty) return data;
       return fallback;
     }
@@ -194,12 +202,16 @@ class _AuthPageState extends State<AuthPage> {
         return 'OTP service is temporarily unavailable. Please try again later.';
       }
       // Network/timeout issues
-      if (lower.contains('socket') || lower.contains('network') || lower.contains('timeout')) {
+      if (lower.contains('socket') ||
+          lower.contains('network') ||
+          lower.contains('timeout')) {
         return 'Network issue. Check your internet connection and try again.';
       }
       // OTP verification messages
-      if (lower.contains('invalid otp') || lower.contains('wrong otp') ||
-          lower.contains('otp code invalid') || lower.contains('expired')) {
+      if (lower.contains('invalid otp') ||
+          lower.contains('wrong otp') ||
+          lower.contains('otp code invalid') ||
+          lower.contains('expired')) {
         return 'Invalid or expired OTP. Please request a new code.';
       }
       return msg;
@@ -216,9 +228,9 @@ class _AuthPageState extends State<AuthPage> {
 
     // Requirement: If the user is authenticated and authorized, go to Home
     // directly instead of any vehicle detail/selection screen.
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MainShell()),
-    );
+    Navigator.of(
+      context,
+    ).pushReplacement(MaterialPageRoute(builder: (_) => const MainShell()));
   }
 
   @override
@@ -249,60 +261,63 @@ class _AuthPageState extends State<AuthPage> {
                 _modeSwitcher(),
                 const SizedBox(height: 12),
                 if (_mode == 'customer') ...[
-                _PhoneField(controller: _phoneCtrl),
-                const SizedBox(height: 6),
-                // Helpful hint for correct phone formatting per user's request
-                const Text(
-                  'Example: +91 94134 57023 (normalized to +919413457023)',
-                  textAlign: TextAlign.left,
-                  style: TextStyle(color: Colors.white54, fontSize: 12),
-                ),
-                const SizedBox(height: 12),
-                ElevatedButton(
-                  onPressed: _loading || _otpStep ? null : _sendOtp,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: accent,
-                    foregroundColor: Colors.black,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  _PhoneField(controller: _phoneCtrl),
+                  const SizedBox(height: 6),
+                  // Helpful hint for correct phone formatting per user's request
+                  const Text(
+                    'Example: +91 94134 57023 (normalized to +919413457023)',
+                    textAlign: TextAlign.left,
+                    style: TextStyle(color: Colors.white54, fontSize: 12),
                   ),
-                  child: const Text('Send OTP'),
-                ),
-                const SizedBox(height: 8),
-                if (_otpStep) ...[
-                  const Divider(color: border),
                   const SizedBox(height: 12),
-                  _OtpField(controller: _otpCtrl),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _loading ? null : _verifyOtp,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: accent,
-                            foregroundColor: Colors.black,
-                            padding: const EdgeInsets.symmetric(vertical: 14),
+                  ElevatedButton(
+                    onPressed: _loading || _otpStep ? null : _sendOtp,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: accent,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    child: const Text('Send OTP'),
+                  ),
+                  const SizedBox(height: 8),
+                  if (_otpStep) ...[
+                    const Divider(color: border),
+                    const SizedBox(height: 12),
+                    _OtpField(controller: _otpCtrl),
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: _loading ? null : _verifyOtp,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: accent,
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                            ),
+                            child: const Text('Verify OTP'),
                           ),
-                          child: const Text('Verify OTP'),
                         ),
-                      ),
-                      const SizedBox(width: 12),
-                      TextButton(
-                        onPressed: (_secondsLeft == 0 && !_loading)
-                            ? _sendOtp
-                            : null,
-                        child: Text(
-                          _secondsLeft == 0
-                              ? 'Resend OTP'
-                              : 'Resend in $_secondsLeft s',
-                          style: const TextStyle(color: Colors.white70),
+                        const SizedBox(width: 12),
+                        TextButton(
+                          onPressed: (_secondsLeft == 0 && !_loading)
+                              ? _sendOtp
+                              : null,
+                          child: Text(
+                            _secondsLeft == 0
+                                ? 'Resend OTP'
+                                : 'Resend in $_secondsLeft s',
+                            style: const TextStyle(color: Colors.white70),
+                          ),
                         ),
-                      )
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
                 ] else ...[
-                  _StaffFields(usernameController: _usernameCtrl, passwordController: _passwordCtrl),
+                  _StaffFields(
+                    usernameController: _usernameCtrl,
+                    passwordController: _passwordCtrl,
+                  ),
                   const SizedBox(height: 12),
                   ElevatedButton(
                     onPressed: _loading ? null : _loginStaff,
@@ -351,7 +366,7 @@ class _AuthPageState extends State<AuthPage> {
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white70, fontSize: 18),
                 ),
-              ]
+              ],
             ],
           ),
         ),
@@ -364,7 +379,11 @@ class _AuthPageState extends State<AuthPage> {
       children: [
         Expanded(
           child: OutlinedButton(
-            onPressed: _loading ? null : () => setState(() { _mode = 'customer'; }),
+            onPressed: _loading
+                ? null
+                : () => setState(() {
+                    _mode = 'customer';
+                  }),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: _mode == 'customer' ? accent : border),
               foregroundColor: Colors.white,
@@ -375,7 +394,11 @@ class _AuthPageState extends State<AuthPage> {
         const SizedBox(width: 12),
         Expanded(
           child: OutlinedButton(
-            onPressed: _loading ? null : () => setState(() { _mode = 'staff'; }),
+            onPressed: _loading
+                ? null
+                : () => setState(() {
+                    _mode = 'staff';
+                  }),
             style: OutlinedButton.styleFrom(
               side: BorderSide(color: _mode == 'staff' ? accent : border),
               foregroundColor: Colors.white,

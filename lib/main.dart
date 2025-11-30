@@ -7,7 +7,7 @@ import 'utils/api_config.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
-  debugPrint('🔥 BACKEND BASE URL: ${resolveBackendBase()}');
+  debugPrint('🔥 BACKEND BASE URL: $backendBase');
   runApp(const ProviderScope(child: MyApp()));
 }
 

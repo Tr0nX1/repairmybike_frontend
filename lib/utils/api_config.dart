@@ -1,34 +1,10 @@
-// Centralized backend base for APIs and media URLs
-// Override at build time with: --dart-define=BACKEND_BASE=http://localhost:8000
-import 'package:flutter/foundation.dart';
+// Centralized backend base for APIs and media URLs (fixed to production)
+// No environment overrides to ensure consistent interaction with production API.
+const String backendBase = 'https://repairmybikebackend-production.up.railway.app';
 
-const String backendBase = String.fromEnvironment(
-  'BACKEND_BASE',
-  defaultValue: 'http://127.0.0.1:8000',
-);
+String resolveBackendBase() => backendBase;
 
-// Resolve base URL per platform (fixes Android emulator localhost mapping)
-// On Android emulator, 127.0.0.1/localhost should be 10.0.2.2.
-String resolveBackendBase() {
-  final base = backendBase;
-  // Web uses as-is; no dart:io or emulator mapping required
-  if (kIsWeb) return base;
-
-  // Detect Android via Flutter foundation instead of dart:io (works on web builds)
-  if (defaultTargetPlatform == TargetPlatform.android) {
-    final uri = Uri.tryParse(base);
-    if (uri != null) {
-      final host = uri.host;
-      if (host == 'localhost' || host == '127.0.0.1') {
-        final mapped = uri.replace(host: '10.0.2.2');
-        return mapped.toString();
-      }
-    }
-  }
-  return base;
-}
-
-// Convenience bases for common API groups (dynamic to support local dev overrides)
-String get apiBaseSpareParts => '${resolveBackendBase()}/api/spare-parts';
-String get apiBaseVehicles => '${resolveBackendBase()}/api/vehicles';
-String get apiBaseServices => '${resolveBackendBase()}/api/services';
+// Convenience bases for common API groups (fixed to production base)
+String get apiBaseSpareParts => '$backendBase/api/spare-parts';
+String get apiBaseVehicles => '$backendBase/api/vehicles';
+String get apiBaseServices => '$backendBase/api/services';

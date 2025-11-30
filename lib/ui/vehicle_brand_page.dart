@@ -6,7 +6,12 @@ import 'vehicle_name_page.dart';
 import 'widgets/rm_app_bar.dart';
 
 class VehicleBrandPage extends StatefulWidget {
-  const VehicleBrandPage({super.key, this.phone, required this.vehicleTypeId, required this.vehicleTypeName});
+  const VehicleBrandPage({
+    super.key,
+    this.phone,
+    required this.vehicleTypeId,
+    required this.vehicleTypeName,
+  });
   final String? phone;
   final int vehicleTypeId;
   final String vehicleTypeName;
@@ -43,7 +48,11 @@ class _VehicleBrandPageState extends State<VehicleBrandPage> {
   }
 
   void _select(VehicleBrandItem item) {
-    final phone = widget.phone ?? AppState.phoneNumber ?? AppState.lastCustomerPhone ?? '';
+    final phone =
+        widget.phone ??
+        AppState.phoneNumber ??
+        AppState.lastCustomerPhone ??
+        '';
     if (phone.isNotEmpty) {
       AppState.setVehicleForPhone(phone: phone, brand: item.name);
     } else {
@@ -65,7 +74,9 @@ class _VehicleBrandPageState extends State<VehicleBrandPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: RMAppBar(title: 'Select ${widget.vehicleTypeName.toUpperCase()} Brand'),
+      appBar: RMAppBar(
+        title: 'Select ${widget.vehicleTypeName.toUpperCase()} Brand',
+      ),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
@@ -74,77 +85,104 @@ class _VehicleBrandPageState extends State<VehicleBrandPage> {
             const SizedBox(height: 20),
             Text(
               'Choose your ${widget.vehicleTypeName} brand:',
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-              ),
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
             const SizedBox(height: 30),
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _error != null
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(_error!, style: const TextStyle(color: Colors.white70)),
-                            const SizedBox(height: 12),
-                            OutlinedButton(onPressed: _loadBrands, child: const Text('Retry')),
-                          ],
-                        )
-                      : GridView.builder(
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: MediaQuery.of(context).size.width < 600 ? 2 : 3,
-                            childAspectRatio: 0.95,
-                            crossAxisSpacing: 15,
-                            mainAxisSpacing: 15,
-                          ),
-                          itemCount: _brands.length,
-                          itemBuilder: (context, index) {
-                            final item = _brands[index];
-                            final img = buildImageUrl(item.image);
-                            return InkWell(
-                              onTap: () => _select(item),
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                decoration: BoxDecoration(
-                                  color: Colors.grey[900],
-                                  borderRadius: BorderRadius.circular(12),
-                                  border: Border.all(color: Colors.grey[700]!, width: 1),
-                                ),
-                                padding: const EdgeInsets.all(12),
-                                child: Column(
-                                  children: [
-                                    Expanded(
-                                      child: img != null
-                                          ? ClipRRect(
-                                              borderRadius: BorderRadius.circular(8),
-                                              child: Image.network(
-                                                img,
-                                                fit: BoxFit.cover,
-                                                alignment: Alignment.center,
-                                                loadingBuilder: (context, child, progress) {
-                                                  if (progress == null) return child;
-                                                  return const Center(child: CircularProgressIndicator());
-                                                },
-                                                errorBuilder: (_, __, ___) => const Icon(Icons.factory, color: Colors.white54, size: 40),
-                                              ),
-                                            )
-                                          : const Icon(Icons.factory, color: Colors.white54, size: 40),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      item.name,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            );
-                          },
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _error!,
+                          style: const TextStyle(color: Colors.white70),
                         ),
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          onPressed: _loadBrands,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    )
+                  : GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: MediaQuery.of(context).size.width < 600
+                            ? 2
+                            : 3,
+                        childAspectRatio: 0.95,
+                        crossAxisSpacing: 15,
+                        mainAxisSpacing: 15,
+                      ),
+                      itemCount: _brands.length,
+                      itemBuilder: (context, index) {
+                        final item = _brands[index];
+                        final img = buildImageUrl(item.image);
+                        return InkWell(
+                          onTap: () => _select(item),
+                          borderRadius: BorderRadius.circular(12),
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: Colors.grey[900],
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: Colors.grey[700]!,
+                                width: 1,
+                              ),
+                            ),
+                            padding: const EdgeInsets.all(12),
+                            child: Column(
+                              children: [
+                                Expanded(
+                                  child: img != null
+                                      ? ClipRRect(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          child: Image.network(
+                                            img,
+                                            fit: BoxFit.cover,
+                                            alignment: Alignment.center,
+                                            loadingBuilder:
+                                                (context, child, progress) {
+                                                  if (progress == null)
+                                                    return child;
+                                                  return const Center(
+                                                    child:
+                                                        CircularProgressIndicator(),
+                                                  );
+                                                },
+                                            errorBuilder: (_, __, ___) =>
+                                                const Icon(
+                                                  Icons.factory,
+                                                  color: Colors.white54,
+                                                  size: 40,
+                                                ),
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.factory,
+                                          color: Colors.white54,
+                                          size: 40,
+                                        ),
+                                ),
+                                const SizedBox(height: 8),
+                                Text(
+                                  item.name,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: const TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),

@@ -21,7 +21,9 @@ class CartPage extends ConsumerWidget {
           final type = action['type'] as String?;
           if (type == 'checkout') {
             if (!context.mounted) return;
-            Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CheckoutPage()));
+            Navigator.of(
+              context,
+            ).push(MaterialPageRoute(builder: (_) => const CheckoutPage()));
           }
         }
       }
@@ -29,13 +31,18 @@ class CartPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? cs.surface,
-        foregroundColor: Theme.of(context).appBarTheme.foregroundColor ?? cs.onSurface,
+        backgroundColor:
+            Theme.of(context).appBarTheme.backgroundColor ?? cs.surface,
+        foregroundColor:
+            Theme.of(context).appBarTheme.foregroundColor ?? cs.onSurface,
         title: const Text('Your Cart'),
       ),
       body: cart.items.isEmpty
           ? Center(
-              child: Text('Your cart is empty', style: TextStyle(color: cs.onSurface.withOpacity(0.7))),
+              child: Text(
+                'Your cart is empty',
+                style: TextStyle(color: cs.onSurface.withOpacity(0.7)),
+              ),
             )
           : ListView.separated(
               padding: const EdgeInsets.all(16),
@@ -55,7 +62,9 @@ class CartPage extends ConsumerWidget {
                         return;
                       }
                       if (!context.mounted) return;
-                      Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CheckoutPage()));
+                      Navigator.of(context).push(
+                        MaterialPageRoute(builder: (_) => const CheckoutPage()),
+                      );
                     },
                   );
                 }
@@ -86,35 +95,60 @@ class _CartItemTile extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(item.name, style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w700)),
+                Text(
+                  item.name,
+                  style: TextStyle(
+                    color: cs.onSurface,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
                 const SizedBox(height: 4),
-                Text('₹${item.price}', style: TextStyle(color: cs.onSurfaceVariant)),
+                Text(
+                  '₹${item.price}',
+                  style: TextStyle(color: cs.onSurfaceVariant),
+                ),
               ],
             ),
           ),
-          Row(children: [
-            IconButton(
-              tooltip: 'Decrease',
-              onPressed: item.quantity > 1
-                  ? () => ref.read(cartProvider.notifier).updateItem(itemId: item.id, quantity: item.quantity - 1)
-                  : null,
-              icon: const Icon(Icons.remove_circle_outline),
-              color: cs.onSurface,
-            ),
-            Text('${item.quantity}', style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w600)),
-            IconButton(
-              tooltip: 'Increase',
-              onPressed: () => ref.read(cartProvider.notifier).updateItem(itemId: item.id, quantity: item.quantity + 1),
-              icon: const Icon(Icons.add_circle_outline),
-              color: cs.onSurface,
-            ),
-            IconButton(
-              tooltip: 'Remove',
-              onPressed: () => ref.read(cartProvider.notifier).removeItem(itemId: item.id),
-              icon: const Icon(Icons.delete_outline),
-              color: cs.onSurfaceVariant,
-            ),
-          ])
+          Row(
+            children: [
+              IconButton(
+                tooltip: 'Decrease',
+                onPressed: item.quantity > 1
+                    ? () => ref
+                          .read(cartProvider.notifier)
+                          .updateItem(
+                            itemId: item.id,
+                            quantity: item.quantity - 1,
+                          )
+                    : null,
+                icon: const Icon(Icons.remove_circle_outline),
+                color: cs.onSurface,
+              ),
+              Text(
+                '${item.quantity}',
+                style: TextStyle(
+                  color: cs.onSurface,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              IconButton(
+                tooltip: 'Increase',
+                onPressed: () => ref
+                    .read(cartProvider.notifier)
+                    .updateItem(itemId: item.id, quantity: item.quantity + 1),
+                icon: const Icon(Icons.add_circle_outline),
+                color: cs.onSurface,
+              ),
+              IconButton(
+                tooltip: 'Remove',
+                onPressed: () =>
+                    ref.read(cartProvider.notifier).removeItem(itemId: item.id),
+                icon: const Icon(Icons.delete_outline),
+                color: cs.onSurfaceVariant,
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -122,40 +156,71 @@ class _CartItemTile extends ConsumerWidget {
 }
 
 class _SummaryCard extends StatelessWidget {
-  final int subtotal; final int tax; final int shipping; final int total; final VoidCallback onCheckout;
-  const _SummaryCard({required this.subtotal, required this.tax, required this.shipping, required this.total, required this.onCheckout});
+  final int subtotal;
+  final int tax;
+  final int shipping;
+  final int total;
+  final VoidCallback onCheckout;
+  const _SummaryCard({
+    required this.subtotal,
+    required this.tax,
+    required this.shipping,
+    required this.total,
+    required this.onCheckout,
+  });
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: cs.surface, borderRadius: BorderRadius.circular(16), border: Border.all(color: cs.outline)),
-      child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-        _row('Subtotal', '₹$subtotal', cs),
-        const SizedBox(height: 6),
-        _row('Tax', '₹$tax', cs),
-        const SizedBox(height: 6),
-        _row('Shipping', '₹$shipping', cs),
-        const Divider(),
-        _row('Total', '₹$total', cs, bold: true),
-        const SizedBox(height: 12),
-        ElevatedButton(
-          onPressed: onCheckout,
-          style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: cs.onPrimary, padding: const EdgeInsets.symmetric(vertical: 14)),
-          child: const Text('Proceed to Checkout'),
-        ),
-      ]),
+      decoration: BoxDecoration(
+        color: cs.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: cs.outline),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          _row('Subtotal', '₹$subtotal', cs),
+          const SizedBox(height: 6),
+          _row('Tax', '₹$tax', cs),
+          const SizedBox(height: 6),
+          _row('Shipping', '₹$shipping', cs),
+          const Divider(),
+          _row('Total', '₹$total', cs, bold: true),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: onCheckout,
+            style: ElevatedButton.styleFrom(
+              backgroundColor: cs.primary,
+              foregroundColor: cs.onPrimary,
+              padding: const EdgeInsets.symmetric(vertical: 14),
+            ),
+            child: const Text('Proceed to Checkout'),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _row(String k, String v, ColorScheme cs, {bool bold = false}) {
-    return Row(children: [
-      Expanded(child: Text(k, style: TextStyle(color: cs.onSurfaceVariant))),
-      Text(v, style: TextStyle(color: cs.onSurface, fontWeight: bold ? FontWeight.w700 : FontWeight.w500)),
-    ]);
+    return Row(
+      children: [
+        Expanded(
+          child: Text(k, style: TextStyle(color: cs.onSurfaceVariant)),
+        ),
+        Text(
+          v,
+          style: TextStyle(
+            color: cs.onSurface,
+            fontWeight: bold ? FontWeight.w700 : FontWeight.w500,
+          ),
+        ),
+      ],
+    );
   }
 }
 
 // Providers to read address/phone from AppState
-final addressProvider = Provider<String?>( (ref) => AppState.address );
-final phoneProvider = Provider<String?>( (ref) => AppState.phoneNumber );
+final addressProvider = Provider<String?>((ref) => AppState.address);
+final phoneProvider = Provider<String?>((ref) => AppState.phoneNumber);

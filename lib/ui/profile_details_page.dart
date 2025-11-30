@@ -3,7 +3,8 @@ import '../data/app_state.dart';
 import 'main_shell.dart';
 
 class ProfileDetailsPage extends StatefulWidget {
-  const ProfileDetailsPage({super.key});
+  final bool popOnSave;
+  const ProfileDetailsPage({super.key, this.popOnSave = false});
 
   @override
   State<ProfileDetailsPage> createState() => _ProfileDetailsPageState();
@@ -53,9 +54,13 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
     AppState.setProfile(name: name, addr: addr, mail: mail.isEmpty ? null : mail);
     AppState.setAvatarUrl(avatar.isEmpty ? null : avatar);
     if (vehicle.isNotEmpty) AppState.setVehicleName(vehicle);
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const MainShell()),
-    );
+    if (widget.popOnSave) {
+      Navigator.of(context).pop();
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const MainShell()),
+      );
+    }
   }
 
   void _show(String msg) {

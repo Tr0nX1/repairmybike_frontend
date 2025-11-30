@@ -41,16 +41,18 @@ class _ProfilePageState extends State<ProfilePage> {
       });
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
     } finally {
       if (mounted) setState(() => _loggingOut = false);
     }
   }
 
   void _edit() {
-    Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const ProfileDetailsPage()),
-    ).then((_) => setState(() {}));
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => const ProfileDetailsPage(popOnSave: true)))
+        .then((_) => setState(() {}));
   }
 
   void _signIn() {
@@ -70,9 +72,13 @@ class _ProfilePageState extends State<ProfilePage> {
   Widget build(BuildContext context) {
     final isAuth = AppState.isAuthenticated;
     final name = isAuth
-        ? ((AppState.fullName?.isNotEmpty ?? false) ? AppState.fullName! : 'User')
+        ? ((AppState.fullName?.isNotEmpty ?? false)
+              ? AppState.fullName!
+              : 'User')
         : 'Guest User';
-    final email = (AppState.email?.isNotEmpty == true) ? AppState.email! : 'Add email';
+    final email = (AppState.email?.isNotEmpty == true)
+        ? AppState.email!
+        : 'Add email';
     return Scaffold(
       backgroundColor: bg,
       body: SafeArea(
@@ -100,17 +106,24 @@ class _ProfilePageState extends State<ProfilePage> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(name, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+                            Text(
+                              name,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
                             const SizedBox(height: 4),
-                            Text(email, style: const TextStyle(color: Colors.white60)),
+                            Text(
+                              email,
+                              style: const TextStyle(color: Colors.white60),
+                            ),
                           ],
                         ),
                       ),
                       // Edit button
-                      TextButton(
-                        onPressed: _edit,
-                        child: const Text('Edit'),
-                      ),
+                      TextButton(onPressed: _edit, child: const Text('Edit')),
                     ],
                   ),
                 ),
@@ -140,32 +153,40 @@ class _ProfilePageState extends State<ProfilePage> {
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.directions_bike, color: Colors.white70, size: 32),
+                      const Icon(
+                        Icons.directions_bike,
+                        color: Colors.white70,
+                        size: 32,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text('Your Vehicle',
-                                style: TextStyle(color: Colors.white70, fontSize: 14, fontWeight: FontWeight.w600)),
+                            const Text(
+                              'Your Vehicle',
+                              style: TextStyle(
+                                color: Colors.white70,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
                             const SizedBox(height: 4),
                             Text(
                               [
-                                AppState.vehicleBrand ?? '—',
-                                AppState.vehicleName ?? '—',
-                              ]
-                                  .where((e) => e != '—')
-                                  .join(' • ')
-                                  .isEmpty
+                                    AppState.vehicleBrand ?? '—',
+                                    AppState.vehicleName ?? '—',
+                                  ].where((e) => e != '—').join(' • ').isEmpty
                                   ? 'Choose your vehicle'
                                   : [
                                       AppState.vehicleBrand ?? '—',
                                       AppState.vehicleName ?? '—',
-                                    ]
-                                      .where((e) => e != '—')
-                                      .join(' • '),
-                              style:
-                                  const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700),
+                                    ].where((e) => e != '—').join(' • '),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
                             ),
                           ],
                         ),
@@ -173,7 +194,11 @@ class _ProfilePageState extends State<ProfilePage> {
                       TextButton(
                         onPressed: () {
                           Navigator.of(context)
-                              .push(MaterialPageRoute(builder: (_) => const VehicleTypePage()))
+                              .push(
+                                MaterialPageRoute(
+                                  builder: (_) => const VehicleTypePage(),
+                                ),
+                              )
                               .then((_) => setState(() {}));
                         },
                         child: const Text('Change'),
@@ -194,7 +219,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           backgroundColor: accent,
                           foregroundColor: Colors.black,
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: Text(isAuth ? 'Update Details' : 'Sign In'),
                       ),
@@ -207,7 +234,9 @@ class _ProfilePageState extends State<ProfilePage> {
                           foregroundColor: accent,
                           side: const BorderSide(color: accent),
                           padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                         child: const Text('Edit Profile'),
                       ),
@@ -219,16 +248,46 @@ class _ProfilePageState extends State<ProfilePage> {
 
                 // Details list
                 _Section(title: 'Vehicle'),
-                _Tile(label: 'Type', value: AppState.vehicleType ?? '—', icon: Icons.motorcycle),
-                _Tile(label: 'Brand', value: AppState.vehicleBrand ?? '—', icon: Icons.factory),
-                _Tile(label: 'Model', value: AppState.vehicleName ?? '—', icon: Icons.directions_bike),
+                _Tile(
+                  label: 'Type',
+                  value: AppState.vehicleType ?? '—',
+                  icon: Icons.motorcycle,
+                ),
+                _Tile(
+                  label: 'Brand',
+                  value: AppState.vehicleBrand ?? '—',
+                  icon: Icons.factory,
+                ),
+                _Tile(
+                  label: 'Model',
+                  value: AppState.vehicleName ?? '—',
+                  icon: Icons.directions_bike,
+                ),
 
                 const SizedBox(height: 12),
                 _Section(title: 'Contact'),
-                _Tile(label: 'Name', value: AppState.fullName ?? '—', icon: Icons.person_outline),
-                _Tile(label: 'Address', value: AppState.address ?? '—', icon: Icons.location_on_outlined),
-                _Tile(label: 'Email', value: AppState.email?.isEmpty == true ? '—' : (AppState.email ?? '—'), icon: Icons.email_outlined),
-                _Tile(label: 'Phone (OTP)', value: AppState.phoneNumber ?? '—', icon: Icons.phone_outlined),
+                _Tile(
+                  label: 'Name',
+                  value: AppState.fullName ?? '—',
+                  icon: Icons.person_outline,
+                ),
+                _Tile(
+                  label: 'Address',
+                  value: AppState.address ?? '—',
+                  icon: Icons.location_on_outlined,
+                ),
+                _Tile(
+                  label: 'Email',
+                  value: AppState.email?.isEmpty == true
+                      ? '—'
+                      : (AppState.email ?? '—'),
+                  icon: Icons.email_outlined,
+                ),
+                _Tile(
+                  label: 'Phone (OTP)',
+                  value: AppState.phoneNumber ?? '—',
+                  icon: Icons.phone_outlined,
+                ),
 
                 const SizedBox(height: 24),
                 if (AppState.isAuthenticated)
@@ -240,13 +299,18 @@ class _ProfilePageState extends State<ProfilePage> {
                         backgroundColor: accent,
                         foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                       child: _loggingOut
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: Colors.black,
+                              ),
                             )
                           : const Text('Logout'),
                     ),
@@ -280,15 +344,24 @@ class _StatCard extends StatelessWidget {
         ),
         child: Column(
           children: [
-            Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
+            Text(
+              value,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
             const SizedBox(height: 4),
-            Text(title, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+            Text(
+              title,
+              style: const TextStyle(color: Colors.white60, fontSize: 12),
+            ),
           ],
         ),
       ),
     );
   }
-
 }
 
 class _Avatar extends StatelessWidget {
@@ -310,9 +383,13 @@ class _Avatar extends StatelessWidget {
           border: Border.all(color: border),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Image.network(url, fit: BoxFit.cover, errorBuilder: (_, __, ___) {
-          return const Icon(Icons.person, color: Colors.white70, size: 32);
-        }),
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          errorBuilder: (_, __, ___) {
+            return const Icon(Icons.person, color: Colors.white70, size: 32);
+          },
+        ),
       );
     }
     return Container(
@@ -335,7 +412,14 @@ class _Section extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)),
+      child: Text(
+        title,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 16,
+          fontWeight: FontWeight.w700,
+        ),
+      ),
     );
   }
 }
