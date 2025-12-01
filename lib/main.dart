@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'ui/main_shell.dart';
 import 'ui/flash_page.dart';
-import 'providers/theme_provider.dart';
+// Theme fixed to dark; remove dynamic theme provider
 import 'utils/api_config.dart';
 
 void main() {
@@ -17,7 +17,7 @@ class MyApp extends ConsumerWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(themeModeProvider);
+    const mode = ThemeMode.dark;
     const Color brandPrimary = Color(0xFF01C9F5);
     const Color brandOnPrimary = Color(0xFF0B0F12);
     const Color brandSecondary = Color(0xFF005B8E);

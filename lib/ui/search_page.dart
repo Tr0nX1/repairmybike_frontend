@@ -46,17 +46,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF071A1D),
         title: const Text('Search'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.qr_code_scanner),
-            onPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const SparePartsPage()),
-              );
-            },
-            tooltip: 'Spare Parts',
-          ),
-        ],
+        actions: const [],
       ),
       body: Column(
         children: [

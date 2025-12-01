@@ -37,6 +37,8 @@ class _AuthPageState extends State<AuthPage> {
   String _mode = AppState.isStaff
       ? 'staff'
       : 'customer'; // 'customer' | 'staff'
+  bool _phoneLocked = false;
+  String? _lockedPhone;
 
   @override
   void dispose() {
@@ -85,17 +87,20 @@ class _AuthPageState extends State<AuthPage> {
     }
   }
 
-  Future<void> _sendOtp() async {
-    final phone = _phoneCtrl.text.trim();
-    if (phone.isEmpty) {
+  Future<void> _sendOtp([String? overridePhone]) async {
+    final raw = (overridePhone ?? _phoneCtrl.text).trim();
+    if (raw.isEmpty) {
       _showSnack('Please enter your phone number');
       return;
     }
+    final phone = AppState.normalizePhone(raw);
     setState(() => _loading = true);
     try {
       await _api.requestOtpPhone(phone);
       setState(() {
         _otpStep = true;
+        _phoneLocked = true;
+        _lockedPhone = phone;
       });
       _startCountdown();
       _showSnack('OTP sent');
@@ -107,7 +112,11 @@ class _AuthPageState extends State<AuthPage> {
   }
 
   Future<void> _verifyOtp() async {
-    final phone = _phoneCtrl.text.trim();
+    if (!_phoneLocked || (_lockedPhone == null || _lockedPhone!.isEmpty)) {
+      _showSnack('Mobile number is not locked. Please request OTP first.');
+      return;
+    }
+    final phone = _lockedPhone!;
     final code = _otpCtrl.text.trim();
     if (code.isEmpty || code.length < 4) {
       _showSnack('Enter the 4–6 digit OTP code');
@@ -119,6 +128,7 @@ class _AuthPageState extends State<AuthPage> {
       final session = (res['session_token'] ?? '') as String;
       final refresh = (res['refresh_token'] ?? '') as String;
       await AppState.setAuth(phone: phone, session: session, refresh: refresh);
+      await AppState.setLastCustomerPhone(phone);
       _showSnack('Signed in');
       setState(() {
         _otpStep = false;
@@ -233,6 +243,40 @@ class _AuthPageState extends State<AuthPage> {
     ).pushReplacement(MaterialPageRoute(builder: (_) => const MainShell()));
   }
 
+  Future<void> _onChangeNumber() async {
+    if (_loading) return;
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Change Mobile Number'),
+        content: const Text(
+          'This will clear OTP verification and require a new OTP for the updated number.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: const Text('Continue'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    _timer?.cancel();
+    setState(() {
+      _otpStep = false;
+      _secondsLeft = 0;
+      _phoneLocked = false;
+      _lockedPhone = null;
+      _otpCtrl.clear();
+    });
+    await AppState.clearAuth();
+    await AppState.setLastCustomerPhone(null);
+  }
+
   @override
   Widget build(BuildContext context) {
     final authenticated = AppState.isAuthenticated;
@@ -261,7 +305,11 @@ class _AuthPageState extends State<AuthPage> {
                 _modeSwitcher(),
                 const SizedBox(height: 12),
                 if (_mode == 'customer') ...[
-                  _PhoneField(controller: _phoneCtrl),
+                  _PhoneField(
+                    controller: _phoneCtrl,
+                    locked: _phoneLocked,
+                    onChangeNumber: _onChangeNumber,
+                  ),
                   const SizedBox(height: 6),
                   // Helpful hint for correct phone formatting per user's request
                   const Text(
@@ -301,7 +349,7 @@ class _AuthPageState extends State<AuthPage> {
                         const SizedBox(width: 12),
                         TextButton(
                           onPressed: (_secondsLeft == 0 && !_loading)
-                              ? _sendOtp
+                              ? () => _sendOtp(_lockedPhone)
                               : null,
                           child: Text(
                             _secondsLeft == 0
@@ -413,28 +461,58 @@ class _AuthPageState extends State<AuthPage> {
 
 class _PhoneField extends StatelessWidget {
   final TextEditingController controller;
-  const _PhoneField({required this.controller});
+  final bool locked;
+  final VoidCallback onChangeNumber;
+  const _PhoneField({
+    required this.controller,
+    required this.locked,
+    required this.onChangeNumber,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return TextField(
-      controller: controller,
-      keyboardType: TextInputType.phone,
-      style: const TextStyle(color: Colors.white),
-      decoration: InputDecoration(
-        hintText: 'Enter phone number',
-        hintStyle: const TextStyle(color: Colors.white54),
-        filled: true,
-        fillColor: const Color(0xFF151515),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF2A2A2A)),
+    final border = const Color(0xFF2A2A2A);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        TextField(
+          controller: controller,
+          keyboardType: TextInputType.phone,
+          enabled: !locked,
+          style: const TextStyle(color: Colors.white),
+          decoration: InputDecoration(
+            hintText: 'Enter phone number',
+            hintStyle: const TextStyle(color: Colors.white54),
+            filled: true,
+            fillColor: const Color(0xFF151515),
+            suffixIcon: locked
+                ? const Icon(Icons.lock, color: Colors.white54)
+                : null,
+            border: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: border),
+            ),
+            enabledBorder: OutlineInputBorder(
+              borderRadius: BorderRadius.circular(12),
+              borderSide: BorderSide(color: border),
+            ),
+          ),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: const BorderSide(color: Color(0xFF2A2A2A)),
-        ),
-      ),
+        if (locked) ...[
+          const SizedBox(height: 8),
+          const Text(
+            'Mobile number locked for OTP verification. Changing number requires a new OTP.',
+            style: TextStyle(color: Colors.white54, fontSize: 12),
+          ),
+          Align(
+            alignment: Alignment.centerLeft,
+            child: TextButton(
+              onPressed: onChangeNumber,
+              child: const Text('Change Mobile Number'),
+            ),
+          ),
+        ],
+      ],
     );
   }
 }

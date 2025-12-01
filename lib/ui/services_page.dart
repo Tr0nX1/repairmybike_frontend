@@ -253,6 +253,19 @@ class _ServiceCardState extends State<_ServiceCard> {
                             imageUrl,
                             fit: BoxFit.contain,
                             alignment: Alignment.center,
+                            errorBuilder: (context, error, stack) {
+                              return Center(
+                                child: Container(
+                                  width: 64,
+                                  height: 64,
+                                  decoration: const BoxDecoration(
+                                    color: Color(0xFF01C9F5),
+                                    shape: BoxShape.circle,
+                                  ),
+                                  child: const Icon(Icons.build_rounded, color: Colors.black, size: 32),
+                                ),
+                              );
+                            },
                           ),
                         ),
                 ),

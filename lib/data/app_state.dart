@@ -19,9 +19,46 @@ class AppState {
   static const _kLikedServices = 'likedServices';
   static const _kFeedbackPrefix = 'feedback_service_';
   static const _kPendingAction = 'pending_action';
+  static const _kUserStore = 'user_store_v1';
+  static const _kUserStoreBackup = 'user_store_backup_v1';
 
   static String? lastCustomerPhone;
   static Set<int> likedServiceIds = <int>{};
+
+  static String normalizePhone(String p) {
+    var s = p.trim().replaceAll(RegExp('\\D'), '');
+    if (s.isEmpty) return '';
+    if (s.length == 10) return '+91' + s;
+    if (s.length == 12 && s.startsWith('91')) return '+' + s;
+    if (s.startsWith('0') && s.length == 11) return '+91' + s.substring(1);
+    if (p.trim().startsWith('+')) return p.trim();
+    return '+' + s;
+  }
+
+  static Future<Map<String, dynamic>> _readStore() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_kUserStore);
+    if (raw != null && raw.isNotEmpty) {
+      try {
+        final m = jsonDecode(raw);
+        if (m is Map<String, dynamic>) return m;
+      } catch (_) {}
+    }
+    return {'version': 1, 'currentPhone': null, 'profiles': <String, dynamic>{}};
+  }
+
+  static Future<void> _writeStore(Map<String, dynamic> store) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final prev = prefs.getString(_kUserStore);
+      if (prev != null) {
+        await prefs.setString(_kUserStoreBackup, prev);
+      }
+      await prefs.setString(_kUserStore, jsonEncode(store));
+    } catch (e) {
+      print('Store write failed: ' + e.toString());
+    }
+  }
 
   // Auth state
   static String? phoneNumber;
@@ -69,21 +106,46 @@ class AppState {
         .whereType<int>()
         .toSet();
 
-    // Hydrate vehicle selection specific to a phone if available
-    final p = phoneNumber ?? lastCustomerPhone;
-    if (p != null && p.isNotEmpty) {
-      final tPhone = prefs.getString('$_kVehicleType' '_' '$p');
-      final bPhone = prefs.getString('$_kVehicleBrand' '_' '$p');
-      final nPhone = prefs.getString('$_kVehicleName' '_' '$p');
-      final fPhone = prefs.getString('$_kFullName' '_' '$p');
-      final aPhone = prefs.getString('$_kAddress' '_' '$p');
-      final ePhone = prefs.getString('$_kEmail' '_' '$p');
-      if (tPhone != null) vehicleType = tPhone;
-      if (bPhone != null) vehicleBrand = bPhone;
-      if (nPhone != null) vehicleName = nPhone;
-      if (fPhone != null) fullName = fPhone;
-      if (aPhone != null) address = aPhone;
-      if (ePhone != null) email = ePhone;
+    final store = await _readStore();
+    final cp0 = store['currentPhone'] as String?;
+    final cp = (cp0 == null || cp0.isEmpty)
+        ? normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '')
+        : cp0;
+    if (cp.isNotEmpty) {
+      final profiles = (store['profiles'] as Map?) ?? {};
+      final u = profiles[cp] as Map?;
+      if (u != null) {
+        vehicleType = u['vehicleType'] as String?;
+        vehicleBrand = u['vehicleBrand'] as String?;
+        vehicleName = u['vehicleName'] as String?;
+        fullName = u['fullName'] as String?;
+        address = u['address'] as String?;
+        email = u['email'] as String?;
+      } else {
+        final tPhone = prefs.getString('$_kVehicleType' '_' '$cp');
+        final bPhone = prefs.getString('$_kVehicleBrand' '_' '$cp');
+        final nPhone = prefs.getString('$_kVehicleName' '_' '$cp');
+        final fPhone = prefs.getString('$_kFullName' '_' '$cp');
+        final aPhone = prefs.getString('$_kAddress' '_' '$cp');
+        final ePhone = prefs.getString('$_kEmail' '_' '$cp');
+        vehicleType = tPhone;
+        vehicleBrand = bPhone;
+        vehicleName = nPhone;
+        fullName = fPhone;
+        address = aPhone;
+        email = ePhone;
+        store['currentPhone'] = cp;
+        store['profiles'] = (store['profiles'] as Map?) ?? {};
+        (store['profiles'] as Map)[cp] = {
+          'vehicleType': vehicleType,
+          'vehicleBrand': vehicleBrand,
+          'vehicleName': vehicleName,
+          'fullName': fullName,
+          'address': address,
+          'email': email,
+        };
+        await _writeStore(store);
+      }
     }
   }
 
@@ -92,31 +154,42 @@ class AppState {
     required String session,
     required String refresh,
   }) async {
-    phoneNumber = phone;
+    final nPhone = normalizePhone(phone);
+    phoneNumber = nPhone;
     sessionToken = session;
     refreshToken = refresh;
     isStaff = false;
     staffUsername = null;
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kPhone, phone);
+    await prefs.setString(_kPhone, nPhone);
     await prefs.setString(_kSession, session);
     await prefs.setString(_kRefresh, refresh);
     await prefs.setBool(_kIsStaff, false);
     await prefs.remove(_kUsername);
-
-    // Load phone-specific vehicle and profile when user signs in
-    final tPhone = prefs.getString('$_kVehicleType' '_' '$phone');
-    final bPhone = prefs.getString('$_kVehicleBrand' '_' '$phone');
-    final nPhone = prefs.getString('$_kVehicleName' '_' '$phone');
-    vehicleType = tPhone; // may be null for first-time
-    vehicleBrand = bPhone;
-    vehicleName = nPhone;
-    final fPhone = prefs.getString('$_kFullName' '_' '$phone');
-    final aPhone = prefs.getString('$_kAddress' '_' '$phone');
-    final ePhone = prefs.getString('$_kEmail' '_' '$phone');
-    fullName = fPhone;
-    address = aPhone;
-    email = ePhone;
+    final store = await _readStore();
+    store['currentPhone'] = nPhone;
+    final profiles = (store['profiles'] as Map?) ?? {};
+    final u = profiles[nPhone] as Map?;
+    if (u != null) {
+      vehicleType = u['vehicleType'] as String?;
+      vehicleBrand = u['vehicleBrand'] as String?;
+      vehicleName = u['vehicleName'] as String?;
+      fullName = u['fullName'] as String?;
+      address = u['address'] as String?;
+      email = u['email'] as String?;
+    } else {
+      profiles[nPhone] = {
+        'vehicleType': null,
+        'vehicleBrand': null,
+        'vehicleName': null,
+        'fullName': null,
+        'address': null,
+        'email': null,
+      };
+      store['profiles'] = profiles;
+    }
+    await _writeStore(store);
+    print('Auth set for ' + nPhone);
   }
 
   static Future<void> clearAuth() async {
@@ -165,28 +238,46 @@ class AppState {
 
   static Future<void> setVehicleType(String type) async {
     vehicleType = type;
-    final prefs = await SharedPreferences.getInstance();
-    final phone = phoneNumber ?? lastCustomerPhone;
-    if (phone != null && phone.isNotEmpty) {
-      await prefs.setString('$_kVehicleType' '_' '$phone', type);
+    final store = await _readStore();
+    final cp = normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '');
+    if (cp.isNotEmpty) {
+      final profiles = (store['profiles'] as Map?) ?? {};
+      final u = (profiles[cp] as Map?) ?? {};
+      u['vehicleType'] = type;
+      profiles[cp] = u;
+      store['profiles'] = profiles;
+      store['currentPhone'] = cp;
+      await _writeStore(store);
     }
   }
 
   static Future<void> setVehicleBrand(String brand) async {
     vehicleBrand = brand;
-    final prefs = await SharedPreferences.getInstance();
-    final phone = phoneNumber ?? lastCustomerPhone;
-    if (phone != null && phone.isNotEmpty) {
-      await prefs.setString('$_kVehicleBrand' '_' '$phone', brand);
+    final store = await _readStore();
+    final cp = normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '');
+    if (cp.isNotEmpty) {
+      final profiles = (store['profiles'] as Map?) ?? {};
+      final u = (profiles[cp] as Map?) ?? {};
+      u['vehicleBrand'] = brand;
+      profiles[cp] = u;
+      store['profiles'] = profiles;
+      store['currentPhone'] = cp;
+      await _writeStore(store);
     }
   }
 
   static Future<void> setVehicleName(String name) async {
     vehicleName = name;
-    final prefs = await SharedPreferences.getInstance();
-    final phone = phoneNumber ?? lastCustomerPhone;
-    if (phone != null && phone.isNotEmpty) {
-      await prefs.setString('$_kVehicleName' '_' '$phone', name);
+    final store = await _readStore();
+    final cp = normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '');
+    if (cp.isNotEmpty) {
+      final profiles = (store['profiles'] as Map?) ?? {};
+      final u = (profiles[cp] as Map?) ?? {};
+      u['vehicleName'] = name;
+      profiles[cp] = u;
+      store['profiles'] = profiles;
+      store['currentPhone'] = cp;
+      await _writeStore(store);
     }
   }
 
@@ -197,22 +288,37 @@ class AppState {
     String? brand,
     String? name,
   }) async {
-    final prefs = await SharedPreferences.getInstance();
-    if (type != null) await prefs.setString('$_kVehicleType' '_' '$phone', type);
-    if (brand != null) await prefs.setString('$_kVehicleBrand' '_' '$phone', brand);
-    if (name != null) await prefs.setString('$_kVehicleName' '_' '$phone', name);
+    final store = await _readStore();
+    final cp = normalizePhone(phone);
+    final profiles = (store['profiles'] as Map?) ?? {};
+    final u = (profiles[cp] as Map?) ?? {};
+    if (type != null) u['vehicleType'] = type;
+    if (brand != null) u['vehicleBrand'] = brand;
+    if (name != null) u['vehicleName'] = name;
+    profiles[cp] = u;
+    store['profiles'] = profiles;
+    store['currentPhone'] = cp;
+    await _writeStore(store);
+    print('Vehicle set for ' + cp);
   }
 
   static Future<void> setProfile({String? name, String? addr, String? mail}) async {
     fullName = name ?? fullName;
     address = addr ?? address;
     email = mail ?? email;
-    final prefs = await SharedPreferences.getInstance();
-    final phone = phoneNumber ?? lastCustomerPhone;
-    if (phone != null && phone.isNotEmpty) {
-      if (name != null) await prefs.setString('$_kFullName' '_' '$phone', name);
-      if (addr != null) await prefs.setString('$_kAddress' '_' '$phone', addr);
-      if (mail != null) await prefs.setString('$_kEmail' '_' '$phone', mail);
+    final store = await _readStore();
+    final cp = normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '');
+    if (cp.isNotEmpty) {
+      final profiles = (store['profiles'] as Map?) ?? {};
+      final u = (profiles[cp] as Map?) ?? {};
+      if (name != null) u['fullName'] = name;
+      if (addr != null) u['address'] = addr;
+      if (mail != null) u['email'] = mail;
+      profiles[cp] = u;
+      store['profiles'] = profiles;
+      store['currentPhone'] = cp;
+      await _writeStore(store);
+      print('Profile updated for ' + cp);
     }
   }
 
@@ -227,12 +333,17 @@ class AppState {
   }
 
   static Future<void> setLastCustomerPhone(String? phone) async {
-    lastCustomerPhone = phone;
+    final cp = phone == null ? '' : normalizePhone(phone);
+    lastCustomerPhone = cp.isEmpty ? null : cp;
     final prefs = await SharedPreferences.getInstance();
-    if (phone == null || phone.isEmpty) {
+    if (cp.isEmpty) {
       await prefs.remove(_kLastCustomerPhone);
     } else {
-      await prefs.setString(_kLastCustomerPhone, phone);
+      await prefs.setString(_kLastCustomerPhone, cp);
+      final store = await _readStore();
+      store['currentPhone'] = cp;
+      await _writeStore(store);
+      print('Last customer phone set to ' + cp);
     }
   }
 

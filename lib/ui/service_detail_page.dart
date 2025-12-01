@@ -151,7 +151,38 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                         ),
                       );
                     }
-                    return Image.network(url, fit: BoxFit.cover);
+                    return Image.network(
+                      url,
+                      fit: BoxFit.cover,
+                      errorBuilder: (context, error, stack) {
+                        return Container(
+                          color: const Color(0xFF202020),
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Container(
+                                width: 96,
+                                height: 96,
+                                decoration: const BoxDecoration(
+                                  color: accent,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(Icons.build_rounded, size: 48, color: Colors.black),
+                              ),
+                              const SizedBox(height: 16),
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: accent,
+                                  shape: BoxShape.circle,
+                                ),
+                              )
+                            ],
+                          ),
+                        );
+                      },
+                    );
                   }),
                 ),
 

@@ -6,7 +6,7 @@ import '../models/category.dart';
 import 'services_page.dart';
 import 'subscription_section.dart';
 import 'search_page.dart';
-import 'qr_scanner_page.dart';
+// QR scanner removed
 import 'spare_parts_page.dart';
 import 'spare_parts_section.dart';
 import 'service_detail_page.dart';
@@ -14,7 +14,7 @@ import '../data/app_state.dart';
 import '../providers/category_provider.dart' as providers;
 import '../models/service.dart';
 import '../utils/url_utils.dart';
-import '../providers/theme_provider.dart';
+// Theme toggle removed
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -107,7 +107,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ),
                     ),
                     const Spacer(),
-                    const _ThemeToggleButton(),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -447,15 +446,7 @@ class _QuickActionsRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final items = <({IconData icon, String label, VoidCallback onTap})>[
-      (
-        icon: Icons.qr_code_scanner,
-        label: 'Scan QR',
-        onTap: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => QrScannerPage()));
-        },
-      ),
+      // Scan QR removed
       (
         icon: Icons.search,
         label: 'Search Parts',
@@ -605,6 +596,11 @@ class _LikedCard extends StatelessWidget {
                         fit: BoxFit.contain,
                         alignment: Alignment.center,
                         width: double.infinity,
+                        errorBuilder: (context, error, stack) {
+                          return const Center(
+                            child: Icon(Icons.handyman, color: Colors.white54),
+                          );
+                        },
                       ),
                     ),
             ),
@@ -637,22 +633,4 @@ class _LikedCard extends StatelessWidget {
   }
 }
 
-class _ThemeToggleButton extends ConsumerWidget {
-  const _ThemeToggleButton();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final mode = ref.watch(themeModeProvider);
-    final isDark = mode == ThemeMode.dark;
-    return IconButton(
-      tooltip: isDark ? 'Switch to Light' : 'Switch to Dark',
-      onPressed: () {
-        ref.read(themeModeProvider.notifier).toggle();
-      },
-      icon: Icon(isDark ? Icons.light_mode : Icons.dark_mode),
-      color: Theme.of(context).colorScheme.primary,
-      constraints: const BoxConstraints(minWidth: 36, minHeight: 36),
-      padding: const EdgeInsets.all(0),
-    );
-  }
-}
+// Theme toggle widget removed
