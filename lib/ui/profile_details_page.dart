@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../data/app_state.dart';
+import '../data/auth_api.dart';
 import 'main_shell.dart';
 
 class ProfileDetailsPage extends StatefulWidget {
@@ -51,15 +52,35 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
       return;
     }
     setState(() => _saving = true);
-    AppState.setProfile(name: name, addr: addr, mail: mail.isEmpty ? null : mail);
+    AppState.setProfile(
+      name: name,
+      addr: addr,
+      mail: mail.isEmpty ? null : mail,
+    );
     AppState.setAvatarUrl(avatar.isEmpty ? null : avatar);
+    try {
+      final parts = name.split(' ').where((e) => e.trim().isNotEmpty).toList();
+      final first = parts.isNotEmpty ? parts.first : name;
+      final last = parts.length > 1 ? parts.sublist(1).join(' ') : '';
+      final api = AuthApi();
+      final token = AppState.sessionToken ?? '';
+      if (token.isNotEmpty) {
+        api.updateProfile(
+          sessionToken: token,
+          firstName: first,
+          lastName: last.isNotEmpty ? last : null,
+          phoneNumber: AppState.phoneNumber,
+          profilePicture: avatar.isNotEmpty ? avatar : null,
+        );
+      }
+    } catch (_) {}
     if (vehicle.isNotEmpty) AppState.setVehicleName(vehicle);
     if (widget.popOnSave) {
       Navigator.of(context).pop();
     } else {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const MainShell()),
-      );
+      Navigator.of(
+        context,
+      ).pushReplacement(MaterialPageRoute(builder: (_) => const MainShell()));
     }
   }
 
@@ -90,9 +111,20 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
             children: [
               _field('Full name', _nameCtrl, Icons.person),
               const SizedBox(height: 12),
-              _field('Phone (from login)', _phoneCtrl, Icons.phone, enabled: false),
+              _field(
+                'Phone (from login)',
+                _phoneCtrl,
+                Icons.phone,
+                enabled: false,
+              ),
               const SizedBox(height: 12),
-              _field('Address', _addrCtrl, Icons.home, minLines: 2, maxLines: 4),
+              _field(
+                'Address',
+                _addrCtrl,
+                Icons.home,
+                minLines: 2,
+                maxLines: 4,
+              ),
               const SizedBox(height: 12),
               _field('Email (optional)', _emailCtrl, Icons.email),
               const SizedBox(height: 12),
@@ -118,8 +150,14 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
     );
   }
 
-  Widget _field(String hint, TextEditingController ctrl, IconData icon,
-      {int minLines = 1, int maxLines = 1, bool enabled = true}) {
+  Widget _field(
+    String hint,
+    TextEditingController ctrl,
+    IconData icon, {
+    int minLines = 1,
+    int maxLines = 1,
+    bool enabled = true,
+  }) {
     return TextField(
       controller: ctrl,
       minLines: minLines,

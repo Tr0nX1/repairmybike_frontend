@@ -5,13 +5,14 @@ class AuthApi {
   final Dio _dio;
 
   AuthApi()
-      : _dio = Dio(
-          BaseOptions(
-            baseUrl: backendBase,
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 15),
-          ),
-        );
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: backendBase,
+          connectTimeout: const Duration(seconds: 20),
+          receiveTimeout: const Duration(seconds: 30),
+          sendTimeout: const Duration(seconds: 20),
+        ),
+      );
 
   String _normalizePhone(String phone) {
     final raw = phone.trim();
@@ -32,10 +33,7 @@ class AuthApi {
     try {
       final res = await _dio.post(
         '/api/auth/staff/login/password/',
-        data: {
-          'identifier': username,
-          'password': password,
-        },
+        data: {'identifier': username, 'password': password},
       );
       final data = res.data;
       if (data is Map<String, dynamic>) {
@@ -59,28 +57,45 @@ class AuthApi {
   }
 
   Future<void> requestOtpPhone(String phone) async {
-    try {
-      final normalized = _normalizePhone(phone);
-      await _dio.post(
-        '/api/auth/otp/request/',
-        data: {
-          // Backend UnifiedOTPRequestSerializer expects only these fields
-          'identifier': normalized,
-          'method': 'phone',
-        },
-      );
-    } on DioException catch (e) {
-      final data = e.response?.data;
-      String msg = 'Failed to send OTP';
-      if (data is Map && data['message'] is String) {
-        msg = data['message'] as String;
-      } else if (data is Map && data['error'] is String) {
-        msg = data['error'] as String;
-      } else if (data is String && data.isNotEmpty) {
-        msg = data;
+    final normalized = _normalizePhone(phone);
+    DioException? lastErr;
+    for (var attempt = 0; attempt < 2; attempt++) {
+      try {
+        await _dio.post(
+          '/api/auth/otp/request/',
+          data: {'identifier': normalized, 'method': 'phone'},
+        );
+        return;
+      } on DioException catch (e) {
+        lastErr = e;
+        if (attempt == 0 &&
+            (e.type == DioExceptionType.connectionTimeout ||
+                e.type == DioExceptionType.sendTimeout ||
+                e.type == DioExceptionType.receiveTimeout)) {
+          await Future.delayed(const Duration(seconds: 1));
+          continue;
+        }
+        break;
       }
-      throw Exception(msg);
     }
+    final e = lastErr;
+    final data = e?.response?.data;
+    String msg = 'Failed to send OTP';
+    if (data is Map && data['message'] is String) {
+      msg = data['message'] as String;
+    } else if (data is Map && data['error'] is String) {
+      msg = data['error'] as String;
+    } else if (data is String && data.isNotEmpty) {
+      msg = data;
+    }
+    assert(() {
+      // ignore: avoid_print
+      print(
+        'OTP request error: ${e?.response?.statusCode} ${e?.message} -> $data',
+      );
+      return true;
+    }());
+    throw Exception(msg);
   }
 
   Future<Map<String, dynamic>> verifyOtpPhone({
@@ -91,12 +106,7 @@ class AuthApi {
       final normalized = _normalizePhone(phone);
       final res = await _dio.post(
         '/api/auth/otp/verify/',
-        data: {
-          // Backend UnifiedOTPVerifySerializer expects only these fields
-          'identifier': normalized,
-          'otp_code': code,
-          'method': 'phone',
-        },
+        data: {'identifier': normalized, 'otp_code': code, 'method': 'phone'},
       );
       final data = res.data;
       if (data is Map<String, dynamic>) {
@@ -129,5 +139,39 @@ class AuthApi {
           ? Options(headers: {'Authorization': 'Bearer $sessionToken'})
           : null,
     );
+  }
+
+  Future<Map<String, dynamic>> getProfile({
+    required String sessionToken,
+  }) async {
+    final res = await _dio.get(
+      '/api/auth/profile/',
+      options: Options(headers: {'Authorization': 'Bearer $sessionToken'}),
+    );
+    final data = res.data;
+    if (data is Map<String, dynamic>) return data;
+    throw Exception('Unexpected response shape for profile');
+  }
+
+  Future<Map<String, dynamic>> updateProfile({
+    required String sessionToken,
+    String? firstName,
+    String? lastName,
+    String? phoneNumber,
+    String? profilePicture,
+  }) async {
+    final payload = <String, dynamic>{};
+    if (firstName != null) payload['first_name'] = firstName;
+    if (lastName != null) payload['last_name'] = lastName;
+    if (phoneNumber != null) payload['phone_number'] = phoneNumber;
+    if (profilePicture != null) payload['profile_picture'] = profilePicture;
+    final res = await _dio.patch(
+      '/api/auth/profile/',
+      data: payload,
+      options: Options(headers: {'Authorization': 'Bearer $sessionToken'}),
+    );
+    final data = res.data;
+    if (data is Map<String, dynamic>) return data;
+    throw Exception('Unexpected response shape for update profile');
   }
 }

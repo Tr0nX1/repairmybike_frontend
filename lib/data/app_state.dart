@@ -44,7 +44,11 @@ class AppState {
         if (m is Map<String, dynamic>) return m;
       } catch (_) {}
     }
-    return {'version': 1, 'currentPhone': null, 'profiles': <String, dynamic>{}};
+    return {
+      'version': 1,
+      'currentPhone': null,
+      'profiles': <String, dynamic>{},
+    };
   }
 
   static Future<void> _writeStore(Map<String, dynamic> store) async {
@@ -81,6 +85,27 @@ class AppState {
   static bool get isCustomerAuthenticated => isAuthenticated && !isStaff;
   static bool get isStaffAuthenticated => isAuthenticated && isStaff;
 
+  static int? _jwtExpEpoch(String? jwt) {
+    try {
+      if (jwt == null || jwt.isEmpty) return null;
+      final parts = jwt.split('.');
+      if (parts.length < 2) return null;
+      String norm(String s) =>
+          s.padRight(s.length + (4 - s.length % 4) % 4, '=');
+      final payload = utf8.decode(base64Url.decode(norm(parts[1])));
+      final map = jsonDecode(payload);
+      if (map is Map && map['exp'] is num) return (map['exp'] as num).toInt();
+    } catch (_) {}
+    return null;
+  }
+
+  static bool get isSessionExpired {
+    final exp = _jwtExpEpoch(sessionToken);
+    if (exp == null) return false;
+    final now = DateTime.now().millisecondsSinceEpoch ~/ 1000;
+    return now >= exp;
+  }
+
   // Initialize from SharedPreferences
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
@@ -89,6 +114,12 @@ class AppState {
     refreshToken = prefs.getString(_kRefresh);
     isStaff = prefs.getBool(_kIsStaff) ?? false;
     staffUsername = prefs.getString(_kUsername);
+    if (isSessionExpired) {
+      sessionToken = null;
+      refreshToken = null;
+      await prefs.remove(_kSession);
+      await prefs.remove(_kRefresh);
+    }
     // Do NOT hydrate global profile/vehicle; use phone-scoped values only
     fullName = null;
     address = null;
@@ -122,12 +153,36 @@ class AppState {
         address = u['address'] as String?;
         email = u['email'] as String?;
       } else {
-        final tPhone = prefs.getString('$_kVehicleType' '_' '$cp');
-        final bPhone = prefs.getString('$_kVehicleBrand' '_' '$cp');
-        final nPhone = prefs.getString('$_kVehicleName' '_' '$cp');
-        final fPhone = prefs.getString('$_kFullName' '_' '$cp');
-        final aPhone = prefs.getString('$_kAddress' '_' '$cp');
-        final ePhone = prefs.getString('$_kEmail' '_' '$cp');
+        final tPhone = prefs.getString(
+          '$_kVehicleType'
+          '_'
+          '$cp',
+        );
+        final bPhone = prefs.getString(
+          '$_kVehicleBrand'
+          '_'
+          '$cp',
+        );
+        final nPhone = prefs.getString(
+          '$_kVehicleName'
+          '_'
+          '$cp',
+        );
+        final fPhone = prefs.getString(
+          '$_kFullName'
+          '_'
+          '$cp',
+        );
+        final aPhone = prefs.getString(
+          '$_kAddress'
+          '_'
+          '$cp',
+        );
+        final ePhone = prefs.getString(
+          '$_kEmail'
+          '_'
+          '$cp',
+        );
         vehicleType = tPhone;
         vehicleBrand = bPhone;
         vehicleName = nPhone;
@@ -302,7 +357,11 @@ class AppState {
     print('Vehicle set for ' + cp);
   }
 
-  static Future<void> setProfile({String? name, String? addr, String? mail}) async {
+  static Future<void> setProfile({
+    String? name,
+    String? addr,
+    String? mail,
+  }) async {
     fullName = name ?? fullName;
     address = addr ?? address;
     email = mail ?? email;
@@ -348,7 +407,8 @@ class AppState {
   }
 
   // Likes API
-  static bool isServiceLiked(int serviceId) => likedServiceIds.contains(serviceId);
+  static bool isServiceLiked(int serviceId) =>
+      likedServiceIds.contains(serviceId);
 
   static Future<void> toggleLikeService(int serviceId) async {
     if (likedServiceIds.contains(serviceId)) {

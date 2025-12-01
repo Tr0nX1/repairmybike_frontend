@@ -48,7 +48,7 @@ class _AuthPageState extends State<AuthPage> {
     super.dispose();
   }
 
-  void _startCountdown([int seconds = 60]) {
+  void _startCountdown([int seconds = 30]) {
     _timer?.cancel();
     setState(() => _secondsLeft = seconds);
     _timer = Timer.periodic(const Duration(seconds: 1), (t) {
@@ -94,6 +94,11 @@ class _AuthPageState extends State<AuthPage> {
       return;
     }
     final phone = AppState.normalizePhone(raw);
+    final digits = phone.replaceAll(RegExp(r'\D'), '');
+    if (digits.length < 10) {
+      _showSnack('Enter a valid phone number with at least 10 digits');
+      return;
+    }
     setState(() => _loading = true);
     try {
       await _api.requestOtpPhone(phone);
@@ -129,6 +134,21 @@ class _AuthPageState extends State<AuthPage> {
       final refresh = (res['refresh_token'] ?? '') as String;
       await AppState.setAuth(phone: phone, session: session, refresh: refresh);
       await AppState.setLastCustomerPhone(phone);
+      try {
+        final profile = await _api.getProfile(sessionToken: session);
+        final first = (profile['first_name'] ?? '') as String;
+        final last = (profile['last_name'] ?? '') as String;
+        final mail = (profile['email'] ?? '') as String;
+        final full = [
+          first,
+          last,
+        ].where((e) => e.trim().isNotEmpty).join(' ').trim();
+        await AppState.setProfile(
+          name: full.isNotEmpty ? full : null,
+          addr: null,
+          mail: mail.isNotEmpty ? mail : null,
+        );
+      } catch (_) {}
       _showSnack('Signed in');
       setState(() {
         _otpStep = false;

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/app_state.dart';
+import '../data/auth_api.dart';
 import 'auth_page.dart';
 import 'main_shell.dart';
 import 'profile_details_page.dart';
@@ -39,6 +40,17 @@ class _FlashPageState extends State<FlashPage>
 
   Future<void> _initAndNavigate() async {
     await AppState.init();
+    if (AppState.isAuthenticated && (AppState.sessionToken?.isNotEmpty ?? false)) {
+      try {
+        final api = AuthApi();
+        final profile = await api.getProfile(sessionToken: AppState.sessionToken!);
+        final first = (profile['first_name'] ?? '') as String;
+        final last = (profile['last_name'] ?? '') as String;
+        final mail = (profile['email'] ?? '') as String;
+        final full = [first, last].where((e) => e.trim().isNotEmpty).join(' ').trim();
+        await AppState.setProfile(name: full.isNotEmpty ? full : null, addr: null, mail: mail.isNotEmpty ? mail : null);
+      } catch (_) {}
+    }
     if (mounted) _controller.forward();
     _timer = Timer(const Duration(milliseconds: 2500), () {
       if (!mounted) return;
