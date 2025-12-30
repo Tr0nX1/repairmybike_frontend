@@ -1,5 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'auth_api.dart';
+import 'vehicles_api.dart';
 
 class AppState {
   // Keys for persistence
@@ -264,13 +266,28 @@ class AppState {
     vehicleBrand = null;
     vehicleName = null;
     vehicleModelId = null;
+    lastCustomerPhone = null;
+
+    // Clear in-memory likes
+    likedServiceIds.clear();
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kPhone);
     await prefs.remove(_kSession);
     await prefs.remove(_kRefresh);
     await prefs.remove(_kIsStaff);
     await prefs.remove(_kUsername);
-    // Do not clear likes or profile; they are user-preferences.
+    await prefs.remove(_kLastCustomerPhone);
+    await prefs.remove(_kLikedServices);
+
+    // Clear cart data (keys defined in cart_provider.dart)
+    await prefs.remove('cart_json_v1');
+    await prefs.remove('session_id_v1');
+
+    // Update store to remove currentPhone
+    final store = await _readStore();
+    store['currentPhone'] = null;
+    await _writeStore(store);
   }
 
   // Staff auth: username/password based session. No refresh for now.
@@ -326,12 +343,19 @@ class AppState {
     }
   }
 
-  static Future<void> setVehicle({required String name, int? modelId}) async {
+  static Future<void> setVehicle({
+    required String name,
+    int? modelId,
+    bool syncToBackend = true,
+  }) async {
     vehicleName = name;
     vehicleModelId = modelId;
 
-    // Sync to backend if authenticated
-    if (isAuthenticated && sessionToken != null && modelId != null) {
+    // Sync to backend if authenticated and requested
+    if (syncToBackend &&
+        isAuthenticated &&
+        sessionToken != null &&
+        modelId != null) {
       try {
         await VehiclesApi().addUserVehicle(
           sessionToken: sessionToken!,

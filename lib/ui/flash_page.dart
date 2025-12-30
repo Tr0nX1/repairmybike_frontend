@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
+import '../data/vehicles_api.dart';
 import 'auth_page.dart';
 import 'main_shell.dart';
 import 'profile_details_page.dart';
@@ -77,8 +78,13 @@ class _FlashPageState extends State<FlashPage>
 
             if (typeName != null) await AppState.setVehicleType(typeName);
             if (brandName != null) await AppState.setVehicleBrand(brandName);
-            if (modelName != null)
-              await AppState.setVehicle(name: modelName, modelId: modelId);
+            if (modelName != null) {
+              await AppState.setVehicle(
+                name: modelName,
+                modelId: modelId,
+                syncToBackend: false,
+              );
+            }
           }
         }
       } catch (_) {}
