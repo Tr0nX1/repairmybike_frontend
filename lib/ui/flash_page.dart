@@ -40,15 +40,47 @@ class _FlashPageState extends State<FlashPage>
 
   Future<void> _initAndNavigate() async {
     await AppState.init();
-    if (AppState.isAuthenticated && (AppState.sessionToken?.isNotEmpty ?? false)) {
+    if (AppState.isAuthenticated &&
+        (AppState.sessionToken?.isNotEmpty ?? false)) {
       try {
         final api = AuthApi();
-        final profile = await api.getProfile(sessionToken: AppState.sessionToken!);
+        final profile = await api.getProfile(
+          sessionToken: AppState.sessionToken!,
+        );
         final first = (profile['first_name'] ?? '') as String;
         final last = (profile['last_name'] ?? '') as String;
         final mail = (profile['email'] ?? '') as String;
-        final full = [first, last].where((e) => e.trim().isNotEmpty).join(' ').trim();
-        await AppState.setProfile(name: full.isNotEmpty ? full : null, addr: null, mail: mail.isNotEmpty ? mail : null);
+        final full = [
+          first,
+          last,
+        ].where((e) => e.trim().isNotEmpty).join(' ').trim();
+        await AppState.setProfile(
+          name: full.isNotEmpty ? full : null,
+          addr: null,
+          mail: mail.isNotEmpty ? mail : null,
+        );
+
+        // Sync vehicle
+        final vApi = VehiclesApi();
+        final vehicles = await vApi.getUserVehicles(
+          sessionToken: AppState.sessionToken!,
+        );
+        if (vehicles.isNotEmpty) {
+          // Sort by default or created_at? Backend sorts by -is_default, -created_at
+          final v = vehicles.first;
+          final details = v['vehicle_model_details'];
+          if (details != null) {
+            final typeName = details['vehicle_type_name'];
+            final brandName = details['brand_name'];
+            final modelName = details['name'];
+            final modelId = details['id'];
+
+            if (typeName != null) await AppState.setVehicleType(typeName);
+            if (brandName != null) await AppState.setVehicleBrand(brandName);
+            if (modelName != null)
+              await AppState.setVehicle(name: modelName, modelId: modelId);
+          }
+        }
       } catch (_) {}
     }
     if (mounted) _controller.forward();

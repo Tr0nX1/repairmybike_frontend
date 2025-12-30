@@ -7,7 +7,12 @@ import 'profile_details_page.dart';
 import 'widgets/rm_app_bar.dart';
 
 class VehicleNamePage extends StatefulWidget {
-  const VehicleNamePage({super.key, this.phone, required this.vehicleBrandId, required this.vehicleBrandName});
+  const VehicleNamePage({
+    super.key,
+    this.phone,
+    required this.vehicleBrandId,
+    required this.vehicleBrandName,
+  });
   final String? phone;
   final int vehicleBrandId;
   final String vehicleBrandName;
@@ -45,7 +50,6 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
 
   @override
   Widget build(BuildContext context) {
-
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: RMAppBar(title: 'Select ${widget.vehicleBrandName} Model'),
@@ -57,37 +61,42 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
             const SizedBox(height: 20),
             Text(
               'Choose your ${widget.vehicleBrandName} model:',
-              style: const TextStyle(
-                color: Colors.white70,
-                fontSize: 16,
-              ),
+              style: const TextStyle(color: Colors.white70, fontSize: 16),
             ),
             const SizedBox(height: 30),
             Expanded(
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _error != null
-                      ? Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(_error!, style: const TextStyle(color: Colors.white70)),
-                            const SizedBox(height: 12),
-                            OutlinedButton(onPressed: _loadModels, child: const Text('Retry')),
-                          ],
-                        )
-                      : GridView.builder(
-                          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                            crossAxisCount: MediaQuery.of(context).size.width < 600 ? 2 : 3,
-                            childAspectRatio: 0.95,
-                            crossAxisSpacing: 15,
-                            mainAxisSpacing: 15,
-                          ),
-                          itemCount: _models.length,
-                          itemBuilder: (context, index) {
-                            final item = _models[index];
-                            return _buildModelTile(context, item);
-                          },
+                  ? Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _error!,
+                          style: const TextStyle(color: Colors.white70),
                         ),
+                        const SizedBox(height: 12),
+                        OutlinedButton(
+                          onPressed: _loadModels,
+                          child: const Text('Retry'),
+                        ),
+                      ],
+                    )
+                  : GridView.builder(
+                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: MediaQuery.of(context).size.width < 600
+                            ? 2
+                            : 3,
+                        childAspectRatio: 0.95,
+                        crossAxisSpacing: 15,
+                        mainAxisSpacing: 15,
+                      ),
+                      itemCount: _models.length,
+                      itemBuilder: (context, index) {
+                        final item = _models[index];
+                        return _buildModelTile(context, item);
+                      },
+                    ),
             ),
             const SizedBox(height: 20),
             // Custom model input option
@@ -103,23 +112,28 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
     final img = buildImageUrl(item.image);
     return GestureDetector(
       onTap: () async {
-          await AppState.setVehicleName(model);
-          if (widget.phone != null && widget.phone!.isNotEmpty) {
-            await AppState.setVehicleForPhone(
-              phone: widget.phone!,
-              type: AppState.vehicleType,
-              brand: AppState.vehicleBrand,
-              name: model,
-            );
-          }
-          final needsDetails = AppState.isCustomerAuthenticated &&
-              ((AppState.fullName?.isEmpty ?? true) || (AppState.address?.isEmpty ?? true));
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => needsDetails ? const ProfileDetailsPage() : const MainShell()),
-            (route) => false,
+        await AppState.setVehicle(name: model, modelId: item.id);
+        if (widget.phone != null && widget.phone!.isNotEmpty) {
+          await AppState.setVehicleForPhone(
+            phone: widget.phone!,
+            type: AppState.vehicleType,
+            brand: AppState.vehicleBrand,
+            name: model,
           );
-        },
+        }
+        final needsDetails =
+            AppState.isCustomerAuthenticated &&
+            ((AppState.fullName?.isEmpty ?? true) ||
+                (AppState.address?.isEmpty ?? true));
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(
+            builder: (_) =>
+                needsDetails ? const ProfileDetailsPage() : const MainShell(),
+          ),
+          (route) => false,
+        );
+      },
       child: Container(
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
@@ -139,19 +153,32 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
                         alignment: Alignment.center,
                         loadingBuilder: (context, child, progress) {
                           if (progress == null) return child;
-                          return const Center(child: CircularProgressIndicator());
+                          return const Center(
+                            child: CircularProgressIndicator(),
+                          );
                         },
-                        errorBuilder: (_, __, ___) => const Icon(Icons.directions_bike, color: Colors.white54, size: 40),
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.directions_bike,
+                          color: Colors.white54,
+                          size: 40,
+                        ),
                       ),
                     )
-                  : const Icon(Icons.directions_bike, color: Colors.white54, size: 40),
+                  : const Icon(
+                      Icons.directions_bike,
+                      color: Colors.white54,
+                      size: 40,
+                    ),
             ),
             const SizedBox(height: 8),
             Text(
               model,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              style: const TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -167,20 +194,14 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
       decoration: BoxDecoration(
         color: Colors.grey[900],
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: Colors.grey[700]!,
-          width: 1,
-        ),
+        border: Border.all(color: Colors.grey[700]!, width: 1),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
             'Don\'t see your model?',
-            style: TextStyle(
-              color: Colors.white70,
-              fontSize: 14,
-            ),
+            style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
           const SizedBox(height: 10),
           TextField(
@@ -206,7 +227,7 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
                 onPressed: () async {
                   if (customController.text.trim().isNotEmpty) {
                     final name = customController.text.trim();
-                    await AppState.setVehicleName(name);
+                    await AppState.setVehicle(name: name);
                     if (widget.phone != null && widget.phone!.isNotEmpty) {
                       await AppState.setVehicleForPhone(
                         phone: widget.phone!,
@@ -215,11 +236,17 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
                         name: name,
                       );
                     }
-                    final needsDetails = AppState.isCustomerAuthenticated &&
-                        ((AppState.fullName?.isEmpty ?? true) || (AppState.address?.isEmpty ?? true));
+                    final needsDetails =
+                        AppState.isCustomerAuthenticated &&
+                        ((AppState.fullName?.isEmpty ?? true) ||
+                            (AppState.address?.isEmpty ?? true));
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(builder: (_) => needsDetails ? const ProfileDetailsPage() : const MainShell()),
+                      MaterialPageRoute(
+                        builder: (_) => needsDetails
+                            ? const ProfileDetailsPage()
+                            : const MainShell(),
+                      ),
                       (route) => false,
                     );
                   }

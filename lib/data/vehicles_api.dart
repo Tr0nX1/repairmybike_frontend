@@ -13,7 +13,10 @@ class VehicleTypeItem {
     return VehicleTypeItem(
       id: (json['id'] as num).toInt(),
       name: json['name'] as String? ?? '',
-      image: (json['image'] as String?) ?? (json['logo'] as String?) ?? (json['icon'] as String?),
+      image:
+          (json['image'] as String?) ??
+          (json['logo'] as String?) ??
+          (json['icon'] as String?),
     );
   }
 }
@@ -39,7 +42,10 @@ class VehicleBrandItem {
       vehicleTypeId: (json['vehicle_type'] as num).toInt(),
       vehicleTypeName: json['vehicle_type_name'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      image: (json['image'] as String?) ?? (json['logo'] as String?) ?? (json['icon'] as String?),
+      image:
+          (json['image'] as String?) ??
+          (json['logo'] as String?) ??
+          (json['icon'] as String?),
     );
   }
 }
@@ -68,7 +74,10 @@ class VehicleModelItem {
       brandName: json['brand_name'] as String? ?? '',
       vehicleTypeName: json['vehicle_type_name'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      image: (json['image'] as String?) ?? (json['logo'] as String?) ?? (json['icon'] as String?),
+      image:
+          (json['image'] as String?) ??
+          (json['logo'] as String?) ??
+          (json['icon'] as String?),
     );
   }
 }
@@ -77,29 +86,37 @@ class VehiclesApi {
   final Dio _dio;
 
   VehiclesApi()
-      : _dio = Dio(
-          BaseOptions(
-            baseUrl: backendBase,
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 15),
-          ),
-        ) {
+    : _dio = Dio(
+        BaseOptions(
+          baseUrl: backendBase,
+          connectTimeout: const Duration(seconds: 10),
+          receiveTimeout: const Duration(seconds: 15),
+        ),
+      ) {
     assert(() {
-      _dio.interceptors.add(LogInterceptor(request: true, responseBody: false, error: true));
-      _dio.interceptors.add(InterceptorsWrapper(
-        onRequest: (o, h) {
-          debugPrint('➡️ ${o.method} ${o.uri}');
-          h.next(o);
-        },
-        onResponse: (r, h) {
-          debugPrint('✅ ${r.requestOptions.method} ${r.requestOptions.uri} -> ${r.statusCode}');
-          h.next(r);
-        },
-        onError: (e, h) {
-          debugPrint('❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message}');
-          h.next(e);
-        },
-      ));
+      _dio.interceptors.add(
+        LogInterceptor(request: true, responseBody: false, error: true),
+      );
+      _dio.interceptors.add(
+        InterceptorsWrapper(
+          onRequest: (o, h) {
+            debugPrint('➡️ ${o.method} ${o.uri}');
+            h.next(o);
+          },
+          onResponse: (r, h) {
+            debugPrint(
+              '✅ ${r.requestOptions.method} ${r.requestOptions.uri} -> ${r.statusCode}',
+            );
+            h.next(r);
+          },
+          onError: (e, h) {
+            debugPrint(
+              '❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message}',
+            );
+            h.next(e);
+          },
+        ),
+      );
       return true;
     }());
   }
@@ -162,5 +179,41 @@ class VehiclesApi {
       }
     }
     throw Exception('Unexpected response shape for vehicle models');
+  }
+
+  Future<Map<String, dynamic>> addUserVehicle({
+    required String sessionToken,
+    required int vehicleModelId,
+  }) async {
+    final res = await _dio.post(
+      '/api/vehicles/user-vehicles/',
+      data: {'vehicle_model_id': vehicleModelId, 'is_default': true},
+      options: Options(headers: {'Authorization': 'Bearer $sessionToken'}),
+    );
+    final data = res.data;
+    if (data is Map<String, dynamic>) return data;
+    throw Exception('Unexpected response shape for add user vehicle');
+  }
+
+  Future<List<Map<String, dynamic>>> getUserVehicles({
+    required String sessionToken,
+  }) async {
+    final res = await _dio.get(
+      '/api/vehicles/user-vehicles/',
+      options: Options(headers: {'Authorization': 'Bearer $sessionToken'}),
+    );
+    final body = res.data;
+    if (body is List) {
+      return body.whereType<Map<String, dynamic>>().toList();
+    }
+    // Pagination check
+    if (body is Map<String, dynamic>) {
+      if (body['results'] is List) {
+        return (body['results'] as List)
+            .whereType<Map<String, dynamic>>()
+            .toList();
+      }
+    }
+    throw Exception('Unexpected response shape for user vehicles');
   }
 }

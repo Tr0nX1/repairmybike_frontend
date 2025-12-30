@@ -75,6 +75,7 @@ class AppState {
   static String? vehicleType; // 'scooter' or 'motorcycle'
   static String? vehicleBrand; // e.g., 'Honda', 'Yamaha', 'TVS'
   static String? vehicleName; // e.g., 'Activa 6G', 'FZ-S V3'
+  static int? vehicleModelId; // Backend ID for vehicle model
   static String? fullName;
   static String? address;
   static String? email;
@@ -127,6 +128,7 @@ class AppState {
     vehicleType = null;
     vehicleBrand = null;
     vehicleName = null;
+    vehicleModelId = null;
     avatarUrl = prefs.getString(_kAvatarUrl);
     lastCustomerPhone = prefs.getString(_kLastCustomerPhone);
 
@@ -149,6 +151,7 @@ class AppState {
         vehicleType = u['vehicleType'] as String?;
         vehicleBrand = u['vehicleBrand'] as String?;
         vehicleName = u['vehicleName'] as String?;
+        vehicleModelId = u['vehicleModelId'] as int?;
         fullName = u['fullName'] as String?;
         address = u['address'] as String?;
         email = u['email'] as String?;
@@ -195,6 +198,7 @@ class AppState {
           'vehicleType': vehicleType,
           'vehicleBrand': vehicleBrand,
           'vehicleName': vehicleName,
+          'vehicleModelId': vehicleModelId,
           'fullName': fullName,
           'address': address,
           'email': email,
@@ -259,6 +263,7 @@ class AppState {
     vehicleType = null;
     vehicleBrand = null;
     vehicleName = null;
+    vehicleModelId = null;
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kPhone);
     await prefs.remove(_kSession);
@@ -321,19 +326,38 @@ class AppState {
     }
   }
 
-  static Future<void> setVehicleName(String name) async {
+  static Future<void> setVehicle({required String name, int? modelId}) async {
     vehicleName = name;
+    vehicleModelId = modelId;
+
+    // Sync to backend if authenticated
+    if (isAuthenticated && sessionToken != null && modelId != null) {
+      try {
+        await VehiclesApi().addUserVehicle(
+          sessionToken: sessionToken!,
+          vehicleModelId: modelId,
+        );
+      } catch (e) {
+        print('Failed to sync vehicle to backend: $e');
+      }
+    }
+
     final store = await _readStore();
     final cp = normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '');
     if (cp.isNotEmpty) {
       final profiles = (store['profiles'] as Map?) ?? {};
       final u = (profiles[cp] as Map?) ?? {};
       u['vehicleName'] = name;
+      if (modelId != null) u['vehicleModelId'] = modelId;
       profiles[cp] = u;
       store['profiles'] = profiles;
       store['currentPhone'] = cp;
       await _writeStore(store);
     }
+  }
+
+  static Future<void> setVehicleName(String name) async {
+    await setVehicle(name: name);
   }
 
   // Persist vehicle selection keyed by mobile number
@@ -365,6 +389,32 @@ class AppState {
     fullName = name ?? fullName;
     address = addr ?? address;
     email = mail ?? email;
+
+    // Sync to backend if authenticated
+    if (isAuthenticated && sessionToken != null) {
+      try {
+        String? first;
+        String? last;
+        if (name != null) {
+          final parts = name.trim().split(' ');
+          if (parts.isNotEmpty) {
+            first = parts.first;
+            if (parts.length > 1) {
+              last = parts.sublist(1).join(' ');
+            }
+          }
+        }
+        await AuthApi().updateProfile(
+          sessionToken: sessionToken!,
+          firstName: first,
+          lastName: last,
+          email: mail,
+        );
+      } catch (e) {
+        print('Failed to sync profile to backend: $e');
+      }
+    }
+
     final store = await _readStore();
     final cp = normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '');
     if (cp.isNotEmpty) {

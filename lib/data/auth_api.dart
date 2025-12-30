@@ -159,12 +159,14 @@ class AuthApi {
     String? lastName,
     String? phoneNumber,
     String? profilePicture,
+    String? email,
   }) async {
     final payload = <String, dynamic>{};
     if (firstName != null) payload['first_name'] = firstName;
     if (lastName != null) payload['last_name'] = lastName;
     if (phoneNumber != null) payload['phone_number'] = phoneNumber;
     if (profilePicture != null) payload['profile_picture'] = profilePicture;
+    if (email != null) payload['email'] = email;
     final res = await _dio.patch(
       '/api/auth/profile/',
       data: payload,

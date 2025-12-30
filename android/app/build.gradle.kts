@@ -90,4 +90,5 @@ flutter {
 }
 
 dependencies {
+    implementation("com.google.android.play:core:1.10.3")
 }
