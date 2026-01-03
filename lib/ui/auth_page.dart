@@ -149,7 +149,7 @@ class _AuthPageState extends State<AuthPage> {
           mail: mail.isNotEmpty ? mail : null,
         );
       } catch (_) {}
-      _showSnack('Signed in');
+      // _showSnack('Signed in');
       setState(() {
         _otpStep = false;
         _otpCtrl.clear();
