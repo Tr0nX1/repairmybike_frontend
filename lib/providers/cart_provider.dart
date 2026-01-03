@@ -22,11 +22,10 @@ final cartApiProvider = Provider<CartApi>((ref) => CartApi());
 final orderApiProvider = Provider<OrderApi>((ref) => OrderApi());
 
 class CartNotifier extends Notifier<Cart> {
-  late final CartApi _api;
+  CartApi get _api => ref.read(cartApiProvider);
 
   @override
   Cart build() {
-    _api = ref.read(cartApiProvider);
     // Kick off async load; keep initial empty state until it arrives
     Future(() async => await load());
     return Cart.empty();
