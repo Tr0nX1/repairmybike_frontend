@@ -119,10 +119,34 @@ class AppState {
     isStaff = prefs.getBool(_kIsStaff) ?? false;
     staffUsername = prefs.getString(_kUsername);
     if (isSessionExpired) {
-      sessionToken = null;
-      refreshToken = null;
-      await prefs.remove(_kSession);
-      await prefs.remove(_kRefresh);
+      // Attempt to refresh token
+      bool refreshed = false;
+      if (refreshToken != null && refreshToken!.isNotEmpty) {
+        try {
+          final res = await AuthApi().refreshToken(refreshToken: refreshToken!);
+          final newSession = res['session_token'] as String?;
+          final newRefresh = res['refresh_token'] as String?;
+          if (newSession != null) {
+            sessionToken = newSession;
+            await prefs.setString(_kSession, newSession);
+            if (newRefresh != null) {
+              refreshToken = newRefresh;
+              await prefs.setString(_kRefresh, newRefresh);
+            }
+            refreshed = true;
+            print('Session refreshed successfully');
+          }
+        } catch (e) {
+          print('Session refresh failed: $e');
+        }
+      }
+
+      if (!refreshed) {
+        sessionToken = null;
+        refreshToken = null;
+        await prefs.remove(_kSession);
+        await prefs.remove(_kRefresh);
+      }
     }
     // Do NOT hydrate global profile/vehicle; use phone-scoped values only
     fullName = null;
@@ -406,6 +430,14 @@ class AppState {
     store['currentPhone'] = cp;
     await _writeStore(store);
     print('Vehicle set for ' + cp);
+
+    // Update in-memory state if this phone matches the currently active user/guest
+    final currentCp = normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '');
+    if (cp == currentCp) {
+      if (type != null) vehicleType = type;
+      if (brand != null) vehicleBrand = brand;
+      if (name != null) vehicleName = name;
+    }
   }
 
   static Future<void> setProfile({

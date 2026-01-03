@@ -77,114 +77,127 @@ class _VehicleBrandPageState extends State<VehicleBrandPage> {
       appBar: RMAppBar(
         title: 'Select ${widget.vehicleTypeName.toUpperCase()} Brand',
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const SizedBox(height: 20),
-            Text(
-              'Choose your ${widget.vehicleTypeName} brand:',
-              style: const TextStyle(color: Colors.white70, fontSize: 16),
-            ),
-            const SizedBox(height: 30),
-            Expanded(
-              child: _loading
-                  ? const Center(child: CircularProgressIndicator())
-                  : _error != null
-                  ? Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          _error!,
-                          style: const TextStyle(color: Colors.white70),
-                        ),
-                        const SizedBox(height: 12),
-                        OutlinedButton(
-                          onPressed: _loadBrands,
-                          child: const Text('Retry'),
-                        ),
-                      ],
-                    )
-                  : GridView.builder(
-                      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: MediaQuery.of(context).size.width < 600
-                            ? 2
-                            : 3,
-                        childAspectRatio: 0.95,
-                        crossAxisSpacing: 15,
-                        mainAxisSpacing: 15,
-                      ),
-                      itemCount: _brands.length,
-                      itemBuilder: (context, index) {
-                        final item = _brands[index];
-                        final img = buildImageUrl(item.image);
-                        return InkWell(
-                          onTap: () => _select(item),
-                          borderRadius: BorderRadius.circular(12),
-                          child: Container(
-                            decoration: BoxDecoration(
-                              color: Colors.grey[900],
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: Colors.grey[700]!,
-                                width: 1,
+      body: Align(
+        alignment: Alignment.topCenter,
+        child: Container(
+          constraints: const BoxConstraints(maxWidth: 680),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1C1C1C),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFF2A2A2A)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const SizedBox(height: 10),
+              Center(
+                child: Text(
+                  'Choose your ${widget.vehicleTypeName} brand',
+                  style: const TextStyle(color: Colors.white70, fontSize: 16),
+                ),
+              ),
+              const SizedBox(height: 20),
+              Expanded(
+                child: _loading
+                    ? const Center(child: CircularProgressIndicator())
+                    : _error != null
+                    ? Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            _error!,
+                            style: const TextStyle(color: Colors.white70),
+                          ),
+                          const SizedBox(height: 12),
+                          OutlinedButton(
+                            onPressed: _loadBrands,
+                            child: const Text('Retry'),
+                          ),
+                        ],
+                      )
+                    : GridView.builder(
+                        shrinkWrap: true,
+                         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: MediaQuery.of(context).size.width < 600
+                               ? 2
+                               : (MediaQuery.of(context).size.width < 900 ? 3 : 4),
+                            childAspectRatio: 0.95,
+                            crossAxisSpacing: 12,
+                            mainAxisSpacing: 12,
+                          ),
+                        itemCount: _brands.length,
+                        itemBuilder: (context, index) {
+                          final item = _brands[index];
+                          final img = buildImageUrl(item.image);
+                          return InkWell(
+                            onTap: () => _select(item),
+                            borderRadius: BorderRadius.circular(12),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF171717),
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(
+                                  color: const Color(0xFF2A2A2A),
+                                  width: 1,
+                                ),
+                              ),
+                              padding: const EdgeInsets.all(12),
+                              child: Column(
+                                children: [
+                                  Expanded(
+                                    child: img != null
+                                        ? ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
+                                            child: Image.network(
+                                              img,
+                                              fit: BoxFit.cover,
+                                              alignment: Alignment.center,
+                                              loadingBuilder:
+                                                  (context, child, progress) {
+                                                    if (progress == null)
+                                                      return child;
+                                                    return const Center(
+                                                      child:
+                                                          CircularProgressIndicator(),
+                                                    );
+                                                  },
+                                              errorBuilder: (_, __, ___) =>
+                                                  const Icon(
+                                                    Icons.factory,
+                                                    color: Colors.white54,
+                                                    size: 40,
+                                                  ),
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.factory,
+                                            color: Colors.white54,
+                                            size: 40,
+                                          ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    item.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                            padding: const EdgeInsets.all(12),
-                            child: Column(
-                              children: [
-                                Expanded(
-                                  child: img != null
-                                      ? ClipRRect(
-                                          borderRadius: BorderRadius.circular(
-                                            8,
-                                          ),
-                                          child: Image.network(
-                                            img,
-                                            fit: BoxFit.cover,
-                                            alignment: Alignment.center,
-                                            loadingBuilder:
-                                                (context, child, progress) {
-                                                  if (progress == null)
-                                                    return child;
-                                                  return const Center(
-                                                    child:
-                                                        CircularProgressIndicator(),
-                                                  );
-                                                },
-                                            errorBuilder: (_, __, ___) =>
-                                                const Icon(
-                                                  Icons.factory,
-                                                  color: Colors.white54,
-                                                  size: 40,
-                                                ),
-                                          ),
-                                        )
-                                      : const Icon(
-                                          Icons.factory,
-                                          color: Colors.white54,
-                                          size: 40,
-                                        ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  item.name,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );

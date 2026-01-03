@@ -6,13 +6,35 @@ class SavedServicesApi {
 
   String get _baseUrl => '${resolveBackendBase()}/api/services';
 
+  Future<List<Map<String, dynamic>>> getSavedServices(String sessionToken) async {
+    try {
+      final response = await _dio.get(
+        '$_baseUrl/saved-services/',
+        options: Options(
+          headers: {
+            'Authorization': 'Bearer $sessionToken',
+            'Content-Type': 'application/json',
+          },
+        ),
+      );
+
+      if (response.statusCode == 200 && response.data['error'] == false) {
+        final List data = response.data['data'];
+        return List<Map<String, dynamic>>.from(data);
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
   Future<List<int>> getSavedServiceIds(String sessionToken) async {
     try {
       final response = await _dio.get(
         '$_baseUrl/saved-services/',
         options: Options(
           headers: {
-            'Authorization': 'Token $sessionToken',
+            'Authorization': 'Bearer $sessionToken',
             'Content-Type': 'application/json',
           },
         ),
@@ -35,7 +57,7 @@ class SavedServicesApi {
         data: {'service_id': serviceId},
         options: Options(
           headers: {
-            'Authorization': 'Token $sessionToken',
+            'Authorization': 'Bearer $sessionToken',
             'Content-Type': 'application/json',
           },
         ),
@@ -53,7 +75,7 @@ class SavedServicesApi {
         data: {'service_id': serviceId},
         options: Options(
           headers: {
-            'Authorization': 'Token $sessionToken',
+            'Authorization': 'Bearer $sessionToken',
             'Content-Type': 'application/json',
           },
         ),

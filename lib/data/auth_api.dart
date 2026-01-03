@@ -141,6 +141,22 @@ class AuthApi {
     );
   }
 
+  Future<Map<String, dynamic>> refreshToken({required String refreshToken}) async {
+    try {
+      final res = await _dio.post(
+        '/api/auth/token/refresh/',
+        data: {'refresh_token': refreshToken},
+      );
+      final data = res.data;
+      if (data is Map<String, dynamic>) {
+        return data; // {session_token, refresh_token?}
+      }
+      throw Exception('Unexpected refresh response');
+    } on DioException catch (e) {
+      throw Exception('Token refresh failed: ${e.message}');
+    }
+  }
+
   Future<Map<String, dynamic>> getProfile({
     required String sessionToken,
   }) async {

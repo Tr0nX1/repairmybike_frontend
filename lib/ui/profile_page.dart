@@ -8,6 +8,7 @@ import 'profile_details_page.dart';
 import 'vehicle_type_page.dart';
 import 'booking_list_page.dart';
 import 'cart_page.dart';
+import 'saved_services_page.dart';
 import '../data/booking_api.dart'; // Added for fetching bookings
 
 class ProfilePage extends StatefulWidget {
@@ -185,7 +186,7 @@ class _ProfilePageState extends State<ProfilePage> {
                         title: 'Saved', 
                         value: '${AppState.likedServiceIds.length}',
                         // Synced with backend now
-                        onTap: () {}, // TODO: Link to a dedicated Saved page later
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedServicesPage())),
                     ),
                   ],
                 ),
