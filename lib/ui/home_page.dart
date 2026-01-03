@@ -78,7 +78,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: Image.asset(
-                        'assets/images/logo/repairmybike_newlogo.jpe',
+                        'assets/images/logo/repairmybike_newlogo.jpeg',
                         fit: BoxFit.cover,
                         errorBuilder: (context, error, stack) {
                           return Image.asset(
@@ -172,8 +172,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                         ),
                       );
                     }
-                    // Force 4 columns grid per requirement
-                    const crossAxisCount = 4;
+                    // Responsive grid: 4 cols on mobile, more on wider screens
+                    final width = MediaQuery.of(context).size.width;
+                    int crossAxisCount = 4;
+                    if (width >= 600) crossAxisCount = 6;
+                    if (width >= 1000) crossAxisCount = 8;
+                    if (width >= 1400) crossAxisCount = 10;
                     final visible = _showAllCategories
                         ? categories
                         : categories.take(8).toList();

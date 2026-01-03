@@ -148,13 +148,22 @@ class _ServicesPageState extends ConsumerState<ServicesPage> {
                   );
                 }
 
+                // Responsive grid
+                final width = MediaQuery.of(context).size.width;
+                int cols = 2;
+                if (width >= 600) cols = 4;
+                if (width >= 1000) cols = 5;
+                if (width >= 1400) cols = 6;
+                // Adjust aspect ratio for wider cards to not look stretched
+                final ratio = width < 600 ? 0.78 : 0.85;
+
                 return GridView.builder(
                   padding: const EdgeInsets.all(16),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: cols,
                     crossAxisSpacing: 16,
                     mainAxisSpacing: 16,
-                    childAspectRatio: 0.78,
+                    childAspectRatio: ratio,
                   ),
                   itemCount: filtered.length,
                   itemBuilder: (context, idx) {

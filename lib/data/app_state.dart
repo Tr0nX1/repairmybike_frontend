@@ -2,6 +2,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'auth_api.dart';
 import 'vehicles_api.dart';
+import 'saved_services_api.dart';
 
 class AppState {
   // Keys for persistence
@@ -134,12 +135,14 @@ class AppState {
     avatarUrl = prefs.getString(_kAvatarUrl);
     lastCustomerPhone = prefs.getString(_kLastCustomerPhone);
 
-    // Likes
-    final likedRaw = prefs.getStringList(_kLikedServices) ?? const [];
-    likedServiceIds = likedRaw
-        .map((e) => int.tryParse(e))
-        .whereType<int>()
-        .toSet();
+    // Initial sync for saved services
+    if (isAuthenticated) {
+      await syncSavedServices();
+    } else {
+      // Load local likes if not auth or fallback
+      final likedRaw = prefs.getStringList(_kLikedServices) ?? const [];
+      likedServiceIds = likedRaw.map((e) => int.tryParse(e)).whereType<int>().toSet();
+    }
 
     final store = await _readStore();
     final cp0 = store['currentPhone'] as String?;
@@ -485,27 +488,41 @@ class AppState {
       likedServiceIds.contains(serviceId);
 
   static Future<void> toggleLikeService(int serviceId) async {
-    if (likedServiceIds.contains(serviceId)) {
+    final wasLiked = likedServiceIds.contains(serviceId);
+    if (wasLiked) {
       likedServiceIds.remove(serviceId);
+      if (isAuthenticated && sessionToken != null) {
+        await SavedServicesApi().removeService(serviceId, sessionToken!);
+      }
     } else {
       likedServiceIds.add(serviceId);
+      if (isAuthenticated && sessionToken != null) {
+        await SavedServicesApi().saveService(serviceId, sessionToken!);
+      }
     }
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(
-      _kLikedServices,
-      likedServiceIds.map((e) => e.toString()).toList(),
+        _kLikedServices,
+        likedServiceIds.map((e) => e.toString()).toList(),
     );
   }
 
   static List<int> getLikedServiceIds() => likedServiceIds.toList()..sort();
 
-  static Future<void> setLikedServices(List<int> ids) async {
-    likedServiceIds = ids.toSet();
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setStringList(
-      _kLikedServices,
-      likedServiceIds.map((e) => e.toString()).toList(),
-    );
+  static Future<void> syncSavedServices() async {
+    if (!isAuthenticated || sessionToken == null) return;
+    try {
+      final ids = await SavedServicesApi().getSavedServiceIds(sessionToken!);
+      likedServiceIds = ids.toSet();
+      // Persist to local for offline/fast access
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        _kLikedServices,
+        likedServiceIds.map((e) => e.toString()).toList(),
+      );
+    } catch (_) {
+      // ignore
+    }
   }
 
   // Pending action persistence

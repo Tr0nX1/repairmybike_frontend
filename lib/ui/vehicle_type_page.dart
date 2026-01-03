@@ -104,7 +104,7 @@ class _VehicleTypePageState extends State<VehicleTypePage> {
                   gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: MediaQuery.of(context).size.width < 600
                         ? 2
-                        : 3,
+                        : (MediaQuery.of(context).size.width < 900 ? 3 : 4),
                     childAspectRatio: 0.95,
                     crossAxisSpacing: 12,
                     mainAxisSpacing: 12,

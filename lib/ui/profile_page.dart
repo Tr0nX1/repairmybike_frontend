@@ -36,6 +36,7 @@ class _ProfilePageState extends State<ProfilePage> {
 
   Future<void> _loadData() async {
     if (!AppState.isAuthenticated || (AppState.phoneNumber?.isEmpty ?? true)) return;
+    setState(() => _loading = true);
     try {
       final api = BookingApi();
       final bookings = await api.getBookingsByPhone(
@@ -49,6 +50,8 @@ class _ProfilePageState extends State<ProfilePage> {
       });
     } catch (_) {
       // ignore
+    } finally {
+        if (mounted) setState(() => _loading = false);
     }
   }
 
@@ -167,20 +170,22 @@ class _ProfilePageState extends State<ProfilePage> {
                     _StatCard(
                       title: 'Bookings', 
                       value: '$_bookingCount',
+                      isLoading: _loading,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookingListPage())),
                     ),
                     const SizedBox(width: 12),
                     _StatCard(
                         title: 'Vehicles', 
                         value: (AppState.vehicleName?.isNotEmpty ?? false) ? '1' : '0',
+                        isLoading: _loading,
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VehicleTypePage())), 
                     ),
                     const SizedBox(width: 12),
                     _StatCard(
                         title: 'Saved', 
                         value: '${AppState.likedServiceIds.length}',
-                        // No specific page for saved services yet, linking to Cart for now as placeholder or empty
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CartPage())), 
+                        // Synced with backend now
+                        onTap: () {}, // TODO: Link to a dedicated Saved page later
                     ),
                   ],
                 ),
@@ -396,7 +401,8 @@ class _StatCard extends StatelessWidget {
   final String title;
   final String value;
   final VoidCallback? onTap;
-  const _StatCard({required this.title, required this.value, this.onTap});
+  final bool isLoading;
+  const _StatCard({required this.title, required this.value, this.onTap, this.isLoading = false});
   @override
   Widget build(BuildContext context) {
     const Color card = Color(0xFF1C1C1C);
@@ -414,14 +420,20 @@ class _StatCard extends StatelessWidget {
           ),
           child: Column(
             children: [
-              Text(
-                value,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              isLoading
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                    )
+                  : Text(
+                      value,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 18,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
               const SizedBox(height: 4),
               Text(
                 title,
