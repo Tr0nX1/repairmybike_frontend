@@ -1,22 +1,24 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'main_shell.dart';
 import 'profile_details_page.dart';
 import '../data/auth_api.dart';
 import '../data/app_state.dart';
 import 'vehicle_type_page.dart';
+import '../providers/cart_provider.dart';
 
-class AuthPage extends StatefulWidget {
+class AuthPage extends ConsumerStatefulWidget {
   final VoidCallback? onFinished;
   final bool toDetailsOnFinish;
   const AuthPage({super.key, this.onFinished, this.toDetailsOnFinish = false});
 
   @override
-  State<AuthPage> createState() => _AuthPageState();
+  ConsumerState<AuthPage> createState() => _AuthPageState();
 }
 
-class _AuthPageState extends State<AuthPage> {
+class _AuthPageState extends ConsumerState<AuthPage> {
   static const Color bg = Color(0xFF0F0F0F);
   static const Color card = Color(0xFF1C1C1C);
   static const Color border = Color(0xFF2A2A2A);
@@ -134,6 +136,8 @@ class _AuthPageState extends State<AuthPage> {
       final refresh = (res['refresh_token'] ?? '') as String;
       await AppState.setAuth(phone: phone, session: session, refresh: refresh);
       await AppState.setLastCustomerPhone(phone);
+      // Invalidate cart to load user-specific data
+      ref.invalidate(cartProvider);
       try {
         final profile = await _api.getProfile(sessionToken: session);
         final first = (profile['first_name'] ?? '') as String;
@@ -172,6 +176,8 @@ class _AuthPageState extends State<AuthPage> {
       );
       await AppState.clearAuth();
       await AppState.setLastCustomerPhone(null);
+      // Invalidate cart to clear/reset state for guest or new user
+      ref.invalidate(cartProvider);
       setState(() {
         _otpStep = false;
         _mode = 'customer';
@@ -256,8 +262,21 @@ class _AuthPageState extends State<AuthPage> {
       return;
     }
 
-    // Requirement: If the user is authenticated and authorized, go to Home
-    // directly instead of any vehicle detail/selection screen.
+    // Check if new user needs to select vehicle
+    final hasVehicle =
+        (AppState.vehicleBrand?.isNotEmpty ?? false) &&
+        (AppState.vehicleName?.isNotEmpty ?? false);
+    
+    // If customer has no vehicle (and isn't staff), force selection flow
+    if (!AppState.isStaff && !hasVehicle) {
+       Navigator.of(context).pushReplacement(
+         MaterialPageRoute(
+           builder: (_) => VehicleTypePage(phone: AppState.phoneNumber),
+         ),
+       );
+       return;
+    }
+
     Navigator.of(
       context,
     ).pushReplacement(MaterialPageRoute(builder: (_) => const MainShell()));
@@ -295,6 +314,7 @@ class _AuthPageState extends State<AuthPage> {
     });
     await AppState.clearAuth();
     await AppState.setLastCustomerPhone(null);
+    ref.invalidate(cartProvider);
   }
 
   @override

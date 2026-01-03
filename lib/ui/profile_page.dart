@@ -6,6 +6,9 @@ import '../data/auth_api.dart';
 import 'auth_page.dart';
 import 'profile_details_page.dart';
 import 'vehicle_type_page.dart';
+import 'booking_list_page.dart';
+import 'cart_page.dart';
+import '../data/booking_api.dart'; // Added for fetching bookings
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -21,6 +24,33 @@ class _ProfilePageState extends State<ProfilePage> {
   static const Color accent = Color(0xFF01C9F5);
 
   bool _loggingOut = false;
+  int _bookingCount = 0;
+  List<Map<String, dynamic>> _recentBookings = [];
+  bool _loading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    if (!AppState.isAuthenticated || (AppState.phoneNumber?.isEmpty ?? true)) return;
+    try {
+      final api = BookingApi();
+      final bookings = await api.getBookingsByPhone(
+        AppState.phoneNumber!,
+        sessionToken: AppState.sessionToken,
+      );
+      setState(() {
+         _bookingCount = bookings.length;
+         // Take top 3 for recent
+         _recentBookings = bookings.take(3).toList();
+      });
+    } catch (_) {
+      // ignore
+    }
+  }
 
   Future<void> _logout() async {
     setState(() => _loggingOut = true);
@@ -131,15 +161,51 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 16),
 
                 // Quick stats
+                // Quick stats
                 Row(
-                  children: const [
-                    _StatCard(title: 'Bookings', value: '0'),
-                    SizedBox(width: 12),
-                    _StatCard(title: 'Vehicles', value: '1'),
-                    SizedBox(width: 12),
-                    _StatCard(title: 'Saved', value: '0'),
+                  children: [
+                    _StatCard(
+                      title: 'Bookings', 
+                      value: '$_bookingCount',
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookingListPage())),
+                    ),
+                    const SizedBox(width: 12),
+                    _StatCard(
+                        title: 'Vehicles', 
+                        value: (AppState.vehicleName?.isNotEmpty ?? false) ? '1' : '0',
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VehicleTypePage())), 
+                    ),
+                    const SizedBox(width: 12),
+                    _StatCard(
+                        title: 'Saved', 
+                        value: '${AppState.likedServiceIds.length}',
+                        // No specific page for saved services yet, linking to Cart for now as placeholder or empty
+                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CartPage())), 
+                    ),
                   ],
                 ),
+                
+                if (_recentBookings.isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    _Section(title: 'Recent Bookings'),
+                    ..._recentBookings.map((b) {
+                        return Container(
+                            margin: const EdgeInsets.only(bottom: 8),
+                            decoration: BoxDecoration(
+                                color: card,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: border),
+                            ),
+                            child: ListTile(
+                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookingListPage())),
+                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                                title: Text('Booking #${b['id']}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                subtitle: Text('${b['booking_status'] ?? 'Pending'} • ₹${b['total_amount']}', style: const TextStyle(color: Colors.white70)),
+                                trailing: const Icon(Icons.chevron_right, color: Colors.white54),
+                            ),
+                        );
+                    }).toList(),
+                ],
 
                 const SizedBox(height: 16),
 
@@ -329,35 +395,40 @@ class _ProfilePageState extends State<ProfilePage> {
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;
-  const _StatCard({required this.title, required this.value});
+  final VoidCallback? onTap;
+  const _StatCard({required this.title, required this.value, this.onTap});
   @override
   Widget build(BuildContext context) {
     const Color card = Color(0xFF1C1C1C);
     const Color border = Color(0xFF2A2A2A);
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        decoration: BoxDecoration(
-          color: card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: border),
-        ),
-        child: Column(
-          children: [
-            Text(
-              value,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 14),
+          decoration: BoxDecoration(
+            color: card,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: border),
+          ),
+          child: Column(
+            children: [
+              Text(
+                value,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              title,
-              style: const TextStyle(color: Colors.white60, fontSize: 12),
-            ),
-          ],
+              const SizedBox(height: 4),
+              Text(
+                title,
+                style: const TextStyle(color: Colors.white60, fontSize: 12),
+              ),
+            ],
+          ),
         ),
       ),
     );

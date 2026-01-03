@@ -34,17 +34,32 @@ class CartNotifier extends Notifier<Cart> {
 
   Future<String> _ensureSessionId() async {
     final prefs = await SharedPreferences.getInstance();
-    var key = prefs.getString(_kCartKey);
+    // Use auth-specific key if available, else generic
+    final uniqueKey = AppState.isAuthenticated
+        ? '${_kCartKey}_${AppState.phoneNumber}'
+        : _kCartKey;
+
+    var key = prefs.getString(uniqueKey);
     if (key == null || key.isEmpty) {
+        // If we switched users, we might want a fresh key or reuse guest?
+        // For safety, generate new.
       key = _generateCartKey();
-      await prefs.setString(_kCartKey, key);
+      await prefs.setString(uniqueKey, key);
     }
     return key;
   }
 
+  String _getStoreKey() {
+     if (AppState.isAuthenticated && AppState.phoneNumber != null) {
+       return '${_kCartJson}_${AppState.phoneNumber}';
+     }
+     return _kCartJson;
+  }
+
   Future<void> load() async {
     final prefs = await SharedPreferences.getInstance();
-    final cached = prefs.getString(_kCartJson);
+    final storeKey = _getStoreKey();
+    final cached = prefs.getString(storeKey);
     if (cached != null && cached.isNotEmpty) {
       try {
         final decoded = jsonDecode(cached);
@@ -54,11 +69,18 @@ class CartNotifier extends Notifier<Cart> {
       } catch (_) {
         // ignore decode errors and fetch from server
       }
+    } else {
+        // If nothing cached for this user/guest, clean state
+        state = Cart.empty();
     }
     final sessionId = await _ensureSessionId();
-    final latest = await _api.getCart(sessionId: sessionId);
-    state = latest;
-    await _persist(latest);
+    try {
+        final latest = await _api.getCart(sessionId: sessionId);
+        state = latest;
+        await _persist(latest);
+    } catch (_) {
+        // if network fails, we rely on cached state
+    }
   }
 
   Future<void> addItem({required int partId, int quantity = 1}) async {
@@ -95,7 +117,7 @@ class CartNotifier extends Notifier<Cart> {
     );
     // Clear cart on successful checkout
     state = Cart.empty();
-    await prefs.remove(_kCartJson);
+    await prefs.remove(_getStoreKey());
     return order;
   }
 
@@ -116,7 +138,7 @@ class CartNotifier extends Notifier<Cart> {
 
   Future<void> _persist(Cart cart) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_kCartJson, jsonEncode(cart.toJson()));
+    await prefs.setString(_getStoreKey(), jsonEncode(cart.toJson()));
   }
 }
 
