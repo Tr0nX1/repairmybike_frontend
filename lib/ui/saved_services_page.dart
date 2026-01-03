@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/app_state.dart';
 import '../data/saved_services_api.dart';
+import '../models/service.dart';
 import 'service_detail_page.dart';
 
 class SavedServicesPage extends StatefulWidget {
@@ -84,29 +85,30 @@ class _SavedServicesPageState extends State<SavedServicesPage> {
                   itemCount: _services.length,
                   itemBuilder: (context, index) {
                     final item = _services[index];
-                    final service = item['service'];
-                    final sId = service['id'];
-                    final name = service['name'] ?? 'Unknown Service';
-                    final image = service['image']; // URL
-                    // Price is not directly in Service, it's in ServicePricing.
-                    // We might not show price here, or show "Starts from..." if available?
-                    // For now, just show Name and Description.
+                    final serviceData = item['service'];
+                    final sId = serviceData['id'];
+                    final name = serviceData['name'] ?? 'Unknown Service';
+                    final image = serviceData['images'] != null && serviceData['images'].isNotEmpty 
+                        ? serviceData['images'][0] 
+                        : null;
                     
                     return GestureDetector(
                       onTap: () {
-                         // Navigate to details if we have enough info? 
-                         // ServiceDetailPage requires serviceId and Service object.
-                         Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (_) => ServiceDetailPage(
-                                serviceId: sId,
-                                serviceName: name,
-                                serviceDescription: service['description'],
-                                serviceImageUrl: image,
+                         try {
+                           // Construct Service object from the data
+                           final service = Service.fromJson(serviceData);
+                           Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => ServiceDetailPage(service: service),
                               ),
-                            ),
-                         );
+                           );
+                         } catch (e) {
+                           // If construction fails, show error
+                           ScaffoldMessenger.of(context).showSnackBar(
+                             SnackBar(content: Text('Error loading service: $e')),
+                           );
+                         }
                       },
                       child: Container(
                         decoration: BoxDecoration(

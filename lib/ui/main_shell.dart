@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/cart_provider.dart';
 import 'home_page.dart';
 // import 'services_page.dart';
@@ -17,6 +18,35 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
+  bool _initialized = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _restoreTabIndex();
+  }
+
+  Future<void> _restoreTabIndex() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final savedIndex = prefs.getInt('last_tab_index') ?? 0;
+      if (mounted && savedIndex >= 0 && savedIndex < 5) {
+        setState(() {
+          _currentIndex = savedIndex;
+          _initialized = true;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _initialized = true);
+    }
+  }
+
+  Future<void> _saveTabIndex(int index) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('last_tab_index', index);
+    } catch (_) {}
+  }
 
   List<Widget> get _pages => [
     const HomePage(),
@@ -69,7 +99,10 @@ class _MainShellState extends ConsumerState<MainShell> {
       body: IndexedStack(index: _currentIndex, children: _pages),
       bottomNavigationBar: BottomNavigationBar(
         currentIndex: _currentIndex,
-        onTap: (i) => setState(() => _currentIndex = i),
+        onTap: (i) {
+          setState(() => _currentIndex = i);
+          _saveTabIndex(i);
+        },
         type: BottomNavigationBarType.fixed,
         backgroundColor: scheme.surface,
         selectedItemColor: scheme.primary,

@@ -7,6 +7,7 @@ import 'auth_page.dart';
 import 'main_shell.dart';
 import 'profile_details_page.dart';
 import 'vehicle_type_page.dart';
+import 'landing_page.dart';
 
 class FlashPage extends StatefulWidget {
   const FlashPage({super.key});
@@ -115,9 +116,10 @@ class _FlashPageState extends State<FlashPage>
           );
         }
       } else {
+
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) => const AuthPage(toDetailsOnFinish: true),
+            builder: (_) => const LandingPage(),
           ),
         );
       }
