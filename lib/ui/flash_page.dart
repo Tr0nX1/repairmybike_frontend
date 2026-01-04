@@ -116,10 +116,10 @@ class _FlashPageState extends State<FlashPage>
           );
         }
       } else {
-
+        // Skip LandingPage and go straight to catalog for Guests
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) => const LandingPage(),
+            builder: (_) => const VehicleTypePage(),
           ),
         );
       }
