@@ -1,36 +1,20 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import '../utils/api_config.dart';
+import 'api_client.dart';
 import '../models/spare_part.dart';
 import '../models/spare_part_category.dart';
 import '../models/spare_part_brand.dart';
+
+import '../utils/api_config.dart';
+
 
 class SparePartsApi {
   final Dio _dio;
   final String baseUrl;
 
   SparePartsApi({Dio? dio, String? base})
-      : _dio = dio ?? Dio(),
-        baseUrl = base ?? apiBaseSpareParts {
-    assert(() {
-      _dio.interceptors.add(LogInterceptor(request: true, responseBody: false, error: true));
-      _dio.interceptors.add(InterceptorsWrapper(
-        onRequest: (o, h) {
-          debugPrint('➡️ ${o.method} ${o.uri}');
-          h.next(o);
-        },
-        onResponse: (r, h) {
-          debugPrint('✅ ${r.requestOptions.method} ${r.requestOptions.uri} -> ${r.statusCode}');
-          h.next(r);
-        },
-        onError: (e, h) {
-          debugPrint('❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message}');
-          h.next(e);
-        },
-      ));
-      return true;
-    }());
-  }
+      : _dio = dio ?? ApiClient().dio,
+        baseUrl = base ?? apiBaseSpareParts;
+
 
   Future<List<SparePartListItem>> getParts({int? categoryId, int? brandId, bool? inStock, String? search}) async {
     final params = <String, dynamic>{};

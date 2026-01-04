@@ -1,40 +1,19 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
+import 'api_client.dart';
 import '../models/order.dart';
+
 import '../utils/api_config.dart';
+
+
 
 class OrderApi {
   final Dio _dio;
   final String baseUrl;
 
   OrderApi({Dio? dio, String? base})
-      : _dio = dio ?? Dio(
-          BaseOptions(
-            baseUrl: backendBase,
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 15),
-          ),
-        ),
-        baseUrl = base ?? apiBaseSpareParts {
-    assert(() {
-      _dio.interceptors.add(LogInterceptor(request: true, responseBody: false, error: true));
-      _dio.interceptors.add(InterceptorsWrapper(
-        onRequest: (o, h) {
-          debugPrint('➡️ ${o.method} ${o.uri}');
-          h.next(o);
-        },
-        onResponse: (r, h) {
-          debugPrint('✅ ${r.requestOptions.method} ${r.requestOptions.uri} -> ${r.statusCode}');
-          h.next(r);
-        },
-        onError: (e, h) {
-          debugPrint('❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message}');
-          h.next(e);
-        },
-      ));
-      return true;
-    }());
-  }
+      : _dio = dio ?? ApiClient().dio,
+        baseUrl = base ?? apiBaseSpareParts;
+
 
   Future<Order> checkoutCash({
     required String sessionId,
@@ -116,18 +95,79 @@ class OrderApi {
     }
   }
 
-  Future<List<Order>> listOrders({required String sessionId}) async {
-    final resp = await _dio.get('$baseUrl/orders/', queryParameters: {'session_id': sessionId});
-    final body = resp.data;
-    if (body is Map && body['data'] is List) {
-      return (body['data'] as List)
-          .whereType<Map<String, dynamic>>()
-          .map(Order.fromJson)
-          .toList();
+  Future<List<Order>> listOrders({
+    String? sessionId,
+    String? phone,
+    String? token,
+  }) async {
+    final tasks = <Future<List<Order>>>[];
+
+    // 1. Fetch by Phone (requires token usually)
+    if (phone != null && phone.isNotEmpty) {
+      tasks.add(_fetchOrdersSafe(
+        {'phone': phone},
+        null,
+      ));
     }
-    if (body is List) {
-      return body.whereType<Map<String, dynamic>>().map(Order.fromJson).toList();
+
+    // 2. Fetch by Session
+    if (sessionId != null && sessionId.isNotEmpty) {
+      tasks.add(_fetchOrdersSafe({'session_id': sessionId}, null));
+    }
+
+    if (tasks.isEmpty) return [];
+
+    final results = await Future.wait(tasks);
+    final merged = <int, Order>{};
+    
+    for (final list in results) {
+      for (final order in list) {
+        merged[order.id] = order;
+      }
+    }
+    
+    final sorted = merged.values.toList();
+    // Sort by ID descending (newest first) - assuming ID correlates with time, 
+    // or use created_at if available in Order model model.
+    sorted.sort((a, b) => b.id.compareTo(a.id));
+    return sorted;
+  }
+
+  Future<List<Order>> _fetchOrdersSafe(
+    Map<String, dynamic> params,
+    Options? options,
+  ) async {
+    try {
+      final resp = await _dio.get(
+        '$baseUrl/orders/',
+        queryParameters: params,
+        options: options,
+      );
+      final body = resp.data;
+      if (body is Map && body['data'] is List) {
+        return (body['data'] as List)
+            .whereType<Map<String, dynamic>>()
+            .map(Order.fromJson)
+            .toList();
+      }
+      if (body is List) {
+        return body
+            .whereType<Map<String, dynamic>>()
+            .map(Order.fromJson)
+            .toList();
+      }
+    } catch (e) {
+      // Ignore errors (404/400) for individual fetching strategies
     }
     return [];
+  }
+
+  Future<bool> cancelOrder(int orderId) async {
+    try {
+      await _dio.post('$baseUrl/orders/$orderId/cancel/');
+      return true;
+    } catch (e) {
+      return false;
+    }
   }
 }

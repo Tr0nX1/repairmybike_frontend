@@ -80,6 +80,24 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         session: session,
         refresh: refresh,
       );
+
+      // Fetch profile for staff too
+      try {
+        final profile = await _api.getProfile(sessionToken: session);
+        final first = (profile['first_name'] ?? '') as String;
+        final last = (profile['last_name'] ?? '') as String;
+        final mail = (profile['email'] ?? '') as String;
+        final full = [
+          first,
+          last,
+        ].where((e) => e.trim().isNotEmpty).join(' ').trim();
+        await AppState.setProfile(
+          name: full.isNotEmpty ? full : null,
+          addr: null,
+          mail: mail.isNotEmpty ? mail : null,
+        );
+      } catch (_) {}
+
       _showSnack('Signed in as staff');
       _finish();
     } catch (e) {
@@ -267,14 +285,28 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         (AppState.vehicleBrand?.isNotEmpty ?? false) &&
         (AppState.vehicleName?.isNotEmpty ?? false);
     
+    // Check if user needs to complete profile
+    // We check fullName as a proxy for completed profile
+    final hasProfile = (AppState.fullName?.isNotEmpty ?? false);
+    
     // If customer has no vehicle (and isn't staff), force selection flow
-    if (!AppState.isStaff && !hasVehicle) {
-       Navigator.of(context).pushReplacement(
-         MaterialPageRoute(
-           builder: (_) => VehicleTypePage(phone: AppState.phoneNumber),
-         ),
-       );
-       return;
+    if (!AppState.isStaff) {
+       if (!hasVehicle) {
+         Navigator.of(context).pushReplacement(
+           MaterialPageRoute(
+             builder: (_) => VehicleTypePage(phone: AppState.phoneNumber),
+           ),
+         );
+         return;
+       }
+       if (!hasProfile) {
+         Navigator.of(context).pushReplacement(
+           MaterialPageRoute(
+             builder: (_) => const ProfileDetailsPage(),
+           ),
+         );
+         return;
+       }
     }
 
     Navigator.of(

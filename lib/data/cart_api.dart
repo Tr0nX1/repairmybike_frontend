@@ -1,40 +1,18 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import '../utils/api_config.dart';
+import 'api_client.dart';
 import '../models/cart.dart';
+
+import '../utils/api_config.dart';
+
 
 class CartApi {
   final Dio _dio;
   final String baseUrl;
 
   CartApi({Dio? dio, String? base})
-      : _dio = dio ?? Dio(
-          BaseOptions(
-            baseUrl: backendBase,
-            connectTimeout: const Duration(seconds: 10),
-            receiveTimeout: const Duration(seconds: 15),
-          ),
-        ),
-        baseUrl = base ?? apiBaseSpareParts {
-    assert(() {
-      _dio.interceptors.add(LogInterceptor(request: true, responseBody: false, error: true));
-      _dio.interceptors.add(InterceptorsWrapper(
-        onRequest: (o, h) {
-          debugPrint('➡️ ${o.method} ${o.uri}');
-          h.next(o);
-        },
-        onResponse: (r, h) {
-          debugPrint('✅ ${r.requestOptions.method} ${r.requestOptions.uri} -> ${r.statusCode}');
-          h.next(r);
-        },
-        onError: (e, h) {
-          debugPrint('❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message}');
-          h.next(e);
-        },
-      ));
-      return true;
-    }());
-  }
+      : _dio = dio ?? ApiClient().dio,
+        baseUrl = base ?? apiBaseSpareParts;
+
 
   Future<Cart> getCart({required String sessionId}) async {
     final resp = await _dio.get(

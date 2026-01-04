@@ -250,13 +250,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
       // Remember phone so Bookings tab can auto-fetch.
       await AppState.setLastCustomerPhone(effectivePhone);
-      // Persist current vehicle/profile for consistency
-      await AppState.setVehicleForPhone(
-        phone: effectivePhone,
-        type: _selectedType?.name,
-        brand: _selectedBrand?.name,
-        name: _selectedModel?.name,
-      );
+
       await AppState.setProfile(
         name: _nameCtrl.text.trim(),
         addr: _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),

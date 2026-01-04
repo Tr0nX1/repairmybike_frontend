@@ -1,22 +1,17 @@
 import 'package:dio/dio.dart';
-import '../utils/api_config.dart';
+import 'api_client.dart';
+
 
 class SavedServicesApi {
-  final Dio _dio = Dio();
+  final Dio _dio = ApiClient().dio;
 
-  String get _baseUrl => '${resolveBackendBase()}/api/services';
+  String get _baseUrl => '/api/services';
+
 
   Future<List<Map<String, dynamic>>> getSavedServices(String sessionToken) async {
     try {
-      final response = await _dio.get(
-        '$_baseUrl/saved-services/',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $sessionToken',
-            'Content-Type': 'application/json',
-          },
-        ),
-      );
+      final response = await _dio.get('$_baseUrl/saved-services/');
+
 
       if (response.statusCode == 200 && response.data['error'] == false) {
         final List data = response.data['data'];
@@ -30,15 +25,8 @@ class SavedServicesApi {
 
   Future<List<int>> getSavedServiceIds(String sessionToken) async {
     try {
-      final response = await _dio.get(
-        '$_baseUrl/saved-services/',
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $sessionToken',
-            'Content-Type': 'application/json',
-          },
-        ),
-      );
+      final response = await _dio.get('$_baseUrl/saved-services/');
+
 
       if (response.statusCode == 200 && response.data['error'] == false) {
         final List data = response.data['data'];
@@ -55,12 +43,6 @@ class SavedServicesApi {
       final response = await _dio.post(
         '$_baseUrl/saved-services/',
         data: {'service_id': serviceId},
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $sessionToken',
-            'Content-Type': 'application/json',
-          },
-        ),
       );
       return response.statusCode == 201;
     } catch (e) {
@@ -73,12 +55,6 @@ class SavedServicesApi {
       final response = await _dio.post(
         '$_baseUrl/saved-services/remove/',
         data: {'service_id': serviceId},
-        options: Options(
-          headers: {
-            'Authorization': 'Bearer $sessionToken',
-            'Content-Type': 'application/json',
-          },
-        ),
       );
       return response.statusCode == 200;
     } catch (e) {

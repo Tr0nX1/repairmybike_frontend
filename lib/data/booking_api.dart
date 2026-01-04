@@ -1,17 +1,12 @@
 import 'package:dio/dio.dart';
-import '../utils/api_config.dart';
+import 'api_client.dart';
+
 
 class BookingApi {
   final Dio _dio;
 
-  BookingApi()
-    : _dio = Dio(
-        BaseOptions(
-          baseUrl: resolveBackendBase(),
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 15),
-        ),
-      );
+  BookingApi() : _dio = ApiClient().dio;
+
 
   /// Create a booking using cash payment only.
   ///
@@ -116,11 +111,6 @@ class BookingApi {
       final res = await _dio.get(
         '/api/bookings/bookings/',
         queryParameters: {'phone': phone},
-        options: Options(
-          headers: (sessionToken != null && sessionToken.isNotEmpty)
-              ? {'Authorization': 'Bearer $sessionToken'}
-              : null,
-        ),
       );
       final body = res.data;
       // Accept plain list or wrapped map {data: [...]}
@@ -194,7 +184,6 @@ class BookingApi {
     final res = await _dio.patch(
       '/api/staff/bookings/$bookingId/update-status/',
       data: payload,
-      options: Options(headers: {'Authorization': 'Bearer $sessionToken'}),
     );
     final body = res.data;
     if (body is Map<String, dynamic>) {

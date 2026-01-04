@@ -13,22 +13,25 @@ class BookingListPage extends StatefulWidget {
 }
 
 class _BookingListPageState extends State<BookingListPage> {
+  // Theme colors
   static const Color bg = Color(0xFF0F0F0F);
   static const Color card = Color(0xFF1C1C1C);
   static const Color border = Color(0xFF2A2A2A);
   static const Color accent = Color(0xFF01C9F5);
 
-  final _phoneCtrl = TextEditingController();
-  final _bookingApi = BookingApi();
-  bool _loading = false;
+  // State
+  // Future sections: subscription and spare parts bookings.
   List<Map<String, dynamic>> _bookings = [];
-  // Future sections: subscription and spare parts bookings. These will be
-  // populated when corresponding APIs are available. For now, only services
-  // bookings are shown, and section dividers appear conditionally.
   List<Map<String, dynamic>> _subscriptionBookings = [];
   List<Map<String, dynamic>> _sparePartsBookings = [];
+  bool _loading = false;
+  final BookingApi _bookingApi = BookingApi();
+  final TextEditingController _phoneCtrl = TextEditingController();
+
   Timer? _autoRefreshTimer;
   DateTime? _backoffUntil;
+  DateTime? _lastSync;
+  bool _loadedFromCache = false;
 
   String _monthName(int m) => const [
     'Jan',
@@ -97,6 +100,38 @@ class _BookingListPageState extends State<BookingListPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
+  String _formatTimeSince(DateTime time) {
+    final diff = DateTime.now().difference(time);
+    if (diff.inSeconds < 60) return 'just now';
+    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
+    if (diff.inHours < 24) return '${diff.inHours}h ago';
+    return '${diff.inDays}d ago';
+  }
+
+  Future<void> _loadFromCache() async {
+    // Load cached data immediately for offline support
+    final cachedBookings = await AppState.getCachedBookings();
+    final cachedOrders = await AppState.getCachedOrders();
+    final lastSyncBookings = await AppState.getLastSyncBookings();
+    final lastSyncOrders = await AppState.getLastSyncOrders();
+    
+    if (cachedBookings.isNotEmpty || cachedOrders.isNotEmpty) {
+      setState(() {
+        _bookings = cachedBookings;
+        _sparePartsBookings = cachedOrders;
+        _loadedFromCache = true;
+        // Use the most recent sync time
+        if (lastSyncBookings != null && lastSyncOrders != null) {
+          _lastSync = lastSyncBookings.isAfter(lastSyncOrders) 
+              ? lastSyncBookings 
+              : lastSyncOrders;
+        } else {
+          _lastSync = lastSyncBookings ?? lastSyncOrders;
+        }
+      });
+    }
+  }
+
   Future<void> _search() async {
     final phone = (AppState.phoneNumber ?? '').trim();
     if (phone.isEmpty) {
@@ -110,15 +145,27 @@ class _BookingListPageState extends State<BookingListPage> {
     }
     setState(() => _loading = true);
     try {
-      final items = await _bookingApi.getBookingsByPhone(
-        phone,
-        sessionToken: AppState.sessionToken,
-      );
-      setState(() => _bookings = items);
-      await _loadSparePartsOrders();
-      // NOTE: When subscription/spare parts endpoints are added, fetch and
-      // assign to _subscriptionBookings and _sparePartsBookings similarly.
-      // Start/refresh auto polling after a successful search.
+      // Fetch both service bookings and spare parts orders in parallel
+      final results = await Future.wait([
+        _bookingApi.getBookingsByPhone(phone, sessionToken: AppState.sessionToken),
+        _fetchSparePartsOrders(),
+      ]);
+
+      final bookings = results[0];
+      final spareParts = results[1];
+
+      if (mounted) {
+        setState(() {
+          _bookings = bookings;
+          _sparePartsBookings = spareParts;
+          _lastSync = DateTime.now();
+        });
+      }
+
+      // Persist to local cache for offline/instant access
+      await AppState.cacheBookings(bookings);
+      await AppState.cacheOrders(spareParts);
+
       _startAutoRefresh();
     } catch (e) {
       final msg = e.toString();
@@ -131,17 +178,62 @@ class _BookingListPageState extends State<BookingListPage> {
     }
   }
 
-  Future<void> _loadSparePartsOrders() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final sessionId = prefs.getString('session_id_v1');
-      if (sessionId == null || sessionId.isEmpty) {
-        setState(() => _sparePartsBookings = []);
-        return;
+  Future<void> _confirmCancelOrder(int orderId) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF1C1C1C),
+        title: const Text('Cancel Order?', style: TextStyle(color: Colors.white)),
+        content: const Text(
+          'Are you sure you want to cancel this order? This action cannot be undone.',
+          style: TextStyle(color: Colors.white70),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('No'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: TextButton.styleFrom(foregroundColor: Colors.redAccent),
+            child: const Text('Yes, Cancel'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _loading = true);
+      final success = await OrderApi().cancelOrder(orderId);
+      if (success) {
+        _showSnack('Order cancelled successfully');
+        _search(); // Refresh list
+      } else {
+        _showSnack('Failed to cancel order');
+        setState(() => _loading = false);
       }
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> _fetchSparePartsOrders() async {
+    try {
+      final phone = AppState.phoneNumber;
+      final sessionId = await AppState.getCartSessionId();
+      
+      // Prefer phone if authenticated, otherwise use session_id
+      if (phone == null || phone.isEmpty) {
+        if (sessionId == null || sessionId.isEmpty) {
+          return [];
+        }
+      }
+      
       final api = OrderApi();
-      final orders = await api.listOrders(sessionId: sessionId);
-      final mapped = orders
+      final orders = await api.listOrders(
+        phone: phone,
+        sessionId: sessionId,
+        token: AppState.sessionToken,
+      );
+      return orders
           .map(
             (o) => {
               'id': o.id,
@@ -151,16 +243,22 @@ class _BookingListPageState extends State<BookingListPage> {
               'created_at': DateTime.now().toIso8601String(),
               'updated_at': null,
               'customer': {'name': o.customerName},
-              'services': o.items.map((i) => {'name': i.name}).toList(),
-              'service_location': 'processing',
-              'appointment_date': null,
-              'appointment_time': null,
+              'services': o.items.map((i) => {
+                'name': i.name,
+                'sku': i.sku,
+                'quantity': i.quantity,
+                'price': i.unitPrice,
+              }).toList(),
+              'isSparePartOrder': true,
+              'tracking_number': o.trackingNumber,
+              'courier_name': o.courierName,
+              'estimated_delivery': o.estimatedDelivery?.toIso8601String(),
+              'delivered_at': o.deliveredAt?.toIso8601String(),
             },
           )
           .toList();
-      setState(() => _sparePartsBookings = mapped);
     } catch (e) {
-      // Ignore; just don’t show spare parts section on failure
+      return [];
     }
   }
 
@@ -252,7 +350,7 @@ class _BookingListPageState extends State<BookingListPage> {
     final children = <Widget>[];
 
     if (hasServices) {
-      children.add(_sectionDivider('Request for Services Booking'));
+      children.add(_sectionDivider('Service Bookings'));
       children.add(const SizedBox(height: 12));
       for (final b in _bookings) {
         children.add(_bookingCard(b));
@@ -260,7 +358,7 @@ class _BookingListPageState extends State<BookingListPage> {
       }
     }
     if (hasSubscriptions) {
-      children.add(_sectionDivider('Request for Subscription Booking'));
+      children.add(_sectionDivider('Subscription Bookings'));
       children.add(const SizedBox(height: 12));
       for (final b in _subscriptionBookings) {
         children.add(_bookingCard(b));
@@ -268,7 +366,7 @@ class _BookingListPageState extends State<BookingListPage> {
       }
     }
     if (hasSpareParts) {
-      children.add(_sectionDivider('Request for Spare Parts Booking'));
+      children.add(_sectionDivider('Spare Parts Orders'));
       children.add(const SizedBox(height: 12));
       for (final b in _sparePartsBookings) {
         children.add(_bookingCard(b));
@@ -349,7 +447,7 @@ class _BookingListPageState extends State<BookingListPage> {
     );
   }
 
-  // Unified booking card renderer used by all sections.
+  // Unified booking/order card renderer used by all sections.
   Widget _bookingCard(Map<String, dynamic> b) {
     final id = b['id'];
     final total = b['total_amount'];
@@ -363,15 +461,18 @@ class _BookingListPageState extends State<BookingListPage> {
     final apptDate = b['appointment_date'];
     final apptTime = b['appointment_time'];
     final location = (b['service_location'] ?? '').toString();
+    final isSparePartOrder = b['isSparePartOrder'] == true;
 
-    final requestedLine = 'Requested: ${_fmtDateTime(createdAt)}';
+    final requestedLine = isSparePartOrder
+        ? 'Ordered: ${_fmtDateTime(createdAt)}'
+        : 'Requested: ${_fmtDateTime(createdAt)}';
     final updatedLine = (updatedAt != null && updatedAt.toString().isNotEmpty)
         ? 'Updated: ${_fmtDateTime(updatedAt)}'
         : '';
     final scheduleLine = (apptDate != null || apptTime != null)
         ? 'Schedule: ${_fmtDate(apptDate)}${apptTime != null ? ' · ${_fmtTime(apptTime)}' : ''}'
         : '';
-    final locationLine = location.isNotEmpty
+    final locationLine = location.isNotEmpty && !isSparePartOrder
         ? 'Location: ${location == 'home' ? 'Home' : 'Workshop'}'
         : '';
 
@@ -389,7 +490,7 @@ class _BookingListPageState extends State<BookingListPage> {
             children: [
               Expanded(
                 child: Text(
-                  'Booking #$id',
+                  isSparePartOrder ? 'Order #$id' : 'Booking #$id',
                   style: const TextStyle(
                     color: Colors.white,
                     fontWeight: FontWeight.w700,
@@ -456,26 +557,100 @@ class _BookingListPageState extends State<BookingListPage> {
             children: [
               _statusChip(status),
               _chip('payment: $payStatus', Colors.white54),
-              _chip('services: ${services.length}', Colors.white54),
+              _chip(
+                isSparePartOrder
+                    ? 'items: ${services.length}'
+                    : 'services: ${services.length}',
+                Colors.white54,
+              ),
             ],
           ),
+          
+          if (isSparePartOrder && services.isNotEmpty) ...[
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                   const Text(
+                     'Items Ordered:', 
+                     style: TextStyle(color: Colors.white54, fontSize: 12)
+                   ),
+                   const SizedBox(height: 8),
+                   ...services.map((s) {
+                     final name = s['name'] ?? 'Unknown';
+                     final sku = s['sku'] ?? '';
+                     final qty = s['quantity'] ?? 1;
+                     return Padding(
+                       padding: const EdgeInsets.only(bottom: 4),
+                       child: Row(
+                         children: [
+                           Expanded(
+                             child: Text(
+                               sku.toString().isNotEmpty ? '$name ($sku)' : name,
+                               style: const TextStyle(color: Colors.white),
+                             ),
+                           ),
+                           Text(
+                             'x$qty', 
+                             style: const TextStyle(color: Colors.white70),
+                           ),
+                         ],
+                       ),
+                     );
+                   }),
+                ],
+              ),
+            ),
+          ],
+          
           const SizedBox(height: 12),
+          // Cancel button for cancellable orders
+          if (isSparePartOrder && !['cancelled', 'fulfilled', 'delivered', 'shipped'].contains(status.toLowerCase())) ...[
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => _confirmCancelOrder(id),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.redAccent,
+                  side: const BorderSide(color: Colors.redAccent),
+                ),
+                child: const Text('Cancel Order'),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
+          
+          // Tracking Timeline
+          if (isSparePartOrder)
+            OrderTrackingTimeline(order: b),
+            
+          const SizedBox(height: 12),
+
           Row(
             children: [
-              Expanded(
-                child: SizedBox(
-                  height: 40,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: border),
-                      foregroundColor: Colors.white,
+              // Only show Edit Schedule for service bookings, not spare parts orders
+              if (!isSparePartOrder) ...[
+                Expanded(
+                  child: SizedBox(
+                    height: 40,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: border),
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: () => _editScheduleDialog(b),
+                      child: const Text('Edit Schedule'),
                     ),
-                    onPressed: () => _editScheduleDialog(b),
-                    child: const Text('Edit Schedule'),
                   ),
                 ),
-              ),
-              const SizedBox(width: 12),
+                const SizedBox(width: 12),
+              ],
               if (AppState.isStaffAuthenticated) ...[
                 SizedBox(
                   height: 40,
@@ -490,17 +665,32 @@ class _BookingListPageState extends State<BookingListPage> {
                 ),
                 const SizedBox(width: 12),
               ],
-              SizedBox(
-                height: 40,
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(color: border),
-                    foregroundColor: Colors.white,
+              if (!isSparePartOrder)
+                SizedBox(
+                  height: 40,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: border),
+                      foregroundColor: Colors.white,
+                    ),
+                    onPressed: _loading ? null : _search,
+                    child: const Text('Refresh'),
                   ),
-                  onPressed: _loading ? null : _search,
-                  child: const Text('Refresh'),
                 ),
-              ),
+              if (isSparePartOrder)
+                Expanded(
+                  child: SizedBox(
+                    height: 40,
+                    child: OutlinedButton(
+                      style: OutlinedButton.styleFrom(
+                        side: BorderSide(color: border),
+                        foregroundColor: Colors.white,
+                      ),
+                      onPressed: _loading ? null : _search,
+                      child: const Text('Refresh'),
+                    ),
+                  ),
+                ),
             ],
           ),
         ],
@@ -611,13 +801,16 @@ class _BookingListPageState extends State<BookingListPage> {
   @override
   void initState() {
     super.initState();
-    // Only load when authenticated; no manual phone entry allowed.
-    final authPhone = AppState.phoneNumber;
-    if (authPhone != null && authPhone.isNotEmpty) {
-      _phoneCtrl.text = authPhone;
-      WidgetsBinding.instance.addPostFrameCallback((_) => _search());
-      _startAutoRefresh();
-    }
+    // Load from cache immediately, then fetch fresh data
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await _loadFromCache();
+      final authPhone = AppState.phoneNumber;
+      if (authPhone != null && authPhone.isNotEmpty) {
+        _phoneCtrl.text = authPhone;
+        _search();  // Fetch fresh data in background
+        _startAutoRefresh();
+      }
+    });
   }
 
   @override
@@ -684,6 +877,149 @@ class _BookingListPageState extends State<BookingListPage> {
           },
         );
       },
+    );
+  }
+}
+
+class OrderTrackingTimeline extends StatelessWidget {
+  final Map<String, dynamic> order;
+
+  const OrderTrackingTimeline({super.key, required this.order});
+
+  @override
+  Widget build(BuildContext context) {
+    final status = (order['status'] as String? ?? 'pending').toLowerCase();
+    
+    // Determine tracking state
+    int currentStep = 0;
+    if (status == 'confirmed') currentStep = 1;
+    if (status == 'shipped') currentStep = 2;
+    if (status == 'out_for_delivery') currentStep = 3;
+    if (status == 'delivered') currentStep = 4;
+    
+    // If cancelled, show red state
+    if (status == 'cancelled') {
+       return Container(
+        margin: const EdgeInsets.only(top: 8),
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: Colors.red.withOpacity(0.1),
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(color: Colors.red.withOpacity(0.3)),
+        ),
+        child: Row(
+          children: [
+            const Icon(Icons.cancel, color: Colors.red, size: 20),
+            const SizedBox(width: 8),
+            Text('Order Cancelled', style: TextStyle(color: Colors.red[300])),
+          ],
+        ),
+      );
+    }
+
+    final trackingNumber = order['tracking_number'] as String?;
+    final courierName = order['courier_name'] as String?;
+    final estimatedDelivery = order['estimated_delivery'] as String?;
+
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.black26,
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (trackingNumber != null) ...[
+            Row(
+              children: [
+                Icon(Icons.local_shipping, size: 16, color: Colors.blue[300]),
+                const SizedBox(width: 8),
+                Text(
+                  'Shipped with ${courierName ?? "Courier"}',
+                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+              ],
+            ),
+            const SizedBox(height: 4),
+            SelectableText(
+              'Tracking ID: $trackingNumber',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            const Divider(color: Colors.white10),
+          ],
+          
+          // Timeline
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              _step(0, currentStep, 'Placed', Icons.shopping_cart),
+              _line(0, currentStep),
+              _step(1, currentStep, 'Confirmed', Icons.check_circle),
+              _line(1, currentStep),
+              _step(2, currentStep, 'Shipped', Icons.local_shipping),
+              _line(2, currentStep),
+              _step(4, currentStep, 'Delivered', Icons.home),
+            ],
+          ),
+          
+          if (estimatedDelivery != null && status != 'delivered') ...[
+            const SizedBox(height: 12),
+            Text(
+              'Expected Delivery: $estimatedDelivery',
+              style: TextStyle(color: Colors.green[300], fontSize: 12),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _step(int distinctStep, int currentStep, String label, IconData icon) {
+    // 0=placed, 1=confirmed, 2=shipped, 3=out_for_deliery, 4=delivered
+    // Mapping simplified: 
+    // Placed (0) -> Confirmed (1) -> Shipped (2) -> Delivered (4)
+    
+    final isActive = currentStep >= distinctStep;
+    return Expanded(
+      child: Column(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(6),
+            decoration: BoxDecoration(
+              color: isActive ? Colors.blue : Colors.grey[800],
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, size: 12, color: Colors.white),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 10,
+              color: isActive ? Colors.white : Colors.white38,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _line(int stepIndex, int currentStep) {
+    // stepIndex: 0 (placed->confirmed), 1 (confirmed->shipped), 2 (shipped->delivered)
+    // Thresholds: 1, 2, 4
+    bool isActive = false;
+    if (stepIndex == 0) isActive = currentStep >= 1;
+    if (stepIndex == 1) isActive = currentStep >= 2;
+    if (stepIndex == 2) isActive = currentStep >= 4;
+
+    return Expanded(
+      child: Container(
+        height: 2,
+        color: isActive ? Colors.blue : Colors.grey[800],
+      ),
     );
   }
 }

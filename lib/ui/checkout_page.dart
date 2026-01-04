@@ -109,32 +109,33 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
             shipping: cart.shippingFee,
             total: cart.total,
           );
-          return Stack(
-            children: [
-              Padding(
+          
+          if (wide) {
+             return SingleChildScrollView(
                 padding: const EdgeInsets.all(16),
-                child: wide
-                    ? Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(flex: 3, child: form),
-                          const SizedBox(width: 16),
-                          Expanded(flex: 2, child: summary),
-                        ],
-                      )
-                    : ListView(
-                        children: [form, const SizedBox(height: 16), summary],
-                      ),
-              ),
-              if (_submitting)
-                Positioned.fill(
-                  child: Container(
-                    color: Colors.black.withOpacity(0.2),
-                    child: const Center(child: CircularProgressIndicator()),
-                  ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(flex: 3, child: form),
+                    const SizedBox(width: 16),
+                    Expanded(flex: 2, child: summary),
+                  ],
                 ),
-            ],
-          );
+             );
+          } else {
+             return SingleChildScrollView(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    form, 
+                    const SizedBox(height: 16), 
+                    summary,
+                    // Add extra padding at bottom to avoid FAB overlap etc if any
+                    const SizedBox(height: 20),
+                  ],
+                ),
+             );
+          }
         },
       ),
     );

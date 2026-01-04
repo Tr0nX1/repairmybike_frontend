@@ -1,18 +1,12 @@
 import 'package:dio/dio.dart';
-import '../utils/api_config.dart';
+import 'api_client.dart';
+
 
 class AuthApi {
   final Dio _dio;
 
-  AuthApi()
-    : _dio = Dio(
-        BaseOptions(
-          baseUrl: backendBase,
-          connectTimeout: const Duration(seconds: 20),
-          receiveTimeout: const Duration(seconds: 30),
-          sendTimeout: const Duration(seconds: 20),
-        ),
-      );
+  AuthApi() : _dio = ApiClient().dio;
+
 
   String _normalizePhone(String phone) {
     final raw = phone.trim();
@@ -135,9 +129,6 @@ class AuthApi {
     await _dio.post(
       '/api/auth/logout/',
       data: refreshToken != null ? {'refresh_token': refreshToken} : {},
-      options: sessionToken != null
-          ? Options(headers: {'Authorization': 'Bearer $sessionToken'})
-          : null,
     );
   }
 
@@ -160,10 +151,8 @@ class AuthApi {
   Future<Map<String, dynamic>> getProfile({
     required String sessionToken,
   }) async {
-    final res = await _dio.get(
-      '/api/auth/profile/',
-      options: Options(headers: {'Authorization': 'Bearer $sessionToken'}),
-    );
+    final res = await _dio.get('/api/auth/profile/');
+
     final data = res.data;
     if (data is Map<String, dynamic>) return data;
     throw Exception('Unexpected response shape for profile');
@@ -176,6 +165,7 @@ class AuthApi {
     String? phoneNumber,
     String? profilePicture,
     String? email,
+    int? defaultVehicle,
   }) async {
     final payload = <String, dynamic>{};
     if (firstName != null) payload['first_name'] = firstName;
@@ -183,10 +173,10 @@ class AuthApi {
     if (phoneNumber != null) payload['phone_number'] = phoneNumber;
     if (profilePicture != null) payload['profile_picture'] = profilePicture;
     if (email != null) payload['email'] = email;
+    if (defaultVehicle != null) payload['default_vehicle'] = defaultVehicle;
     final res = await _dio.patch(
       '/api/auth/profile/',
       data: payload,
-      options: Options(headers: {'Authorization': 'Bearer $sessionToken'}),
     );
     final data = res.data;
     if (data is Map<String, dynamic>) return data;

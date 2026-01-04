@@ -3,6 +3,7 @@ import 'cart_item.dart';
 class OrderItem {
   final int productId;
   final String name;
+  final String sku;
   final int unitPrice;
   final int quantity;
   final int lineTotal;
@@ -10,6 +11,7 @@ class OrderItem {
   OrderItem({
     required this.productId,
     required this.name,
+    required this.sku,
     required this.unitPrice,
     required this.quantity,
     required this.lineTotal,
@@ -27,6 +29,7 @@ class OrderItem {
     return OrderItem(
       productId: (json['spare_part'] as num?)?.toInt() ?? (json['spare_part_id'] as num?)?.toInt() ?? (json['product_id'] as num?)?.toInt() ?? 0,
       name: json['part_name'] as String? ?? (json['name'] as String? ?? ''),
+      sku: json['sku'] as String? ?? '',
       unitPrice: _toInt(json['unit_price'] ?? json['price']),
       quantity: (json['quantity'] as num?)?.toInt() ?? (json['qty'] as num?)?.toInt() ?? 1,
       lineTotal: _toInt(json['total_price'] ?? json['line_total']),
@@ -55,6 +58,13 @@ class Order {
   final String customerName;
   final String phone;
   final String address;
+  
+  // Tracking fields
+  final String? trackingNumber;
+  final String? courierName;
+  final DateTime? estimatedDelivery;
+  final DateTime? deliveredAt;
+
   final List<OrderItem> items;
 
   Order({
@@ -68,6 +78,10 @@ class Order {
     required this.customerName,
     required this.phone,
     required this.address,
+    this.trackingNumber,
+    this.courierName,
+    this.estimatedDelivery,
+    this.deliveredAt,
     required this.items,
   });
 
@@ -95,6 +109,16 @@ class Order {
       customerName: map['customer_name'] as String? ?? '',
       phone: map['phone'] as String? ?? '',
       address: map['address'] as String? ?? '',
+      
+      trackingNumber: map['tracking_number'] as String?,
+      courierName: map['courier_name'] as String?,
+      estimatedDelivery: map['estimated_delivery'] != null 
+          ? DateTime.tryParse(map['estimated_delivery']) 
+          : null,
+      deliveredAt: map['delivered_at'] != null 
+          ? DateTime.tryParse(map['delivered_at']) 
+          : null,
+
       items: (itemsList ?? const [])
           .whereType<Map<String, dynamic>>()
           .map(OrderItem.fromJson)

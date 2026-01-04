@@ -1,4 +1,5 @@
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'auth_api.dart';
 import 'vehicles_api.dart';
@@ -7,23 +8,24 @@ import 'saved_services_api.dart';
 class AppState {
   // Keys for persistence
   static const _kPhone = 'phoneNumber';
-  static const _kSession = 'sessionToken';
-  static const _kRefresh = 'refreshToken';
   static const _kIsStaff = 'isStaff';
   static const _kUsername = 'staffUsername';
-  static const _kFullName = 'fullName';
-  static const _kAddress = 'address';
-  static const _kEmail = 'email';
-  static const _kVehicleType = 'vehicleType';
-  static const _kVehicleBrand = 'vehicleBrand';
-  static const _kVehicleName = 'vehicleName';
   static const _kAvatarUrl = 'avatarUrl';
   static const _kLastCustomerPhone = 'lastCustomerPhone';
   static const _kLikedServices = 'likedServices';
   static const _kFeedbackPrefix = 'feedback_service_';
   static const _kPendingAction = 'pending_action';
-  static const _kUserStore = 'user_store_v1';
-  static const _kUserStoreBackup = 'user_store_backup_v1';
+  
+  // Offline cache keys
+  static const _kCachedBookings = 'cached_bookings_v1';
+  static const _kCachedOrders = 'cached_orders_v1';
+  static const _kLastSyncBookings = 'last_sync_bookings';
+  static const _kLastSyncOrders = 'last_sync_orders';
+
+  // Token keys (stored in SharedPreferences for Windows compatibility)
+  static const _kSession = 'session_token';
+  static const _kRefresh = 'refresh_token';
+
 
   static String? lastCustomerPhone;
   static Set<int> likedServiceIds = <int>{};
@@ -36,35 +38,6 @@ class AppState {
     if (s.startsWith('0') && s.length == 11) return '+91' + s.substring(1);
     if (p.trim().startsWith('+')) return p.trim();
     return '+' + s;
-  }
-
-  static Future<Map<String, dynamic>> _readStore() async {
-    final prefs = await SharedPreferences.getInstance();
-    final raw = prefs.getString(_kUserStore);
-    if (raw != null && raw.isNotEmpty) {
-      try {
-        final m = jsonDecode(raw);
-        if (m is Map<String, dynamic>) return m;
-      } catch (_) {}
-    }
-    return {
-      'version': 1,
-      'currentPhone': null,
-      'profiles': <String, dynamic>{},
-    };
-  }
-
-  static Future<void> _writeStore(Map<String, dynamic> store) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final prev = prefs.getString(_kUserStore);
-      if (prev != null) {
-        await prefs.setString(_kUserStoreBackup, prev);
-      }
-      await prefs.setString(_kUserStore, jsonEncode(store));
-    } catch (e) {
-      print('Store write failed: ' + e.toString());
-    }
   }
 
   // Auth state
@@ -110,14 +83,22 @@ class AppState {
     return now >= exp;
   }
 
-  // Initialize from SharedPreferences
+
+  // Initialize from SharedPreferences and SecureStorage
   static Future<void> init() async {
     final prefs = await SharedPreferences.getInstance();
+    
+    // Read non-sensitive from Prefs
     phoneNumber = prefs.getString(_kPhone);
-    sessionToken = prefs.getString(_kSession);
-    refreshToken = prefs.getString(_kRefresh);
     isStaff = prefs.getBool(_kIsStaff) ?? false;
     staffUsername = prefs.getString(_kUsername);
+    avatarUrl = prefs.getString(_kAvatarUrl);
+    lastCustomerPhone = prefs.getString(_kLastCustomerPhone);
+
+    // Read sensitive from SharedPreferences
+    sessionToken = prefs.getString(_kSession);
+    refreshToken = prefs.getString(_kRefresh);
+
     if (isSessionExpired) {
       // Attempt to refresh token
       bool refreshed = false;
@@ -148,7 +129,8 @@ class AppState {
         await prefs.remove(_kRefresh);
       }
     }
-    // Do NOT hydrate global profile/vehicle; use phone-scoped values only
+
+    // Initialize profile fields as null (fetch from API later for fresh "Truth")
     fullName = null;
     address = null;
     email = null;
@@ -156,8 +138,6 @@ class AppState {
     vehicleBrand = null;
     vehicleName = null;
     vehicleModelId = null;
-    avatarUrl = prefs.getString(_kAvatarUrl);
-    lastCustomerPhone = prefs.getString(_kLastCustomerPhone);
 
     // Initial sync for saved services
     if (isAuthenticated) {
@@ -166,74 +146,6 @@ class AppState {
       // Load local likes if not auth or fallback
       final likedRaw = prefs.getStringList(_kLikedServices) ?? const [];
       likedServiceIds = likedRaw.map((e) => int.tryParse(e)).whereType<int>().toSet();
-    }
-
-    final store = await _readStore();
-    final cp0 = store['currentPhone'] as String?;
-    final cp = (cp0 == null || cp0.isEmpty)
-        ? normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '')
-        : cp0;
-    if (cp.isNotEmpty) {
-      final profiles = (store['profiles'] as Map?) ?? {};
-      final u = profiles[cp] as Map?;
-      if (u != null) {
-        vehicleType = u['vehicleType'] as String?;
-        vehicleBrand = u['vehicleBrand'] as String?;
-        vehicleName = u['vehicleName'] as String?;
-        vehicleModelId = u['vehicleModelId'] as int?;
-        fullName = u['fullName'] as String?;
-        address = u['address'] as String?;
-        email = u['email'] as String?;
-      } else {
-        final tPhone = prefs.getString(
-          '$_kVehicleType'
-          '_'
-          '$cp',
-        );
-        final bPhone = prefs.getString(
-          '$_kVehicleBrand'
-          '_'
-          '$cp',
-        );
-        final nPhone = prefs.getString(
-          '$_kVehicleName'
-          '_'
-          '$cp',
-        );
-        final fPhone = prefs.getString(
-          '$_kFullName'
-          '_'
-          '$cp',
-        );
-        final aPhone = prefs.getString(
-          '$_kAddress'
-          '_'
-          '$cp',
-        );
-        final ePhone = prefs.getString(
-          '$_kEmail'
-          '_'
-          '$cp',
-        );
-        vehicleType = tPhone;
-        vehicleBrand = bPhone;
-        vehicleName = nPhone;
-        fullName = fPhone;
-        address = aPhone;
-        email = ePhone;
-        store['currentPhone'] = cp;
-        store['profiles'] = (store['profiles'] as Map?) ?? {};
-        (store['profiles'] as Map)[cp] = {
-          'vehicleType': vehicleType,
-          'vehicleBrand': vehicleBrand,
-          'vehicleName': vehicleName,
-          'vehicleModelId': vehicleModelId,
-          'fullName': fullName,
-          'address': address,
-          'email': email,
-        };
-        await _writeStore(store);
-      }
     }
   }
 
@@ -248,35 +160,15 @@ class AppState {
     refreshToken = refresh;
     isStaff = false;
     staffUsername = null;
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kPhone, nPhone);
-    await prefs.setString(_kSession, session);
-    await prefs.setString(_kRefresh, refresh);
     await prefs.setBool(_kIsStaff, false);
     await prefs.remove(_kUsername);
-    final store = await _readStore();
-    store['currentPhone'] = nPhone;
-    final profiles = (store['profiles'] as Map?) ?? {};
-    final u = profiles[nPhone] as Map?;
-    if (u != null) {
-      vehicleType = u['vehicleType'] as String?;
-      vehicleBrand = u['vehicleBrand'] as String?;
-      vehicleName = u['vehicleName'] as String?;
-      fullName = u['fullName'] as String?;
-      address = u['address'] as String?;
-      email = u['email'] as String?;
-    } else {
-      profiles[nPhone] = {
-        'vehicleType': null,
-        'vehicleBrand': null,
-        'vehicleName': null,
-        'fullName': null,
-        'address': null,
-        'email': null,
-      };
-      store['profiles'] = profiles;
-    }
-    await _writeStore(store);
+
+    await prefs.setString(_kSession, session);
+    await prefs.setString(_kRefresh, refresh);
+    
     print('Auth set for ' + nPhone);
   }
 
@@ -300,24 +192,27 @@ class AppState {
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kPhone);
-    await prefs.remove(_kSession);
-    await prefs.remove(_kRefresh);
     await prefs.remove(_kIsStaff);
     await prefs.remove(_kUsername);
     await prefs.remove(_kLastCustomerPhone);
     await prefs.remove(_kLikedServices);
+    await prefs.remove(_kAvatarUrl);
+
+    await prefs.remove(_kSession);
+    await prefs.remove(_kRefresh);
 
     // Clear cart data (keys defined in cart_provider.dart)
     await prefs.remove('cart_json_v1');
     await prefs.remove('session_id_v1');
 
-    // Update store to remove currentPhone
-    final store = await _readStore();
-    store['currentPhone'] = null;
-    await _writeStore(store);
+    // Clear offline caches to prevent data leakage
+    await prefs.remove(_kCachedBookings);
+    await prefs.remove(_kCachedOrders);
+    await prefs.remove(_kLastSyncBookings);
+    await prefs.remove(_kLastSyncOrders);
   }
 
-  // Staff auth: username/password based session. No refresh for now.
+  // Staff auth: username/password based session.
   static Future<void> setStaffAuth({
     required String username,
     required String session,
@@ -326,48 +221,29 @@ class AppState {
     staffUsername = username;
     sessionToken = session;
     refreshToken = refresh;
-    phoneNumber = null; // not applicable
+    phoneNumber = null;
     isStaff = true;
+
     final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_kIsStaff, true);
+    await prefs.setString(_kUsername, username);
+    await prefs.remove(_kPhone);
+
     await prefs.setString(_kSession, session);
     if (refresh != null && refresh.isNotEmpty) {
       await prefs.setString(_kRefresh, refresh);
     } else {
       await prefs.remove(_kRefresh);
     }
-    await prefs.setBool(_kIsStaff, true);
-    await prefs.setString(_kUsername, username);
-    await prefs.remove(_kPhone);
   }
+
 
   static Future<void> setVehicleType(String type) async {
     vehicleType = type;
-    final store = await _readStore();
-    final cp = normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '');
-    if (cp.isNotEmpty) {
-      final profiles = (store['profiles'] as Map?) ?? {};
-      final u = (profiles[cp] as Map?) ?? {};
-      u['vehicleType'] = type;
-      profiles[cp] = u;
-      store['profiles'] = profiles;
-      store['currentPhone'] = cp;
-      await _writeStore(store);
-    }
   }
 
   static Future<void> setVehicleBrand(String brand) async {
     vehicleBrand = brand;
-    final store = await _readStore();
-    final cp = normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '');
-    if (cp.isNotEmpty) {
-      final profiles = (store['profiles'] as Map?) ?? {};
-      final u = (profiles[cp] as Map?) ?? {};
-      u['vehicleBrand'] = brand;
-      profiles[cp] = u;
-      store['profiles'] = profiles;
-      store['currentPhone'] = cp;
-      await _writeStore(store);
-    }
   }
 
   static Future<void> setVehicle({
@@ -392,52 +268,10 @@ class AppState {
         print('Failed to sync vehicle to backend: $e');
       }
     }
-
-    final store = await _readStore();
-    final cp = normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '');
-    if (cp.isNotEmpty) {
-      final profiles = (store['profiles'] as Map?) ?? {};
-      final u = (profiles[cp] as Map?) ?? {};
-      u['vehicleName'] = name;
-      if (modelId != null) u['vehicleModelId'] = modelId;
-      profiles[cp] = u;
-      store['profiles'] = profiles;
-      store['currentPhone'] = cp;
-      await _writeStore(store);
-    }
   }
 
   static Future<void> setVehicleName(String name) async {
     await setVehicle(name: name);
-  }
-
-  // Persist vehicle selection keyed by mobile number
-  static Future<void> setVehicleForPhone({
-    required String phone,
-    String? type,
-    String? brand,
-    String? name,
-  }) async {
-    final store = await _readStore();
-    final cp = normalizePhone(phone);
-    final profiles = (store['profiles'] as Map?) ?? {};
-    final u = (profiles[cp] as Map?) ?? {};
-    if (type != null) u['vehicleType'] = type;
-    if (brand != null) u['vehicleBrand'] = brand;
-    if (name != null) u['vehicleName'] = name;
-    profiles[cp] = u;
-    store['profiles'] = profiles;
-    store['currentPhone'] = cp;
-    await _writeStore(store);
-    print('Vehicle set for ' + cp);
-
-    // Update in-memory state if this phone matches the currently active user/guest
-    final currentCp = normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '');
-    if (cp == currentCp) {
-      if (type != null) vehicleType = type;
-      if (brand != null) vehicleBrand = brand;
-      if (name != null) vehicleName = name;
-    }
   }
 
   static Future<void> setProfile({
@@ -473,21 +307,6 @@ class AppState {
         print('Failed to sync profile to backend: $e');
       }
     }
-
-    final store = await _readStore();
-    final cp = normalizePhone((phoneNumber ?? lastCustomerPhone) ?? '');
-    if (cp.isNotEmpty) {
-      final profiles = (store['profiles'] as Map?) ?? {};
-      final u = (profiles[cp] as Map?) ?? {};
-      if (name != null) u['fullName'] = name;
-      if (addr != null) u['address'] = addr;
-      if (mail != null) u['email'] = mail;
-      profiles[cp] = u;
-      store['profiles'] = profiles;
-      store['currentPhone'] = cp;
-      await _writeStore(store);
-      print('Profile updated for ' + cp);
-    }
   }
 
   static Future<void> setAvatarUrl(String? url) async {
@@ -508,9 +327,6 @@ class AppState {
       await prefs.remove(_kLastCustomerPhone);
     } else {
       await prefs.setString(_kLastCustomerPhone, cp);
-      final store = await _readStore();
-      store['currentPhone'] = cp;
-      await _writeStore(store);
       print('Last customer phone set to ' + cp);
     }
   }
@@ -602,5 +418,71 @@ class AppState {
     // Here, we attempt to read using SharedPreferences synchronously by
     // returning null and letting the UI ignore when not immediately needed.
     return null;
+  }
+
+  // Offline cache for bookings
+  static Future<void> cacheBookings(List<Map<String, dynamic>> bookings) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kCachedBookings, jsonEncode(bookings));
+    await prefs.setString(_kLastSyncBookings, DateTime.now().toIso8601String());
+  }
+
+  static Future<List<Map<String, dynamic>>> getCachedBookings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_kCachedBookings);
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return decoded.cast<Map<String, dynamic>>();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  static Future<DateTime?> getLastSyncBookings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_kLastSyncBookings);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  // Offline cache for spare parts orders
+  static Future<void> cacheOrders(List<Map<String, dynamic>> orders) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kCachedOrders, jsonEncode(orders));
+    await prefs.setString(_kLastSyncOrders, DateTime.now().toIso8601String());
+  }
+
+  static Future<List<Map<String, dynamic>>> getCachedOrders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_kCachedOrders);
+    if (raw == null || raw.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is List) {
+        return decoded.cast<Map<String, dynamic>>();
+      }
+    } catch (_) {}
+    return [];
+  }
+
+  static Future<DateTime?> getLastSyncOrders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final raw = prefs.getString(_kLastSyncOrders);
+    if (raw == null) return null;
+    return DateTime.tryParse(raw);
+  }
+
+  // Helper to get the correct cart session ID (aligning with CartProvider logic)
+  static Future<String?> getCartSessionId() async {
+    final prefs = await SharedPreferences.getInstance();
+    // Logic must match CartProvider: if auth, use suffixed key, else generic.
+    // _kCartKey is 'session_id_v1' locally in CartProvider, we replicate here.
+    const kCartKey = 'session_id_v1';
+    final uniqueKey = isAuthenticated && (phoneNumber?.isNotEmpty ?? false)
+        ? '${kCartKey}_$phoneNumber'
+        : kCartKey;
+    return prefs.getString(uniqueKey);
   }
 }

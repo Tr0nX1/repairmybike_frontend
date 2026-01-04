@@ -48,16 +48,7 @@ class _VehicleBrandPageState extends State<VehicleBrandPage> {
   }
 
   void _select(VehicleBrandItem item) {
-    final phone =
-        widget.phone ??
-        AppState.phoneNumber ??
-        AppState.lastCustomerPhone ??
-        '';
-    if (phone.isNotEmpty) {
-      AppState.setVehicleForPhone(phone: phone, brand: item.name);
-    } else {
-      AppState.setVehicleBrand(item.name);
-    }
+    AppState.setVehicleBrand(item.name);
     Navigator.push(
       context,
       MaterialPageRoute(

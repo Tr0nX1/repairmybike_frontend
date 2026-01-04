@@ -10,6 +10,7 @@ import 'booking_list_page.dart';
 import 'cart_page.dart';
 import 'saved_services_page.dart';
 import '../data/booking_api.dart'; // Added for fetching bookings
+import '../data/order_api.dart'; // Added for fetching spare parts orders
 
 class ProfilePage extends StatefulWidget {
   const ProfilePage({super.key});
@@ -25,7 +26,8 @@ class _ProfilePageState extends State<ProfilePage> {
   static const Color accent = Color(0xFF01C9F5);
 
   bool _loggingOut = false;
-  int _bookingCount = 0;
+  int _bookingCount = 0;  // Service bookings count
+  int _orderCount = 0;  // Spare parts orders count
   List<Map<String, dynamic>> _recentBookings = [];
   bool _loading = false;
 
@@ -44,6 +46,22 @@ class _ProfilePageState extends State<ProfilePage> {
         AppState.phoneNumber!,
         sessionToken: AppState.sessionToken,
       );
+      
+      // Also fetch spare parts orders
+      try {
+        final orderApi = OrderApi();
+        final orders = await orderApi.listOrders(phone: AppState.phoneNumber);
+        
+        // Also refresh liked/saved services here
+        if (mounted) {
+           await AppState.syncSavedServices();
+        }
+
+        setState(() => _orderCount = orders.length);
+      } catch (_) {
+        // Ignore
+      }
+      
       setState(() {
          _bookingCount = bookings.length;
          // Take top 3 for recent
@@ -68,11 +86,8 @@ class _ProfilePageState extends State<ProfilePage> {
       await AppState.setLastCustomerPhone(null);
       if (!mounted) return;
       // Close app after logout per requirement
-      Future.delayed(const Duration(milliseconds: 200), () {
-        if (!kIsWeb) {
-          SystemNavigator.pop();
-        }
-      });
+        // Restart app flow instead of closing
+        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -93,9 +108,24 @@ class _ProfilePageState extends State<ProfilePage> {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => AuthPage(
-          onFinished: () {
-            Navigator.of(context).pop();
-            setState(() {});
+          onFinished: () async {
+            // Re-check state after login to handle onboarding
+            await AppState.init(); // Refresh state
+            if (!mounted) return;
+            
+            Navigator.of(context).pop(); // Close auth page
+            
+            final hasVehicle = (AppState.vehicleBrand?.isNotEmpty ?? false) && 
+                              (AppState.vehicleName?.isNotEmpty ?? false);
+            final hasProfile = (AppState.fullName?.isNotEmpty ?? false);
+
+            if (!hasVehicle) {
+               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VehicleTypePage()));
+            } else if (!hasProfile) {
+               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileDetailsPage()));
+            } else {
+               setState(() {}); // Just refresh if everything is good
+            }
           },
         ),
       ),
@@ -165,12 +195,11 @@ class _ProfilePageState extends State<ProfilePage> {
                 const SizedBox(height: 16),
 
                 // Quick stats
-                // Quick stats
                 Row(
                   children: [
                     _StatCard(
                       title: 'Bookings', 
-                      value: '$_bookingCount',
+                      value: '${_bookingCount + _orderCount}',  // Combined count
                       isLoading: _loading,
                       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookingListPage())),
                     ),

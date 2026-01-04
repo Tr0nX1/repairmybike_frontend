@@ -126,14 +126,6 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
     return GestureDetector(
       onTap: () async {
         await AppState.setVehicle(name: model, modelId: item.id);
-        if (widget.phone != null && widget.phone!.isNotEmpty) {
-          await AppState.setVehicleForPhone(
-            phone: widget.phone!,
-            type: AppState.vehicleType,
-            brand: AppState.vehicleBrand,
-            name: model,
-          );
-        }
         final needsDetails =
             AppState.isCustomerAuthenticated &&
             ((AppState.fullName?.isEmpty ?? true) ||
@@ -241,14 +233,6 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
                   if (customController.text.trim().isNotEmpty) {
                     final name = customController.text.trim();
                     await AppState.setVehicle(name: name);
-                    if (widget.phone != null && widget.phone!.isNotEmpty) {
-                      await AppState.setVehicleForPhone(
-                        phone: widget.phone!,
-                        type: AppState.vehicleType,
-                        brand: AppState.vehicleBrand,
-                        name: name,
-                      );
-                    }
                     final needsDetails =
                         AppState.isCustomerAuthenticated &&
                         ((AppState.fullName?.isEmpty ?? true) ||

@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
-import '../utils/api_config.dart';
+import 'api_client.dart';
 
 class VehicleTypeItem {
   final int id;
@@ -84,42 +83,8 @@ class VehicleModelItem {
 
 class VehiclesApi {
   final Dio _dio;
+  VehiclesApi() : _dio = ApiClient().dio;
 
-  VehiclesApi()
-    : _dio = Dio(
-        BaseOptions(
-          baseUrl: backendBase,
-          connectTimeout: const Duration(seconds: 10),
-          receiveTimeout: const Duration(seconds: 15),
-        ),
-      ) {
-    assert(() {
-      _dio.interceptors.add(
-        LogInterceptor(request: true, responseBody: false, error: true),
-      );
-      _dio.interceptors.add(
-        InterceptorsWrapper(
-          onRequest: (o, h) {
-            debugPrint('➡️ ${o.method} ${o.uri}');
-            h.next(o);
-          },
-          onResponse: (r, h) {
-            debugPrint(
-              '✅ ${r.requestOptions.method} ${r.requestOptions.uri} -> ${r.statusCode}',
-            );
-            h.next(r);
-          },
-          onError: (e, h) {
-            debugPrint(
-              '❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message}',
-            );
-            h.next(e);
-          },
-        ),
-      );
-      return true;
-    }());
-  }
 
   Future<List<VehicleTypeItem>> getVehicleTypes() async {
     final res = await _dio.get('/api/vehicles/vehicle-types/');
@@ -188,7 +153,6 @@ class VehiclesApi {
     final res = await _dio.post(
       '/api/vehicles/user-vehicles/',
       data: {'vehicle_model_id': vehicleModelId, 'is_default': true},
-      options: Options(headers: {'Authorization': 'Bearer $sessionToken'}),
     );
     final data = res.data;
     if (data is Map<String, dynamic>) return data;
@@ -198,10 +162,8 @@ class VehiclesApi {
   Future<List<Map<String, dynamic>>> getUserVehicles({
     required String sessionToken,
   }) async {
-    final res = await _dio.get(
-      '/api/vehicles/user-vehicles/',
-      options: Options(headers: {'Authorization': 'Bearer $sessionToken'}),
-    );
+    final res = await _dio.get('/api/vehicles/user-vehicles/');
+
     final body = res.data;
     if (body is List) {
       return body.whereType<Map<String, dynamic>>().toList();
