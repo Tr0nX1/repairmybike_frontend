@@ -291,6 +291,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     
     // If customer has no vehicle (and isn't staff), force selection flow
     if (!AppState.isStaff) {
+       // Check if vehicle info is truly missing
        if (!hasVehicle) {
          Navigator.of(context).pushReplacement(
            MaterialPageRoute(
@@ -299,6 +300,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
          );
          return;
        }
+       // Only go to profile details if NO email/name is present
        if (!hasProfile) {
          Navigator.of(context).pushReplacement(
            MaterialPageRoute(

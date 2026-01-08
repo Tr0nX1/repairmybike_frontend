@@ -192,21 +192,26 @@ class _CartActions extends ConsumerWidget {
         ElevatedButton.icon(
           onPressed: () async {
             try {
-              if (!(AppState.isAuthenticated)) {
-                await AppState.setPendingAction({'type': 'add_to_cart', 'partId': partId, 'qty': 1});
-                await showLoginRequiredDialog(context);
-                return;
-              }
-              await ref.read(cartProvider.notifier).addItem(partId: partId, quantity: 1);
+              // Guest CAN add to cart without login
+              await ref
+                  .read(cartProvider.notifier)
+                  .addItem(partId: partId, quantity: 1);
               if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Added to cart')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Added to cart')),
+              );
               _showAddAnimation(context);
             } catch (e) {
               if (!context.mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Add to cart failed: $e')));
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text('Add to cart failed: $e')),
+              );
             }
           },
-          style: ElevatedButton.styleFrom(backgroundColor: cs.primary, foregroundColor: cs.onPrimary),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: cs.primary,
+            foregroundColor: cs.onPrimary,
+          ),
           icon: const Icon(Icons.add_shopping_cart),
           label: const Text('Add to Cart'),
         ),
@@ -215,19 +220,34 @@ class _CartActions extends ConsumerWidget {
           onPressed: () async {
             try {
               if (!(AppState.isAuthenticated)) {
-                await AppState.setPendingAction({'type': 'add_to_cart', 'partId': partId, 'qty': 1});
+                await AppState.setPendingAction({
+                  'type': 'buy_now',
+                  'partId': partId,
+                  'qty': 1,
+                });
                 await showLoginRequiredDialog(context);
                 return;
               }
-              await ref.read(cartProvider.notifier).addItem(partId: partId, quantity: 1);
-              if (context.mounted) Navigator.of(context).push(MaterialPageRoute(builder: (_) => const CartPage()));
+              await ref
+                  .read(cartProvider.notifier)
+                  .addItem(partId: partId, quantity: 1);
+              if (context.mounted) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const CartPage()),
+                );
+              }
             } catch (e) {
               if (context.mounted) {
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Purchase failed: $e')));
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('Purchase failed: $e')),
+                );
               }
             }
           },
-          style: OutlinedButton.styleFrom(foregroundColor: cs.primary, side: BorderSide(color: cs.primary)),
+          style: OutlinedButton.styleFrom(
+            foregroundColor: cs.primary,
+            side: BorderSide(color: cs.primary),
+          ),
           child: const Text('Buy Now'),
         )
       ],

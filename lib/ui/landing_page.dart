@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'auth_page.dart';
+import 'vehicle_type_page.dart';
 
 class LandingPage extends StatelessWidget {
   const LandingPage({super.key});
@@ -127,8 +128,10 @@ class LandingPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 48),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                    Wrap(
+                      spacing: 20,
+                      runSpacing: 20,
+                      alignment: WrapAlignment.center,
                       children: [
                         ElevatedButton(
                           onPressed: () {
@@ -149,6 +152,26 @@ class LandingPage extends StatelessWidget {
                           ),
                           child: const Text(
                             'Book a Service Now',
+                            style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                        OutlinedButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const VehicleTypePage(),
+                              ),
+                            );
+                          },
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: Colors.white,
+                            side: const BorderSide(color: Colors.white, width: 2),
+                            padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 24),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+                          ),
+                          child: const Text(
+                            'Browse as Guest',
                             style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                           ),
                         ),

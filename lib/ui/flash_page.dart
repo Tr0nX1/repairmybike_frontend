@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
 import '../data/vehicles_api.dart';
@@ -94,32 +95,16 @@ class _FlashPageState extends State<FlashPage>
     _timer = Timer(const Duration(milliseconds: 2500), () {
       if (!mounted) return;
       if (AppState.isAuthenticated) {
-        final hasVehicle =
-            (AppState.vehicleBrand?.isNotEmpty ?? false) &&
-            (AppState.vehicleName?.isNotEmpty ?? false);
-        final hasProfile =
-            (AppState.fullName?.isNotEmpty ?? false) &&
-            (AppState.address?.isNotEmpty ?? false);
-        if (!hasVehicle) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => VehicleTypePage(phone: AppState.phoneNumber),
-            ),
-          );
-        } else if (!hasProfile) {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const ProfileDetailsPage()),
-          );
-        } else {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const MainShell()),
-          );
-        }
+        // Always open Home (MainShell) for authenticated users as requested
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const MainShell()),
+        );
       } else {
-        // Skip LandingPage and go straight to catalog for Guests
+        // Redirection for Guest Users: Skip LandingPage since we have a static HTML version for web 
+        // and mobile/windows should go straight to login.
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (_) => const VehicleTypePage(),
+            builder: (_) => const AuthPage(toDetailsOnFinish: true),
           ),
         );
       }

@@ -99,4 +99,54 @@ class SparePartsApi {
     if (data is Map<String, dynamic>) return data;
     return {'success': true};
   }
+
+  Future<List<Map<String, dynamic>>> getSavedParts() async {
+    try {
+      final response = await _dio.get('$baseUrl/saved-parts/');
+      if (response.statusCode == 200 && response.data['error'] == false) {
+        final List data = response.data['data'];
+        return List<Map<String, dynamic>>.from(data);
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<List<int>> getSavedPartIds() async {
+    try {
+      final response = await _dio.get('$baseUrl/saved-parts/');
+      if (response.statusCode == 200 && response.data['error'] == false) {
+        final List data = response.data['data'];
+        return data.map<int>((item) => item['spare_part']['id'] as int).toList();
+      }
+      return [];
+    } catch (e) {
+      return [];
+    }
+  }
+
+  Future<bool> savePart(int sparePartId) async {
+    try {
+      final response = await _dio.post(
+        '$baseUrl/saved-parts/',
+        data: {'spare_part_id': sparePartId},
+      );
+      return response.statusCode == 201 || response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
+
+  Future<bool> removePart(int sparePartId) async {
+    try {
+      final response = await _dio.post(
+        '$baseUrl/saved-parts/remove/',
+        data: {'spare_part_id': sparePartId},
+      );
+      return response.statusCode == 200;
+    } catch (e) {
+      return false;
+    }
+  }
 }

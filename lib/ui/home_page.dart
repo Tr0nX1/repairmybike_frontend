@@ -12,6 +12,7 @@ import 'spare_parts_section.dart';
 import 'service_detail_page.dart';
 import '../data/app_state.dart';
 import '../providers/category_provider.dart' as providers;
+import '../providers/saved_services_provider.dart';
 import '../models/service.dart';
 import '../utils/url_utils.dart';
 // Theme toggle removed
@@ -116,6 +117,8 @@ class _HomePageState extends ConsumerState<HomePage> {
                 const SizedBox(height: 24),
                 _LikedServicesSection(),
                 const SizedBox(height: 24),
+                if (_loadPartsSection) const SparePartsSection(),
+                const SizedBox(height: 24),
                 Text(
                   'Explore Services',
                   style: TextStyle(
@@ -172,31 +175,32 @@ class _HomePageState extends ConsumerState<HomePage> {
                         ),
                       );
                     }
-                    // Responsive grid: 4 cols on mobile, more on wider screens
+                    // Responsive grid: 3 high-end tiles on mobile instead of 4
                     final width = MediaQuery.of(context).size.width;
-                    int crossAxisCount = 4;
-                    if (width >= 600) crossAxisCount = 6;
-                    if (width >= 1000) crossAxisCount = 8;
-                    if (width >= 1400) crossAxisCount = 10;
+                    int crossAxisCount = 3;
+                    if (width >= 600) crossAxisCount = 5;
+                    if (width >= 1000) crossAxisCount = 7;
+                    if (width >= 1400) crossAxisCount = 9;
+                    
                     final visible = _showAllCategories
                         ? categories
-                        : categories.take(8).toList();
-                    // Make tiles taller on phones to avoid vertical overflow
-                    final isPhone = MediaQuery.of(context).size.width < 600;
-                    final tileRatio = isPhone ? 0.75 : 0.95; // width/height
+                        : categories.take(6).toList(); // Show 6 initially (2 rows)
+
+                    final isPhone = width < 600;
+                    final tileRatio = isPhone ? 0.85 : 1.0; 
+
                     return GridView.builder(
                       physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
                       gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                         crossAxisCount: crossAxisCount,
-                        mainAxisSpacing: 12,
-                        crossAxisSpacing: 12,
+                        mainAxisSpacing: 14,
+                        crossAxisSpacing: 14,
                         childAspectRatio: tileRatio,
                       ),
                       itemCount: visible.length,
                       itemBuilder: (context, index) {
-                        final category = visible[index];
-                        return _CategoryCard(category: category);
+                        return _CategoryCard(category: visible[index]);
                       },
                     );
                   },
@@ -242,9 +246,6 @@ class _HomePageState extends ConsumerState<HomePage> {
 
                 const SizedBox(height: 24),
                 const SubscriptionSection(),
-
-                const SizedBox(height: 24),
-                if (_loadPartsSection) const SparePartsSection(),
                 const SizedBox(height: 24),
               ],
             ),
@@ -261,24 +262,26 @@ class _CategoryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const cardColor = Color(0xFF1C1C1C);
-    const borderColor = Color(0xFF2A2A2A);
-    // Derive a pleasant accent color per category for subtle colorization
+    const cardColor = Color(0xFF181818);
+    
+    // Premium Palette Logic
     Color accentFor(Category c) {
       const palette = <Color>[
         Color(0xFF00E5FF), // cyan
         Color(0xFF8A2BE2), // blue violet
         Color(0xFFFFA726), // orange
-        Color(0xFF66BB6A), // green
+        Color(0xFF01C9F5), // brand blue
         Color(0xFFEF5350), // red
-        Color(0xFF42A5F5), // blue
+        Color(0xFF66BB6A), // green
       ];
       final idx = (c.id % palette.length).abs();
       return palette[idx];
     }
 
+    final accentColor = accentFor(category);
+
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(18),
       onTap: () {
         Navigator.of(context).push(
           MaterialPageRoute(
@@ -292,63 +295,73 @@ class _CategoryCard extends StatelessWidget {
       child: LayoutBuilder(
         builder: (context, constraints) {
           final w = constraints.maxWidth;
-          final iconSize = w < 88 ? 28.0 : 36.0;
-          final nameSize = w < 88 ? 12.0 : 14.0;
-          final countSize = w < 88 ? 10.0 : 12.0;
-          final gap = w < 88 ? 8.0 : 12.0;
-          final isAndroid =
-              Theme.of(context).platform == TargetPlatform.android;
-          final scale = isAndroid
-              ? 0.95
-              : 1.0; // slightly reduce text on Android to fit
-          final accentColor = accentFor(category);
+          
           return Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: accentColor.withOpacity(0.55)),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: accentColor.withOpacity(0.3), width: 1.2),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [cardColor, accentColor.withOpacity(0.20)],
+                colors: [cardColor, accentColor.withOpacity(0.08)],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.25),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
+                  color: Colors.black.withOpacity(0.4),
+                  blurRadius: 8,
+                  offset: const Offset(0, 4),
                 ),
               ],
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+            padding: const EdgeInsets.all(10),
             child: Column(
-              mainAxisSize: MainAxisSize.min,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  _iconForCategory(category),
-                  size: iconSize,
-                  color: accentColor,
-                ),
-                SizedBox(height: gap),
-                Flexible(
-                  child: Text(
-                    category.name,
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: nameSize,
-                    ),
-                    textScaleFactor: scale,
+                // The "Symbol" Container
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: accentColor.withOpacity(0.12),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: accentColor.withOpacity(0.15),
+                        blurRadius: 10,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Icon(
+                    _iconForCategory(category),
+                    size: w < 90 ? 28 : 34,
+                    color: accentColor,
                   ),
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 12),
+                // Scalable Name
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
+                      category.name,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w800,
+                        fontSize: 13,
+                        letterSpacing: -0.2,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 2),
                 Text(
                   '${category.serviceCount} services',
-                  style: TextStyle(color: Colors.white60, fontSize: countSize),
-                  textScaleFactor: scale,
+                  style: TextStyle(
+                    color: Colors.white38, 
+                    fontSize: w < 90 ? 9 : 10,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
               ],
             ),
@@ -511,7 +524,7 @@ class _QuickActionsRow extends StatelessWidget {
 class _LikedServicesSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final likedIds = AppState.getLikedServiceIds();
+    final likedIds = ref.watch(savedServicesProvider);
     if (likedIds.isEmpty) {
       return const SizedBox.shrink();
     }
@@ -537,7 +550,7 @@ class _LikedServicesSection extends ConsumerWidget {
                 .toList();
             if (liked.isEmpty) return const SizedBox.shrink();
             return SizedBox(
-              height: 160,
+              height: 185,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
                 itemCount: liked.length,

@@ -141,16 +141,33 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
               height: 48,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black),
-                onPressed: _submitting ? null : () => _subscribe(plan),
+                onPressed: (AppState.isAuthenticated && !_submitting)
+                    ? () => _subscribe(plan)
+                    : null,
                 child: _submitting
                     ? const SizedBox(
                         width: 20,
                         height: 20,
-                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                        child: CircularProgressIndicator(
+                          strokeWidth: 2,
+                          color: Colors.black,
+                        ),
                       )
-                    : const Text('Confirm Subscription', style: TextStyle(fontWeight: FontWeight.w700)),
+                    : const Text(
+                        'Confirm Subscription',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
               ),
             ),
+            if (!AppState.isAuthenticated) ...[
+              const SizedBox(height: 12),
+              const Center(
+                child: Text(
+                  'Login required to subscribe',
+                  style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.w600),
+                ),
+              ),
+            ],
             const SizedBox(height: 16),
             Row(
               children: [

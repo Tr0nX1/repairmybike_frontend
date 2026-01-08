@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import '../models/subscription.dart';
 import 'subscription_checkout_page.dart';
+import '../data/app_state.dart';
+import 'widgets/login_required_dialog.dart';
 
 const accent = Color(0xFF00E5FF);
 const cardColor = Color(0xFF222222);
@@ -23,6 +25,21 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
     final ordered = _orderOptions(widget.options);
     if (selectedIndex >= ordered.length) selectedIndex = 0;
     final selected = ordered.isNotEmpty ? ordered[selectedIndex] : null;
+
+    Future.microtask(() async {
+      if (AppState.isAuthenticated) {
+        final action = await AppState.takePendingAction();
+        if (action != null && action['type'] == 'subscribe' && selected != null) {
+          if (!context.mounted) return;
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => SubscriptionCheckoutPage(plan: selected),
+            ),
+          );
+        }
+      }
+    });
+
     final currency = selected != null ? selected.currency : (ordered.isNotEmpty ? ordered.first.currency : 'INR');
     final symbol = _currencySymbol(currency);
 
@@ -36,11 +53,28 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
         child: ListView(
           children: [
             Container(
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
                 color: cardColor,
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: borderColor),
+                image: (selected?.imageUrl != null && selected!.imageUrl!.isNotEmpty)
+                  ? DecorationImage(
+                      image: NetworkImage(
+                        selected!.imageUrl!.contains('http') 
+                          ? selected!.imageUrl! 
+                          : 'http://127.0.0.1:8000${selected!.imageUrl!}'
+                      ),
+                      fit: BoxFit.cover,
+                      colorFilter: ColorFilter.mode(
+                        Colors.black.withOpacity(0.7), 
+                        BlendMode.darken
+                      ),
+                    )
+                  : null,
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 10, offset: const Offset(0, 5))
+                ],
               ),
               child: Row(
                 children: [
@@ -48,13 +82,13 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(widget.tierName, style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800)),
+                        Text(widget.tierName, style: const TextStyle(color: Colors.white, fontSize: 24, fontWeight: FontWeight.w900, letterSpacing: -0.5)),
                         const SizedBox(height: 8),
-                        const Text('Membership Plans', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w700)),
+                        Text(selected?.description ?? 'Membership Plans', style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.w600, fontSize: 13)),
                       ],
                     ),
                   ),
-                  const Icon(Icons.workspace_premium, color: accent, size: 28),
+                  const Icon(Icons.workspace_premium, color: accent, size: 32),
                 ],
               ),
             ),
@@ -100,9 +134,21 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
                 ),
                 onPressed: selected == null
                     ? null
-                    : () {
+                    : () async {
+                        if (!AppState.isAuthenticated) {
+                          await AppState.setPendingAction({
+                            'type': 'subscribe',
+                          });
+                          if (context.mounted) {
+                            await showLoginRequiredDialog(context);
+                          }
+                          return;
+                        }
                         Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => SubscriptionCheckoutPage(plan: selected)),
+                          MaterialPageRoute(
+                            builder: (_) =>
+                                SubscriptionCheckoutPage(plan: selected),
+                          ),
                         );
                       },
                 child: const Text('Book Subscription', style: TextStyle(fontWeight: FontWeight.w800)),

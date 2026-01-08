@@ -4,6 +4,9 @@ import 'booking_form_page.dart';
 import 'booking_list_page.dart';
 import '../utils/url_utils.dart';
 import '../data/app_state.dart';
+import 'widgets/login_required_dialog.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/saved_services_provider.dart';
 
 class ServiceDetailPage extends StatefulWidget {
   final Service service;
@@ -84,6 +87,22 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
 
   @override
   Widget build(BuildContext context) {
+    Future.microtask(() async {
+      if (AppState.isAuthenticated) {
+        final action = await AppState.takePendingAction();
+        if (action != null && action['type'] == 'book_service') {
+          if (!context.mounted) return;
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => BookingFormPage(
+                service: widget.service,
+                initialLocation: _selectedLocation,
+              ),
+            ),
+          );
+        }
+      }
+    });
     final rating = double.tryParse(widget.service.rating) ?? 0.0;
     return Scaffold(
       backgroundColor: bg,
@@ -91,9 +110,23 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
         backgroundColor: const Color(0xFF071A1D),
         elevation: 0,
         actions: [
-          const Padding(
-            padding: EdgeInsets.only(right: 12),
-            child: Icon(Icons.favorite_border),
+          Consumer(
+            builder: (context, ref, _) {
+              final isLiked = ref.watch(savedServicesProvider).contains(widget.service.id);
+              return IconButton(
+                icon: Icon(
+                  isLiked ? Icons.favorite : Icons.favorite_border,
+                  color: isLiked ? Colors.red : Colors.white,
+                ),
+                onPressed: () {
+                  if (!AppState.isAuthenticated) {
+                    showLoginRequiredDialog(context);
+                    return;
+                  }
+                  ref.read(savedServicesProvider.notifier).toggle(widget.service.id);
+                },
+              );
+            },
           ),
           IconButton(
             icon: const Icon(Icons.history),
@@ -418,7 +451,14 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                       foregroundColor: Colors.black,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    onPressed: () {
+                    onPressed: () async {
+                      if (!AppState.isAuthenticated) {
+                        await AppState.setPendingAction({'type': 'book_service'});
+                        if (context.mounted) {
+                          await showLoginRequiredDialog(context);
+                        }
+                        return;
+                      }
                       Navigator.of(context).push(
                         MaterialPageRoute(
                           builder: (_) => BookingFormPage(
@@ -428,8 +468,10 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                         ),
                       );
                     },
-                    child: const Text('Book Service Now',
-                        style: TextStyle(fontWeight: FontWeight.w700)),
+                    child: const Text(
+                      'Book Service Now',
+                      style: TextStyle(fontWeight: FontWeight.w700),
+                    ),
                   ),
                 ),
               ),

@@ -328,7 +328,8 @@ class _MembershipCard extends StatelessWidget {
     final prices = options.map((o) => o.price).toList();
     final minPrice = prices.reduce((a, b) => a < b ? a : b);
     final currency = options.isNotEmpty ? options.first.currency : 'INR';
-    final symbol = _currencySymbol(currency);
+    final planSymbol = _currencySymbol(currency);
+    final plan = options.first;
     return InkWell(
       borderRadius: BorderRadius.circular(16),
       onTap: onTap,
@@ -338,16 +339,32 @@ class _MembershipCard extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: borderColor, width: 1),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1C1C1C), Color(0xFF212121)],
-          ),
+          image: (plan.imageUrl != null && plan.imageUrl!.isNotEmpty)
+              ? DecorationImage(
+                  image: NetworkImage(
+                    plan.imageUrl!.contains('http') 
+                      ? plan.imageUrl! 
+                      : 'http://127.0.0.1:8000${plan.imageUrl!}'
+                  ),
+                  fit: BoxFit.cover,
+                  colorFilter: ColorFilter.mode(
+                    Colors.black.withOpacity(0.65), 
+                    BlendMode.darken
+                  ),
+                )
+              : null,
+          gradient: (plan.imageUrl == null || plan.imageUrl!.isEmpty)
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [Color(0xFF1C1C1C), Color(0xFF212121)],
+                )
+              : null,
           boxShadow: [
             BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 6, offset: const Offset(0, 3)),
           ],
         ),
-        padding: const EdgeInsets.all(12),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -358,17 +375,24 @@ class _MembershipCard extends StatelessWidget {
                     tierName,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w800),
+                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -0.5),
                   ),
                 ),
-                const Icon(Icons.workspace_premium, color: accent, size: 22),
+                const Icon(Icons.workspace_premium, color: accent, size: 24),
               ],
             ),
-            const SizedBox(height: 8),
+            const Spacer(),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(color: const Color(0xFF0B2E32), borderRadius: BorderRadius.circular(10), border: Border.all(color: borderColor)),
-              child: Text('Starts at $symbol${minPrice.toStringAsFixed(2)}', style: const TextStyle(color: accent, fontWeight: FontWeight.w800)),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black.withOpacity(0.6),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: accent.withOpacity(0.3)),
+              ),
+              child: Text(
+                'Starts at $planSymbol${minPrice.toStringAsFixed(0)}', 
+                style: const TextStyle(color: accent, fontWeight: FontWeight.w900, fontSize: 13)
+              ),
             ),
           ],
         ),

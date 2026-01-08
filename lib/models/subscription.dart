@@ -3,6 +3,7 @@ class SubscriptionPlan {
   final String name;
   final String slug;
   final String description;
+  final String? imageUrl;
   final Map<String, dynamic> benefits;
   final List<String> services;
   final num price;
@@ -20,6 +21,7 @@ class SubscriptionPlan {
     required this.name,
     required this.slug,
     required this.description,
+    this.imageUrl,
     required this.benefits,
     required this.services,
     required this.price,
@@ -39,6 +41,7 @@ class SubscriptionPlan {
       name: json['name'] as String? ?? '',
       slug: json['slug'] as String? ?? '',
       description: json['description'] as String? ?? '',
+      imageUrl: json['image'] as String?,
       benefits: (json['benefits'] as Map<String, dynamic>?) ?? <String, dynamic>{},
       services: ((json['services'] as List?) ?? const []).map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList(),
       price: (json['price'] is num)

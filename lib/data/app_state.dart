@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'auth_api.dart';
 import 'vehicles_api.dart';
 import 'saved_services_api.dart';
+import 'spare_parts_api.dart';
 
 class AppState {
   // Keys for persistence
@@ -13,7 +14,15 @@ class AppState {
   static const _kAvatarUrl = 'avatarUrl';
   static const _kLastCustomerPhone = 'lastCustomerPhone';
   static const _kLikedServices = 'likedServices';
+  static const _kLikedParts = 'likedParts';
   static const _kFeedbackPrefix = 'feedback_service_';
+  static const _kFullName = 'fullName';
+  static const _kAddress = 'address';
+  static const _kEmail = 'email';
+  static const _kVehicleType = 'vehicleType';
+  static const _kVehicleBrand = 'vehicleBrand';
+  static const _kVehicleName = 'vehicleName';
+  static const _kVehicleModelId = 'vehicleModelId';
   static const _kPendingAction = 'pending_action';
   
   // Offline cache keys
@@ -29,6 +38,7 @@ class AppState {
 
   static String? lastCustomerPhone;
   static Set<int> likedServiceIds = <int>{};
+  static Set<int> likedPartIds = <int>{};
 
   static String normalizePhone(String p) {
     var s = p.trim().replaceAll(RegExp('\\D'), '');
@@ -130,22 +140,27 @@ class AppState {
       }
     }
 
-    // Initialize profile fields as null (fetch from API later for fresh "Truth")
-    fullName = null;
-    address = null;
-    email = null;
-    vehicleType = null;
-    vehicleBrand = null;
-    vehicleName = null;
-    vehicleModelId = null;
-
+    // Read profile fields from cache for fast access
+    fullName = prefs.getString(_kFullName);
+    address = prefs.getString(_kAddress);
+    email = prefs.getString(_kEmail);
+    vehicleType = prefs.getString(_kVehicleType);
+    vehicleBrand = prefs.getString(_kVehicleBrand);
+    vehicleName = prefs.getString(_kVehicleName);
+    vehicleModelId = prefs.getInt(_kVehicleModelId);
     // Initial sync for saved services
     if (isAuthenticated) {
       await syncSavedServices();
-    } else {
       // Load local likes if not auth or fallback
       final likedRaw = prefs.getStringList(_kLikedServices) ?? const [];
       likedServiceIds = likedRaw.map((e) => int.tryParse(e)).whereType<int>().toSet();
+      
+      final likedPartsRaw = prefs.getStringList(_kLikedParts) ?? const [];
+      likedPartIds = likedPartsRaw.map((e) => int.tryParse(e)).whereType<int>().toSet();
+    }
+    // Initial sync for saved parts
+    if (isAuthenticated) {
+      await syncSavedParts();
     }
   }
 
@@ -189,6 +204,7 @@ class AppState {
 
     // Clear in-memory likes
     likedServiceIds.clear();
+    likedPartIds.clear();
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_kPhone);
@@ -196,10 +212,20 @@ class AppState {
     await prefs.remove(_kUsername);
     await prefs.remove(_kLastCustomerPhone);
     await prefs.remove(_kLikedServices);
+    await prefs.remove(_kLikedParts);
     await prefs.remove(_kAvatarUrl);
 
     await prefs.remove(_kSession);
     await prefs.remove(_kRefresh);
+
+    // Wipe cached profile and vehicle data
+    await prefs.remove(_kFullName);
+    await prefs.remove(_kAddress);
+    await prefs.remove(_kEmail);
+    await prefs.remove(_kVehicleType);
+    await prefs.remove(_kVehicleBrand);
+    await prefs.remove(_kVehicleName);
+    await prefs.remove(_kVehicleModelId);
 
     // Clear cart data (keys defined in cart_provider.dart)
     await prefs.remove('cart_json_v1');
@@ -210,6 +236,9 @@ class AppState {
     await prefs.remove(_kCachedOrders);
     await prefs.remove(_kLastSyncBookings);
     await prefs.remove(_kLastSyncOrders);
+
+    // Clear navigation state
+    await prefs.remove('last_tab_index');
   }
 
   // Staff auth: username/password based session.
@@ -240,12 +269,15 @@ class AppState {
 
   static Future<void> setVehicleType(String type) async {
     vehicleType = type;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kVehicleType, type);
   }
 
   static Future<void> setVehicleBrand(String brand) async {
     vehicleBrand = brand;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kVehicleBrand, brand);
   }
-
   static Future<void> setVehicle({
     required String name,
     int? modelId,
@@ -254,12 +286,20 @@ class AppState {
     vehicleName = name;
     vehicleModelId = modelId;
 
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kVehicleName, name);
+    if (modelId != null) {
+      await prefs.setInt(_kVehicleModelId, modelId);
+    } else {
+      await prefs.remove(_kVehicleModelId);
+    }
+
     // Sync to backend if authenticated and requested
     if (syncToBackend &&
         isAuthenticated &&
         sessionToken != null &&
         modelId != null) {
-      try {
+     try {
         await VehiclesApi().addUserVehicle(
           sessionToken: sessionToken!,
           vehicleModelId: modelId,
@@ -283,9 +323,14 @@ class AppState {
     address = addr ?? address;
     email = mail ?? email;
 
+    final prefs = await SharedPreferences.getInstance();
+    if (name != null) await prefs.setString(_kFullName, name);
+    if (addr != null) await prefs.setString(_kAddress, addr);
+    if (mail != null) await prefs.setString(_kEmail, mail);
+
     // Sync to backend if authenticated
     if (isAuthenticated && sessionToken != null) {
-      try {
+     try {
         String? first;
         String? last;
         if (name != null) {
@@ -367,6 +412,46 @@ class AppState {
       await prefs.setStringList(
         _kLikedServices,
         likedServiceIds.map((e) => e.toString()).toList(),
+      );
+    } catch (_) {
+      // ignore
+    }
+  }
+
+  // Saved Parts logic
+  static bool isPartLiked(int partId) =>
+      likedPartIds.contains(partId);
+
+  static Future<void> toggleLikePart(int partId) async {
+    final wasLiked = likedPartIds.contains(partId);
+    if (wasLiked) {
+      likedPartIds.remove(partId);
+      if (isAuthenticated && sessionToken != null) {
+        await SparePartsApi().removePart(partId);
+      }
+    } else {
+      likedPartIds.add(partId);
+      if (isAuthenticated && sessionToken != null) {
+        await SparePartsApi().savePart(partId);
+      }
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(
+        _kLikedParts,
+        likedPartIds.map((e) => e.toString()).toList(),
+    );
+  }
+
+  static Future<void> syncSavedParts() async {
+    if (!isAuthenticated || sessionToken == null) return;
+    try {
+      final ids = await SparePartsApi().getSavedPartIds();
+      likedPartIds = ids.toSet();
+      // Persist to local for offline/fast access
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(
+        _kLikedParts,
+        likedPartIds.map((e) => e.toString()).toList(),
       );
     } catch (_) {
       // ignore

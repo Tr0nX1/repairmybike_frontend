@@ -52,3 +52,5 @@ android/gradle/local-maven/
 # Android signing (keep secrets out of git)
 release.jks
 android/key.properties
+.vercel
+.env*.local

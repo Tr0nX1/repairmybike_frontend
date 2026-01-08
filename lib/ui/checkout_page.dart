@@ -381,7 +381,18 @@ class _OrderItemTile extends StatelessWidget {
               color: cs.surfaceVariant,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.image, size: 28),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: (item.imageUrl != null && item.imageUrl!.isNotEmpty)
+                  ? Image.network(
+                      item.imageUrl!.contains('http') 
+                        ? item.imageUrl! 
+                        : 'http://127.0.0.1:8000${item.imageUrl!}', // Fallback for local dev
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) => const Icon(Icons.build, size: 24, color: Colors.white24),
+                    )
+                  : const Icon(Icons.image, size: 28),
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(

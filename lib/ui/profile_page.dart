@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/foundation.dart';
@@ -11,15 +12,17 @@ import 'cart_page.dart';
 import 'saved_services_page.dart';
 import '../data/booking_api.dart'; // Added for fetching bookings
 import '../data/order_api.dart'; // Added for fetching spare parts orders
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../providers/saved_services_provider.dart';
 
-class ProfilePage extends StatefulWidget {
+class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
 
   @override
-  State<ProfilePage> createState() => _ProfilePageState();
+  ConsumerState<ProfilePage> createState() => _ProfilePageState();
 }
 
-class _ProfilePageState extends State<ProfilePage> {
+class _ProfilePageState extends ConsumerState<ProfilePage> {
   static const Color bg = Color(0xFF0F0F0F);
   static const Color card = Color(0xFF1C1C1C);
   static const Color border = Color(0xFF2A2A2A);
@@ -54,7 +57,7 @@ class _ProfilePageState extends State<ProfilePage> {
         
         // Also refresh liked/saved services here
         if (mounted) {
-           await AppState.syncSavedServices();
+           await ref.read(savedServicesProvider.notifier).sync();
         }
 
         setState(() => _orderCount = orders.length);
@@ -85,9 +88,18 @@ class _ProfilePageState extends State<ProfilePage> {
       await AppState.clearAuth();
       await AppState.setLastCustomerPhone(null);
       if (!mounted) return;
+      
       // Close app after logout per requirement
-        // Restart app flow instead of closing
-        Navigator.of(context).pushNamedAndRemoveUntil('/', (route) => false);
+      // Using exit(0) to ensure a full shutdown as requested
+      // Note: On iOS this might look like a crash, but it fulfills the "shutdown and close" request.
+      try {
+        await SystemNavigator.pop();
+      } catch (_) {}
+      
+      // Fallback to exit(0) to ensure it closes
+      // ignore: avoid_print
+      print('Shutting down app...');
+      exit(0);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -213,7 +225,7 @@ class _ProfilePageState extends State<ProfilePage> {
                     const SizedBox(width: 12),
                     _StatCard(
                         title: 'Saved', 
-                        value: '${AppState.likedServiceIds.length}',
+                        value: '${ref.watch(savedServicesProvider).length}',
                         // Synced with backend now
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedServicesPage())),
                     ),
