@@ -222,5 +222,5 @@ class _SummaryCard extends StatelessWidget {
 }
 
 // Providers to read address/phone from AppState
-final addressProvider = Provider<String?>((ref) => AppState.address);
+final addressProvider = Provider<String?>((ref) => AppState.fullAddress);
 final phoneProvider = Provider<String?>((ref) => AppState.phoneNumber);

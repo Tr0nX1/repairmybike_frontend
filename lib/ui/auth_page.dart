@@ -94,7 +94,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         ].where((e) => e.trim().isNotEmpty).join(' ').trim();
         await AppState.setProfile(
           name: full.isNotEmpty ? full : null,
-          addr: null,
           mail: mail.isNotEmpty ? mail : null,
         );
       } catch (_) {}

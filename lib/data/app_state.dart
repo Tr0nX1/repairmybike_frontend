@@ -61,6 +61,8 @@ class AppState {
   static String? lastCustomerPhone;
   static Set<int> likedServiceIds = <int>{};
   static Set<int> likedPartIds = <int>{};
+  static Map<int, Map<String, dynamic>> serviceFeedbacks = {};
+  static Map<String, dynamic>? pendingAction;
 
   static bool get isAuthenticated => sessionToken != null && sessionToken!.isNotEmpty;
   static bool get isCustomerAuthenticated => isAuthenticated && !isStaff;
@@ -138,6 +140,14 @@ class AppState {
     if (likedS != null) likedServiceIds = likedS.map(int.parse).toSet();
     final likedP = prefs.getStringList(_kLikedParts);
     if (likedP != null) likedPartIds = likedP.map(int.parse).toSet();
+    
+    final fbJson = prefs.getString('serviceFeedbacks');
+    if (fbJson != null) {
+      try {
+        final Map<String, dynamic> deco = jsonDecode(fbJson);
+        serviceFeedbacks = deco.map((k, v) => MapEntry(int.parse(k), v as Map<String, dynamic>));
+      } catch (_) {}
+    }
   }
 
   static Future<void> setPhone(String phone) async {
@@ -169,7 +179,6 @@ class AppState {
         await VehiclesApi().addUserVehicle(
           sessionToken: sessionToken!,
           vehicleModelId: modelId ?? 1,
-          isDefault: true,
         );
       } catch (_) {}
     }
@@ -179,6 +188,12 @@ class AppState {
     vehicleType = type;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kVehicleType, type);
+  }
+
+  static Future<void> setVehicleBrand(String brand) async {
+    vehicleBrand = brand;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kVehicleBrand, brand);
   }
 
   static Future<void> setProfile({
@@ -262,6 +277,44 @@ class AppState {
     likedServiceIds.clear();
     likedPartIds.clear();
   }
+
+  static Future<void> setAuth({required String phone, required String session, String? refresh}) async {
+    phoneNumber = phone;
+    sessionToken = session;
+    refreshToken = refresh;
+    isStaff = false;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kPhone, phone);
+    await prefs.setString(_kSession, session);
+    if (refresh != null) await prefs.setString(_kRefresh, refresh);
+    await prefs.setBool(_kIsStaff, false);
+  }
+
+  static Future<void> setStaffAuth({required String username, required String session, String? refresh}) async {
+    staffUsername = username;
+    sessionToken = session;
+    refreshToken = refresh;
+    isStaff = true;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kUsername, username);
+    await prefs.setString(_kSession, session);
+    if (refresh != null) await prefs.setString(_kRefresh, refresh);
+    await prefs.setBool(_kIsStaff, true);
+  }
+
+  static Future<void> clearAuth() async {
+    sessionToken = null;
+    refreshToken = null;
+    phoneNumber = null;
+    isStaff = false;
+    staffUsername = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kSession);
+    await prefs.remove(_kRefresh);
+    await prefs.remove(_kPhone);
+    await prefs.remove(_kIsStaff);
+    await prefs.remove(_kUsername);
+  }
   
   static Future<void> setAvatarUrl(String? url) async {
     avatarUrl = url;
@@ -277,5 +330,157 @@ class AppState {
     vehicleName = name;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kVehicleName, name);
+  }
+
+  static Future<void> setLastCustomerPhone(String? phone) async {
+    lastCustomerPhone = phone;
+    final prefs = await SharedPreferences.getInstance();
+    if (phone == null) {
+      await prefs.remove(_kLastCustomerPhone);
+    } else {
+      await prefs.setString(_kLastCustomerPhone, phone);
+    }
+  }
+
+  static Future<void> toggleLikeService(int id) async {
+    if (likedServiceIds.contains(id)) {
+      likedServiceIds.remove(id);
+    } else {
+      likedServiceIds.add(id);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_kLikedServices, likedServiceIds.map((e) => e.toString()).toList());
+    if (isAuthenticated) {
+      try {
+        if (likedServiceIds.contains(id)) {
+          await SavedServicesApi().removeService(id, sessionToken!);
+        } else {
+          await SavedServicesApi().saveService(id, sessionToken!);
+        }
+      } catch (_) {}
+    }
+  }
+
+  static bool isServiceLiked(int id) => likedServiceIds.contains(id);
+
+  static Future<void> toggleLikePart(int id) async {
+    if (likedPartIds.contains(id)) {
+      likedPartIds.remove(id);
+    } else {
+      likedPartIds.add(id);
+    }
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setStringList(_kLikedParts, likedPartIds.map((e) => e.toString()).toList());
+    if (isAuthenticated) {
+      try {
+        if (likedPartIds.contains(id)) {
+          await SparePartsApi().removePart(id);
+        } else {
+          await SparePartsApi().savePart(id);
+        }
+      } catch (_) {}
+    }
+  }
+
+  static bool isPartLiked(int id) => likedPartIds.contains(id);
+
+  static Future<void> syncSavedServices() async {
+    if (!isAuthenticated) return;
+    try {
+      final ids = await SavedServicesApi().getSavedServiceIds(sessionToken!);
+      likedServiceIds = ids.toSet();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_kLikedServices, likedServiceIds.map((e) => e.toString()).toList());
+    } catch (_) {}
+  }
+
+  static Future<void> syncSavedParts() async {
+    if (!isAuthenticated) return;
+    try {
+      final ids = await SparePartsApi().getSavedPartIds();
+      likedPartIds = ids.toSet();
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_kLikedParts, likedPartIds.map((e) => e.toString()).toList());
+    } catch (_) {}
+  }
+
+  static Future<void> setPendingAction(Map<String, dynamic>? action) async {
+    pendingAction = action;
+  }
+
+  static Future<Map<String, dynamic>?> takePendingAction() async {
+    final a = pendingAction;
+    pendingAction = null;
+    return a;
+  }
+
+  static Map<String, dynamic>? getServiceFeedback(int id) => serviceFeedbacks[id];
+
+  static Future<void> setServiceFeedback({
+    required int serviceId,
+    required int rating,
+    required String text,
+  }) async {
+    serviceFeedbacks[serviceId] = {'rating': rating, 'text': text};
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('serviceFeedbacks', jsonEncode(serviceFeedbacks.map((k, v) => MapEntry(k.toString(), v))));
+  }
+
+  static Future<List<Map<String, dynamic>>> getCachedBookings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final s = prefs.getString('cachedBookings');
+    if (s == null) return [];
+    try {
+      final List l = jsonDecode(s);
+      return l.cast<Map<String, dynamic>>();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<List<Map<String, dynamic>>> getCachedOrders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final s = prefs.getString('cachedOrders');
+    if (s == null) return [];
+    try {
+      final List l = jsonDecode(s);
+      return l.cast<Map<String, dynamic>>();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<DateTime?> getLastSyncBookings() async {
+    final prefs = await SharedPreferences.getInstance();
+    final ms = prefs.getInt('lastSyncBookings');
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  static Future<DateTime?> getLastSyncOrders() async {
+    final prefs = await SharedPreferences.getInstance();
+    final ms = prefs.getInt('lastSyncOrders');
+    return ms == null ? null : DateTime.fromMillisecondsSinceEpoch(ms);
+  }
+
+  static Future<void> cacheBookings(List<Map<String, dynamic>> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('cachedBookings', jsonEncode(data));
+    await prefs.setInt('lastSyncBookings', DateTime.now().millisecondsSinceEpoch);
+  }
+
+  static Future<void> cacheOrders(List<Map<String, dynamic>> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('cachedOrders', jsonEncode(data));
+    await prefs.setInt('lastSyncOrders', DateTime.now().millisecondsSinceEpoch);
+  }
+
+  static Future<String?> getCartSessionId() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? sid = prefs.getString('cart_session_id');
+    if (sid == null) {
+      sid = DateTime.now().millisecondsSinceEpoch.toString();
+      await prefs.setString('cart_session_id', sid);
+    }
+    return sid;
   }
 }
