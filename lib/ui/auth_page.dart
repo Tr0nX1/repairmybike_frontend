@@ -171,6 +171,33 @@ class _AuthPageState extends ConsumerState<AuthPage> {
           mail: mail.isNotEmpty ? mail : null,
         );
       } catch (_) {}
+
+      // Sync vehicle for existing users to avoid re-asking
+      try {
+        final vApi = VehiclesApi();
+        final vehicles = await vApi.getUserVehicles(sessionToken: session);
+        if (vehicles.isNotEmpty) {
+          final v = vehicles.first;
+          final details = v['vehicle_model_details'];
+          if (details != null) {
+            final typeName = details['vehicle_type_name'];
+            final brandName = details['brand_name'];
+            final modelName = details['name'];
+            final modelId = details['id'];
+
+            if (typeName != null) await AppState.setVehicleType(typeName);
+            if (brandName != null) await AppState.setVehicleBrand(brandName);
+            if (modelName != null) {
+              await AppState.setVehicle(
+                name: modelName,
+                modelId: modelId,
+                syncToBackend: false,
+              );
+            }
+          }
+        }
+      } catch (_) {}
+
       // _showSnack('Signed in');
       setState(() {
         _otpStep = false;

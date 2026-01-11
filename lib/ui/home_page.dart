@@ -115,40 +115,17 @@ class _HomePageState extends ConsumerState<HomePage> {
                 const SizedBox(height: 12),
                 const _QuickActionsRow(),
                 const SizedBox(height: 24),
-                _LikedServicesSection(),
-                const SizedBox(height: 24),
-                if (_loadPartsSection) const SparePartsSection(),
-                const SizedBox(height: 24),
+
+                // 1) Categories
                 Text(
-                  'Explore Services',
+                  'Categories',
                   style: TextStyle(
                     color: Theme.of(context).colorScheme.onSurface,
                     fontSize: isPhone ? 24 : 28,
                     fontWeight: FontWeight.w800,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'Professional Scooter repair at your doorstep',
-                  style: TextStyle(
-                    color: Theme.of(
-                      context,
-                    ).colorScheme.onSurface.withOpacity(0.7),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                const SizedBox(height: 20),
-                Text(
-                  'Categories',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.onSurface,
-                    fontSize: isPhone ? 20 : 22,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
                 const SizedBox(height: 12),
-
                 asyncCategories.when(
                   loading: () =>
                       const Center(child: CircularProgressIndicator()),
@@ -209,7 +186,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                 const SizedBox(height: 16),
                 Center(
                   child: SizedBox(
-                    height: 46,
+                    height: 40,
                     child: OutlinedButton(
                       style: OutlinedButton.styleFrom(
                         foregroundColor: Theme.of(context).colorScheme.primary,
@@ -217,7 +194,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           color: Theme.of(context).colorScheme.primary,
                         ),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(20),
                         ),
                       ),
                       onPressed: () {
@@ -237,6 +214,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                             _showAllCategories
                                 ? Icons.expand_less
                                 : Icons.expand_more,
+                            size: 18,
                           ),
                         ],
                       ),
@@ -245,8 +223,19 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
 
                 const SizedBox(height: 24),
+                // 2) Feature parts
+                if (_loadPartsSection) const SparePartsSection(),
+
+                const SizedBox(height: 32),
+                // 3) Membership
                 const SubscriptionSection(),
+
+                const SizedBox(height: 32),
+                // 4) Your likes
+                _LikedServicesSection(),
+
                 const SizedBox(height: 24),
+
               ],
             ),
           ),
