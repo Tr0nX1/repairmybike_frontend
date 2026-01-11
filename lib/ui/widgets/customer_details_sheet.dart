@@ -12,7 +12,7 @@ Future<CustomerDetailsResult?> showCustomerDetailsSheet(BuildContext context) as
   final cs = Theme.of(context).colorScheme;
   final nameCtrl = TextEditingController(text: AppState.fullName ?? '');
   final phoneCtrl = TextEditingController(text: AppState.phoneNumber ?? '');
-  final addressCtrl = TextEditingController(text: AppState.address ?? '');
+  final addressCtrl = TextEditingController(text: AppState.fullAddress);
   final formKey = GlobalKey<FormState>();
   return showModalBottomSheet<CustomerDetailsResult>(
     context: context,
@@ -65,7 +65,7 @@ Future<CustomerDetailsResult?> showCustomerDetailsSheet(BuildContext context) as
                       final phone = phoneCtrl.text.trim();
                       final address = addressCtrl.text.trim();
                       AppState.setLastCustomerPhone(phone);
-                      AppState.setProfile(name: name, addr: address, mail: AppState.email);
+                      AppState.setProfile(name: name, mail: AppState.email);
                       Navigator.of(ctx).pop(CustomerDetailsResult(name: name, phone: phone, address: address));
                     },
                     child: const Text('Continue'),

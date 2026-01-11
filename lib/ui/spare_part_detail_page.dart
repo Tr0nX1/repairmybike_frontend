@@ -169,7 +169,7 @@ class _CartActions extends ConsumerWidget {
           } else if (type == 'buy_now' && partId != null) {
             try {
               String phone = AppState.phoneNumber ?? '';
-              String address = AppState.address ?? '';
+              String address = AppState.fullAddress;
               final hasAll = (AppState.fullName?.isNotEmpty ?? false) && (phone.isNotEmpty) && (address.isNotEmpty);
               if (!hasAll) {
                 final res = await showCustomerDetailsSheet(context);

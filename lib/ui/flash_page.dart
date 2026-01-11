@@ -59,9 +59,24 @@ class _FlashPageState extends State<FlashPage>
         ].where((e) => e.trim().isNotEmpty).join(' ').trim();
         await AppState.setProfile(
           name: full.isNotEmpty ? full : null,
-          addr: null,
           mail: mail.isNotEmpty ? mail : null,
         );
+
+        // Handle addresses
+        final addrs = profile['addresses'] as List?;
+        if (addrs != null && addrs.isNotEmpty) {
+          final addr = addrs.firstWhere((a) => a['is_default'] == true, orElse: () => addrs.first);
+          await AppState.setProfile(
+            f: addr['flat_house_no'],
+            a: addr['area_street'],
+            l: addr['landmark'],
+            p: addr['pincode'],
+            c: addr['town_city'],
+            s: addr['state'],
+            i: addr['delivery_instructions'],
+            ph: addr['phone_number'],
+          );
+        }
 
         // Sync vehicle
         final vApi = VehiclesApi();
@@ -69,7 +84,6 @@ class _FlashPageState extends State<FlashPage>
           sessionToken: AppState.sessionToken!,
         );
         if (vehicles.isNotEmpty) {
-          // Sort by default or created_at? Backend sorts by -is_default, -created_at
           final v = vehicles.first;
           final details = v['vehicle_model_details'];
           if (details != null) {
@@ -95,7 +109,20 @@ class _FlashPageState extends State<FlashPage>
     _timer = Timer(const Duration(milliseconds: 2500), () {
       if (!mounted) return;
       if (AppState.isAuthenticated) {
-        // Always open Home (MainShell) for authenticated users as requested
+        if (!AppState.isStaff) {
+          if (!AppState.hasVehicle) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => VehicleTypePage(phone: AppState.phoneNumber)),
+            );
+            return;
+          }
+          if (!AppState.hasAddress) {
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const ProfileDetailsPage()),
+            );
+            return;
+          }
+        }
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const MainShell()),
         );

@@ -168,9 +168,24 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         ].where((e) => e.trim().isNotEmpty).join(' ').trim();
         await AppState.setProfile(
           name: full.isNotEmpty ? full : null,
-          addr: null,
           mail: mail.isNotEmpty ? mail : null,
         );
+        
+        // Handle addresses
+        final addrs = profile['addresses'] as List?;
+        if (addrs != null && addrs.isNotEmpty) {
+          final addr = addrs.firstWhere((a) => a['is_default'] == true, orElse: () => addrs.first);
+          await AppState.setProfile(
+            f: addr['flat_house_no'],
+            a: addr['area_street'],
+            l: addr['landmark'],
+            p: addr['pincode'],
+            c: addr['town_city'],
+            s: addr['state'],
+            i: addr['delivery_instructions'],
+            ph: addr['phone_number'],
+          );
+        }
       } catch (_) {}
 
       // Sync vehicle for existing users to avoid re-asking
@@ -308,19 +323,9 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       return;
     }
 
-    // Check if new user needs to select vehicle
-    final hasVehicle =
-        (AppState.vehicleBrand?.isNotEmpty ?? false) &&
-        (AppState.vehicleName?.isNotEmpty ?? false);
-    
-    // Check if user needs to complete profile
-    // We check fullName as a proxy for completed profile
-    final hasProfile = (AppState.fullName?.isNotEmpty ?? false);
-    
     // If customer has no vehicle (and isn't staff), force selection flow
     if (!AppState.isStaff) {
-       // Check if vehicle info is truly missing
-       if (!hasVehicle) {
+       if (!AppState.hasVehicle) {
          Navigator.of(context).pushReplacement(
            MaterialPageRoute(
              builder: (_) => VehicleTypePage(phone: AppState.phoneNumber),
@@ -328,8 +333,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
          );
          return;
        }
-       // Only go to profile details if NO email/name is present
-       if (!hasProfile) {
+       if (!AppState.hasAddress) {
          Navigator.of(context).pushReplacement(
            MaterialPageRoute(
              builder: (_) => const ProfileDetailsPage(),

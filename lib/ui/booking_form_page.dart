@@ -69,8 +69,8 @@ class _BookingFormPageState extends State<BookingFormPage> {
       _emailCtrl.text = AppState.email!;
       _autoEmail = true;
     }
-    if ((AppState.address ?? '').isNotEmpty) {
-      _addressCtrl.text = AppState.address!;
+    if ((AppState.fullAddress).isNotEmpty) {
+      _addressCtrl.text = AppState.fullAddress;
       _autoAddress = true;
     }
   }
@@ -253,7 +253,6 @@ class _BookingFormPageState extends State<BookingFormPage> {
 
       await AppState.setProfile(
         name: _nameCtrl.text.trim(),
-        addr: _addressCtrl.text.trim().isEmpty ? null : _addressCtrl.text.trim(),
         mail: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
       );
 

@@ -29,7 +29,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     _phoneCtrl = TextEditingController(
       text: AppState.phoneNumber ?? AppState.lastCustomerPhone ?? '',
     );
-    _addressCtrl = TextEditingController(text: AppState.address ?? '');
+    _addressCtrl = TextEditingController(text: AppState.fullAddress);
     _pincodeCtrl = TextEditingController();
   }
 
@@ -63,7 +63,6 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       await AppState.setLastCustomerPhone(phone);
       await AppState.setProfile(
         name: _nameCtrl.text.trim(),
-        addr: address,
         mail: AppState.email,
       );
       await ref
@@ -186,11 +185,11 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                 maxLines: 3,
                 decoration: InputDecoration(
                   labelText: 'Address',
-                  suffixIcon: (AppState.address?.isNotEmpty ?? false)
+                  suffixIcon: AppState.hasAddress
                       ? IconButton(
                           icon: const Icon(Icons.content_paste),
                           onPressed: () {
-                            _addressCtrl.text = AppState.address!;
+                            _addressCtrl.text = AppState.fullAddress;
                           },
                         )
                       : null,

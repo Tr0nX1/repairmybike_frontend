@@ -182,4 +182,34 @@ class AuthApi {
     if (data is Map<String, dynamic>) return data;
     throw Exception('Unexpected response shape for update profile');
   }
+  Future<Map<String, dynamic>> addAddress({
+    required String sessionToken,
+    required String fullName,
+    required String phone,
+    required String flat,
+    required String area,
+    String? landmark,
+    required String pincode,
+    required String city,
+    required String state,
+    bool isDefault = true,
+    String? instructions,
+  }) async {
+    final res = await _dio.post(
+      '/api/auth/addresses/',
+      data: {
+        'full_name': fullName,
+        'phone_number': phone,
+        'flat_house_no': flat,
+        'area_street': area,
+        'landmark': landmark,
+        'pincode': pincode,
+        'town_city': city,
+        'state': state,
+        'is_default': isDefault,
+        'delivery_instructions': instructions,
+      },
+    );
+    return res.data;
+  }
 }

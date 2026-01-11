@@ -127,13 +127,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             
             Navigator.of(context).pop(); // Close auth page
             
-            final hasVehicle = (AppState.vehicleBrand?.isNotEmpty ?? false) && 
-                              (AppState.vehicleName?.isNotEmpty ?? false);
-            final hasProfile = (AppState.fullName?.isNotEmpty ?? false);
+            final hasVehicle = AppState.hasVehicle;
+            final hasAddress = AppState.hasAddress;
 
             if (!hasVehicle) {
                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VehicleTypePage()));
-            } else if (!hasProfile) {
+            } else if (!hasAddress) {
                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileDetailsPage()));
             } else {
                setState(() {}); // Just refresh if everything is good
@@ -386,7 +385,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
                 _Tile(
                   label: 'Address',
-                  value: AppState.address ?? '—',
+                  value: AppState.hasAddress ? AppState.fullAddress : '—',
                   icon: Icons.location_on_outlined,
                 ),
                 _Tile(
