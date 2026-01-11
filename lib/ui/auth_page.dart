@@ -7,6 +7,7 @@ import 'profile_details_page.dart';
 import '../data/auth_api.dart';
 import '../data/app_state.dart';
 import 'vehicle_type_page.dart';
+import '../data/vehicles_api.dart';
 import '../providers/cart_provider.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
