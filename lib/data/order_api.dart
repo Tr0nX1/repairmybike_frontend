@@ -97,40 +97,11 @@ class OrderApi {
 
   Future<List<Order>> listOrders({
     String? sessionId,
-    String? phone,
-    String? token,
   }) async {
-    final tasks = <Future<List<Order>>>[];
-
-    // 1. Fetch by Phone (requires token usually)
-    if (phone != null && phone.isNotEmpty) {
-      tasks.add(_fetchOrdersSafe(
-        {'phone': phone},
-        null,
-      ));
-    }
-
-    // 2. Fetch by Session
-    if (sessionId != null && sessionId.isNotEmpty) {
-      tasks.add(_fetchOrdersSafe({'session_id': sessionId}, null));
-    }
-
-    if (tasks.isEmpty) return [];
-
-    final results = await Future.wait(tasks);
-    final merged = <int, Order>{};
-    
-    for (final list in results) {
-      for (final order in list) {
-        merged[order.id] = order;
-      }
-    }
-    
-    final sorted = merged.values.toList();
-    // Sort by ID descending (newest first) - assuming ID correlates with time, 
-    // or use created_at if available in Order model model.
-    sorted.sort((a, b) => b.id.compareTo(a.id));
-    return sorted;
+    return _fetchOrdersSafe(
+      sessionId != null ? {'session_id': sessionId} : {},
+      null,
+    );
   }
 
   Future<List<Order>> _fetchOrdersSafe(

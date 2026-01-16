@@ -101,16 +101,12 @@ class BookingApi {
     }
   }
 
-  /// List bookings filtered by customer phone.
+  /// List bookings for the authenticated user.
   /// Returns a list of booking summary maps per backend list serializer.
-  Future<List<Map<String, dynamic>>> getBookingsByPhone(
-    String phone, {
-    String? sessionToken,
-  }) async {
+  Future<List<Map<String, dynamic>>> getBookings() async {
     try {
       final res = await _dio.get(
         'api/bookings/bookings/',
-        queryParameters: {'phone': phone},
       );
       final body = res.data;
       // Accept plain list or wrapped map {data: [...]}

@@ -147,7 +147,7 @@ class _BookingListPageState extends State<BookingListPage> {
     try {
       // Fetch both service bookings and spare parts orders in parallel
       final results = await Future.wait([
-        _bookingApi.getBookingsByPhone(phone, sessionToken: AppState.sessionToken),
+        _bookingApi.getBookings(),
         _fetchSparePartsOrders(),
       ]);
 
@@ -229,9 +229,7 @@ class _BookingListPageState extends State<BookingListPage> {
       
       final api = OrderApi();
       final orders = await api.listOrders(
-        phone: phone,
         sessionId: sessionId,
-        token: AppState.sessionToken,
       );
       return orders
           .map(

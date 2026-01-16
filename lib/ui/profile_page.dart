@@ -45,15 +45,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     setState(() => _loading = true);
     try {
       final api = BookingApi();
-      final bookings = await api.getBookingsByPhone(
-        AppState.phoneNumber!,
-        sessionToken: AppState.sessionToken,
-      );
+      final bookings = await api.getBookings();
       
       // Also fetch spare parts orders
       try {
         final orderApi = OrderApi();
-        final orders = await orderApi.listOrders(phone: AppState.phoneNumber);
+        final orders = await orderApi.listOrders();
         
         // Also refresh liked/saved services here
         if (mounted) {
