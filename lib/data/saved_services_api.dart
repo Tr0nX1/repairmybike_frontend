@@ -5,7 +5,7 @@ import 'api_client.dart';
 class SavedServicesApi {
   final Dio _dio = ApiClient().dio;
 
-  String get _baseUrl => '/api/services';
+  String get _baseUrl => 'api/services';
 
 
   Future<List<Map<String, dynamic>>> getSavedServices(String sessionToken) async {

@@ -87,7 +87,7 @@ class VehiclesApi {
 
 
   Future<List<VehicleTypeItem>> getVehicleTypes() async {
-    final res = await _dio.get('/api/vehicles/vehicle-types/');
+    final res = await _dio.get('api/vehicles/vehicle-types/');
     final body = res.data;
     if (body is Map<String, dynamic>) {
       if (body['error'] == true) {
@@ -106,7 +106,7 @@ class VehiclesApi {
 
   Future<List<VehicleBrandItem>> getVehicleBrands(int vehicleTypeId) async {
     final res = await _dio.get(
-      '/api/vehicles/vehicle-brands/',
+      'api/vehicles/vehicle-brands/',
       queryParameters: {'vehicle_type': vehicleTypeId},
     );
     final body = res.data;
@@ -127,7 +127,7 @@ class VehiclesApi {
 
   Future<List<VehicleModelItem>> getVehicleModels(int vehicleBrandId) async {
     final res = await _dio.get(
-      '/api/vehicles/vehicle-models/',
+      'api/vehicles/vehicle-models/',
       queryParameters: {'vehicle_brand': vehicleBrandId},
     );
     final body = res.data;
@@ -151,7 +151,7 @@ class VehiclesApi {
     required int vehicleModelId,
   }) async {
     final res = await _dio.post(
-      '/api/vehicles/user-vehicles/',
+      'api/vehicles/user-vehicles/',
       data: {'vehicle_model_id': vehicleModelId, 'is_default': true},
     );
     final data = res.data;
@@ -162,7 +162,7 @@ class VehiclesApi {
   Future<List<Map<String, dynamic>>> getUserVehicles({
     required String sessionToken,
   }) async {
-    final res = await _dio.get('/api/vehicles/user-vehicles/');
+    final res = await _dio.get('api/vehicles/user-vehicles/');
 
     final body = res.data;
     if (body is List) {

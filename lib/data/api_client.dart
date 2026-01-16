@@ -7,6 +7,7 @@ import 'app_state.dart';
 class ApiClient {
   static final ApiClient _instance = ApiClient._internal();
   late final Dio dio;
+  bool _isRefreshing = false;
 
   factory ApiClient() => _instance;
 
@@ -30,6 +31,16 @@ class ApiClient {
           
           if (kDebugMode) {
             debugPrint('➡️ ${options.method} ${options.uri}');
+            // Debug: Print auth header to verify token is being sent
+            if (options.headers['Authorization'] != null) {
+              final authHeader = options.headers['Authorization'] as String;
+              final tokenPreview = authHeader.length > 30 
+                  ? '${authHeader.substring(0, 30)}...' 
+                  : authHeader;
+              debugPrint('   🔑 Auth: $tokenPreview');
+            } else {
+              debugPrint('   ⚠️  No auth header');
+            }
           }
           return handler.next(options);
         },
@@ -39,11 +50,120 @@ class ApiClient {
           }
           return handler.next(response);
         },
-        onError: (DioException e, handler) {
+        onError: (DioException e, handler) async {
           if (kDebugMode) {
             debugPrint('❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message} [${e.response?.statusCode}]');
           }
-          // Global 401 handling could go here (e.g., triggering a logout or refresh)
+          
+
+          // Handle 403 Forbidden - Invalid Token / Environment Mismatch
+          // If we send a token that the backend hates (e.g. wrong environment/project), it returns 403.
+          // We must clear the bad token and retry as guest to allow the app to function.
+          if (e.response?.statusCode == 403) {
+            if (kDebugMode) {
+              debugPrint('⛔ 403 Forbidden detected. Clearing invalid auth and retrying as Guest...');
+            }
+
+            // 1. Clear invalid auth state locally
+            await AppState.clearAuth();
+
+            // 2. Construct new options WITHOUT Authorization header
+            final newHeaders = Map<String, dynamic>.from(e.requestOptions.headers);
+            newHeaders.remove('Authorization');
+
+            final opts = Options(
+              method: e.requestOptions.method,
+              headers: newHeaders,
+              contentType: e.requestOptions.contentType,
+              responseType: e.requestOptions.responseType,
+            );
+
+            try {
+              // 3. Retry the request as guest
+              final response = await dio.request(
+                e.requestOptions.path,
+                options: opts,
+                data: e.requestOptions.data,
+                queryParameters: e.requestOptions.queryParameters,
+              );
+              return handler.resolve(response);
+            } catch (retryError) {
+              // If retry fails, return that error
+              // (e.g. maybe it really WAS a permission issue even for guest)
+              return handler.next(retryError is DioException ? retryError : e);
+            }
+          }
+
+          // Handle 401 Unauthorized - attempt token refresh
+          if (e.response?.statusCode == 401 && !_isRefreshing) {
+            final refreshToken = AppState.refreshToken;
+            
+            // Only attempt refresh if we have a refresh token
+            if (refreshToken != null && refreshToken.isNotEmpty) {
+              _isRefreshing = true;
+              
+              try {
+                if (kDebugMode) {
+                  debugPrint('🔄 Attempting token refresh...');
+                }
+                
+                // Call refresh endpoint
+                final refreshResponse = await dio.post(
+                  'api/auth/token/refresh/',
+                  data: {'refresh_token': refreshToken},
+                );
+                
+                final data = refreshResponse.data;
+                if (data is Map<String, dynamic>) {
+                  final newSessionToken = data['session_token'] as String?;
+                  final newRefreshToken = data['refresh_token'] as String?;
+                  
+                  if (newSessionToken != null) {
+                    // Update AppState with new tokens
+                    await AppState.setAuth(
+                      phone: AppState.phoneNumber ?? '',
+                      session: newSessionToken,
+                      refresh: newRefreshToken ?? refreshToken,
+                    );
+                    
+                    if (kDebugMode) {
+                      debugPrint('✅ Token refreshed successfully');
+                    }
+                    
+                    // Retry the original request with new token
+                    final opts = Options(
+                      method: e.requestOptions.method,
+                      headers: {
+                        ...e.requestOptions.headers,
+                        'Authorization': 'Bearer $newSessionToken',
+                      },
+                    );
+                    
+                    final retryResponse = await dio.request(
+                      e.requestOptions.path,
+                      options: opts,
+                      data: e.requestOptions.data,
+                      queryParameters: e.requestOptions.queryParameters,
+                    );
+                    
+                    _isRefreshing = false;
+                    return handler.resolve(retryResponse);
+                  }
+                }
+              } catch (refreshError) {
+                if (kDebugMode) {
+                  debugPrint('❌ Token refresh failed: $refreshError');
+                }
+                _isRefreshing = false;
+                
+                // Clear auth state on refresh failure
+                await AppState.clearAuth();
+              }
+              
+              _isRefreshing = false;
+            }
+          }
+          
           return handler.next(e);
         },
       ),

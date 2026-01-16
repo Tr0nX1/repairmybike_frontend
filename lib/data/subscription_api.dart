@@ -11,7 +11,7 @@ class SubscriptionApi {
 
 
   Future<List<SubscriptionPlan>> getPlans() async {
-    final res = await _dio.get('/api/subscriptions/plans/');
+    final res = await _dio.get('api/subscriptions/plans/');
     final body = res.data;
     // Handle plain list (typical DRF) or wrapped {data: [...]} response
     if (body is List) {
@@ -50,7 +50,7 @@ class SubscriptionApi {
       if (userId != null) 'user': userId,
       'auto_renew': autoRenew,
     };
-    final res = await _dio.post('/api/subscriptions/subscriptions/', data: payload);
+    final res = await _dio.post('api/subscriptions/subscriptions/', data: payload);
     final body = res.data;
     if (body is Map<String, dynamic>) {
       // If wrapped {data: {...}} or direct object
@@ -68,7 +68,7 @@ class SubscriptionApi {
 
   Future<List<SubscriptionItem>> getSubscriptionsByPhone(String phone) async {
     final res = await _dio.get(
-      '/api/subscriptions/subscriptions/',
+      'api/subscriptions/subscriptions/',
       // Backend filter field is 'phone' (maps to contact_phone in queryset)
       queryParameters: {'phone': phone},
     );
@@ -100,7 +100,7 @@ class SubscriptionApi {
     final payload = {
       'metadata': metadata,
     };
-    final res = await _dio.patch('/api/subscriptions/subscriptions/$subscriptionId/', data: payload);
+    final res = await _dio.patch('api/subscriptions/subscriptions/$subscriptionId/', data: payload);
     final body = res.data;
     if (body is Map<String, dynamic>) {
       final error = body['error'] == true;

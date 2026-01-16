@@ -26,7 +26,7 @@ class AuthApi {
   }) async {
     try {
       final res = await _dio.post(
-        '/api/auth/staff/login/password/',
+        'api/auth/staff/login/password/',
         data: {'identifier': username, 'password': password},
       );
       final data = res.data;
@@ -56,7 +56,7 @@ class AuthApi {
     for (var attempt = 0; attempt < 2; attempt++) {
       try {
         await _dio.post(
-          '/api/auth/otp/request/',
+          'api/auth/otp/request/',
           data: {'identifier': normalized, 'method': 'phone'},
         );
         return;
@@ -99,7 +99,7 @@ class AuthApi {
     try {
       final normalized = _normalizePhone(phone);
       final res = await _dio.post(
-        '/api/auth/otp/verify/',
+        'api/auth/otp/verify/',
         data: {'identifier': normalized, 'otp_code': code, 'method': 'phone'},
       );
       final data = res.data;
@@ -127,7 +127,7 @@ class AuthApi {
 
   Future<void> logout({String? refreshToken, String? sessionToken}) async {
     await _dio.post(
-      '/api/auth/logout/',
+      'api/auth/logout/',
       data: refreshToken != null ? {'refresh_token': refreshToken} : {},
     );
   }
@@ -135,7 +135,7 @@ class AuthApi {
   Future<Map<String, dynamic>> refreshToken({required String refreshToken}) async {
     try {
       final res = await _dio.post(
-        '/api/auth/token/refresh/',
+        'api/auth/token/refresh/',
         data: {'refresh_token': refreshToken},
       );
       final data = res.data;
@@ -151,7 +151,7 @@ class AuthApi {
   Future<Map<String, dynamic>> getProfile({
     required String sessionToken,
   }) async {
-    final res = await _dio.get('/api/auth/profile/');
+    final res = await _dio.get('api/auth/profile/');
 
     final data = res.data;
     if (data is Map<String, dynamic>) return data;
@@ -175,7 +175,7 @@ class AuthApi {
     if (email != null) payload['email'] = email;
     if (defaultVehicle != null) payload['default_vehicle'] = defaultVehicle;
     final res = await _dio.patch(
-      '/api/auth/profile/',
+      'api/auth/profile/',
       data: payload,
     );
     final data = res.data;
@@ -196,7 +196,7 @@ class AuthApi {
     String? instructions,
   }) async {
     final res = await _dio.post(
-      '/api/auth/addresses/',
+      'api/auth/addresses/',
       data: {
         'full_name': fullName,
         'phone_number': phone,

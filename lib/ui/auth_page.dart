@@ -332,14 +332,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
          );
          return;
        }
-       if (!AppState.hasAddress) {
-         Navigator.of(context).pushReplacement(
-           MaterialPageRoute(
-             builder: (_) => const ProfileDetailsPage(),
-           ),
-         );
-         return;
-       }
     }
 
     Navigator.of(

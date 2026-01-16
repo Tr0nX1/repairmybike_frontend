@@ -128,12 +128,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             Navigator.of(context).pop(); // Close auth page
             
             final hasVehicle = AppState.hasVehicle;
-            final hasAddress = AppState.hasAddress;
 
             if (!hasVehicle) {
                Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VehicleTypePage()));
-            } else if (!hasAddress) {
-               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const ProfileDetailsPage()));
             } else {
                setState(() {}); // Just refresh if everything is good
             }

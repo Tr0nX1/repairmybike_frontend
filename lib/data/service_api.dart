@@ -12,7 +12,7 @@ class ServiceApi {
 
   Future<List<Service>> getServices({int? categoryId}) async {
     final res = await _dio.get(
-      '/api/services/services/',
+      'api/services/services/',
       queryParameters: categoryId != null
           ? {
               // assuming backend supports filtering by category id

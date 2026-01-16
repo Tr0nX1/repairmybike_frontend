@@ -10,7 +10,7 @@ class CategoryApi {
 
 
   Future<List<Category>> getCategories() async {
-    final res = await _dio.get('/api/services/service-categories/');
+    final res = await _dio.get('api/services/service-categories/');
     final body = res.data;
 
     if (body is Map<String, dynamic>) {

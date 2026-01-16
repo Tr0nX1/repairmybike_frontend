@@ -116,12 +116,6 @@ class _FlashPageState extends State<FlashPage>
             );
             return;
           }
-          if (!AppState.hasAddress) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => const ProfileDetailsPage()),
-            );
-            return;
-          }
         }
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const MainShell()),

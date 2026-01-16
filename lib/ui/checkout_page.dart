@@ -16,11 +16,24 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   final _formKey = GlobalKey<FormState>();
   late TextEditingController _nameCtrl;
   late TextEditingController _phoneCtrl;
-  late TextEditingController _addressCtrl;
+  late TextEditingController _flatCtrl;
+  late TextEditingController _areaCtrl;
+  late TextEditingController _landmarkCtrl;
   late TextEditingController _pincodeCtrl;
+  late TextEditingController _cityCtrl;
+  String? _selectedState;
   String _shippingMethod = 'standard';
   bool _submitting = false;
   String? _error;
+
+  final List<String> _states = [
+    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
+    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
+    'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
+    'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
+    'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
+    'Delhi', 'Chandigarh', 'Other'
+  ];
 
   @override
   void initState() {
@@ -29,16 +42,23 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     _phoneCtrl = TextEditingController(
       text: AppState.phoneNumber ?? AppState.lastCustomerPhone ?? '',
     );
-    _addressCtrl = TextEditingController(text: AppState.fullAddress);
-    _pincodeCtrl = TextEditingController();
+    _flatCtrl = TextEditingController(text: AppState.addrFlat ?? '');
+    _areaCtrl = TextEditingController(text: AppState.addrArea ?? '');
+    _landmarkCtrl = TextEditingController(text: AppState.addrLandmark ?? '');
+    _pincodeCtrl = TextEditingController(text: AppState.addrPincode ?? '');
+    _cityCtrl = TextEditingController(text: AppState.addrCity ?? '');
+    _selectedState = AppState.addrState;
   }
 
   @override
   void dispose() {
     _nameCtrl.dispose();
     _phoneCtrl.dispose();
-    _addressCtrl.dispose();
+    _flatCtrl.dispose();
+    _areaCtrl.dispose();
+    _landmarkCtrl.dispose();
     _pincodeCtrl.dispose();
+    _cityCtrl.dispose();
     super.dispose();
   }
 
@@ -59,15 +79,32 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     });
     try {
       final phone = _phoneCtrl.text.trim();
-      final address = _addressCtrl.text.trim();
+      final flat = _flatCtrl.text.trim();
+      final area = _areaCtrl.text.trim();
+      final landmark = _landmarkCtrl.text.trim();
+      final pincode = _pincodeCtrl.text.trim();
+      final city = _cityCtrl.text.trim();
+      final state = _selectedState;
+      
       await AppState.setLastCustomerPhone(phone);
       await AppState.setProfile(
         name: _nameCtrl.text.trim(),
         mail: AppState.email,
+        f: flat,
+        a: area,
+        l: landmark,
+        p: pincode,
+        c: city,
+        s: state,
       );
+      // Build full address for order
+      final fullAddress = [flat, area, landmark, city, state ?? '', pincode]
+          .where((e) => e.isNotEmpty)
+          .join(', ');
+      
       await ref
           .read(cartProvider.notifier)
-          .checkoutCash(shippingAddress: address, phone: phone);
+          .checkoutCash(shippingAddress: fullAddress, phone: phone);
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
@@ -181,32 +218,65 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
               ),
               const SizedBox(height: 12),
               TextFormField(
-                controller: _addressCtrl,
-                maxLines: 3,
-                decoration: InputDecoration(
-                  labelText: 'Address',
-                  suffixIcon: AppState.hasAddress
-                      ? IconButton(
-                          icon: const Icon(Icons.content_paste),
-                          onPressed: () {
-                            _addressCtrl.text = AppState.fullAddress;
-                          },
-                        )
-                      : null,
+                controller: _flatCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Flat, House no., Building, Company, Apartment',
                 ),
                 validator: (v) => (v == null || v.trim().isEmpty)
-                    ? 'Enter your address'
+                    ? 'Required'
                     : null,
               ),
               const SizedBox(height: 12),
               TextFormField(
-                controller: _pincodeCtrl,
-                keyboardType: TextInputType.number,
-                decoration: const InputDecoration(labelText: 'Pincode'),
-                validator: (v) {
-                  final s = (v ?? '').replaceAll(RegExp(r'\D'), '');
-                  return s.length < 6 ? 'Enter a valid pincode' : null;
-                },
+                controller: _areaCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Area, Street, Sector, Village',
+                ),
+                validator: (v) => (v == null || v.trim().isEmpty)
+                    ? 'Required'
+                    : null,
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                controller: _landmarkCtrl,
+                decoration: const InputDecoration(
+                  labelText: 'Landmark (optional)',
+                  hintText: 'E.g. near apollo hospital',
+                ),
+              ),
+              const SizedBox(height: 12),
+              Row(
+                children: [
+                  Expanded(
+                    child: TextFormField(
+                      controller: _pincodeCtrl,
+                      keyboardType: TextInputType.number,
+                      decoration: const InputDecoration(labelText: 'Pincode'),
+                      validator: (v) {
+                        final s = (v ?? '').replaceAll(RegExp(r'\D'), '');
+                        return s.length < 6 ? 'Enter valid pincode' : null;
+                      },
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: TextFormField(
+                      controller: _cityCtrl,
+                      decoration: const InputDecoration(labelText: 'Town/City'),
+                      validator: (v) => (v == null || v.trim().isEmpty)
+                          ? 'Required'
+                          : null,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              DropdownButtonFormField<String>(
+                value: _selectedState,
+                decoration: const InputDecoration(labelText: 'State'),
+                items: _states.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
+                onChanged: (v) => setState(() => _selectedState = v),
+                validator: (v) => v == null ? 'Select state' : null,
               ),
               const SizedBox(height: 16),
               Text(

@@ -126,13 +126,9 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
     return GestureDetector(
       onTap: () async {
         await AppState.setVehicle(name: model, modelId: item.id);
-        final needsDetails = !AppState.hasAddress;
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(
-            builder: (_) =>
-                needsDetails ? const ProfileDetailsPage() : const MainShell(),
-          ),
+          MaterialPageRoute(builder: (_) => const MainShell()),
           (route) => false,
         );
       },
@@ -230,14 +226,9 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
                   if (customController.text.trim().isNotEmpty) {
                     final name = customController.text.trim();
                     await AppState.setVehicle(name: name);
-                    final needsDetails = !AppState.hasAddress;
                     Navigator.pushAndRemoveUntil(
                       context,
-                      MaterialPageRoute(
-                        builder: (_) => needsDetails
-                            ? const ProfileDetailsPage()
-                            : const MainShell(),
-                      ),
+                      MaterialPageRoute(builder: (_) => const MainShell()),
                       (route) => false,
                     );
                   }

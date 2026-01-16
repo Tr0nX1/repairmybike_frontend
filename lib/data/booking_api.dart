@@ -48,7 +48,7 @@ class BookingApi {
     };
 
     try {
-      final res = await _dio.post('/api/bookings/bookings/', data: payload);
+      final res = await _dio.post('api/bookings/bookings/', data: payload);
       final body = res.data;
       if (body is Map<String, dynamic>) {
         final error = body['error'] == true;
@@ -109,7 +109,7 @@ class BookingApi {
   }) async {
     try {
       final res = await _dio.get(
-        '/api/bookings/bookings/',
+        'api/bookings/bookings/',
         queryParameters: {'phone': phone},
       );
       final body = res.data;
@@ -156,7 +156,7 @@ class BookingApi {
       'appointment_time': appointmentTime,
     };
     final res = await _dio.patch(
-      '/api/bookings/bookings/$bookingId/',
+      'api/bookings/bookings/$bookingId/',
       data: payload,
     );
     final body = res.data;
@@ -182,7 +182,7 @@ class BookingApi {
   }) async {
     final payload = {'status': status};
     final res = await _dio.patch(
-      '/api/staff/bookings/$bookingId/update-status/',
+      'api/staff/bookings/$bookingId/update-status/',
       data: payload,
     );
     final body = res.data;
