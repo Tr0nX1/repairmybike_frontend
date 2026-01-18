@@ -155,8 +155,18 @@
     lucide.createIcons();
     function enterApp() {
       document.getElementById('landing-page').classList.add('hidden');
-      // Flutter app is already loading in background via flutter_bootstrap.js
+      localStorage.setItem('has_entered_app', 'true');
     }
+
+    // Auto-hide if token exists (authenticated) or previously entered
+    (function () {
+      const token = localStorage.getItem('flutter.session_token');
+      const entered = localStorage.getItem('has_entered_app');
+      if (token || entered) {
+        // Use display none immediately to prevent flicker
+        document.getElementById('landing-page').style.display = 'none';
+      }
+    })();
   </script>
 </body>
 

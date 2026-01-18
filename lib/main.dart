@@ -4,8 +4,10 @@ import 'ui/main_shell.dart';
 import 'ui/flash_page.dart';
 // Theme fixed to dark; remove dynamic theme provider
 import 'utils/api_config.dart';
+import 'package:url_strategy/url_strategy.dart';
 
 void main() {
+  setPathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
   debugPrint('🔥 BACKEND BASE URL: $backendBase');
   runApp(const ProviderScope(child: MyApp()));
