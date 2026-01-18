@@ -31,11 +31,13 @@ class AppState {
   static const _kVehicleModelId = 'vehicleModelId';
   static const _kSession = 'session_token';
   static const _kRefresh = 'refresh_token';
+  static const _kGuestId = 'guest_id';
 
   // Auth state
   static String? phoneNumber;
   static String? sessionToken;
   static String? refreshToken;
+  static String? guestId;
   static bool isStaff = false;
   static String? staffUsername;
 
@@ -135,6 +137,15 @@ class AppState {
     vehicleModelId = prefs.getInt(_kVehicleModelId);
     sessionToken = prefs.getString(_kSession);
     refreshToken = prefs.getString(_kRefresh);
+    guestId = prefs.getString(_kGuestId);
+    
+    // Generate Guest ID if not exists (simple stable identifier)
+    if (guestId == null || guestId!.isEmpty) {
+      final timestamp = DateTime.now().millisecondsSinceEpoch.toRadixString(16).padLeft(12, '0');
+      // Format: 00000000-0000-4000-8000-timestamp (UUID v4-like)
+      guestId = "00000000-0000-4000-8000-$timestamp";
+      await prefs.setString(_kGuestId, guestId!);
+    }
     lastCustomerPhone = prefs.getString(_kLastCustomerPhone);
     final likedS = prefs.getStringList(_kLikedServices);
     if (likedS != null) likedServiceIds = likedS.map(int.parse).toSet();

@@ -27,6 +27,12 @@ class ApiClient {
           final token = AppState.sessionToken;
           if (token != null && token.isNotEmpty) {
             options.headers['Authorization'] = 'Bearer $token';
+          } else {
+            // Attach Guest ID for unauthenticated users
+            final guestId = AppState.guestId;
+            if (guestId != null && guestId.isNotEmpty) {
+              options.headers['X-Guest-ID'] = guestId;
+            }
           }
           
           if (kDebugMode) {
@@ -58,40 +64,17 @@ class ApiClient {
 
           // Handle 403 Forbidden - Invalid Token / Environment Mismatch
           // If we send a token that the backend hates (e.g. wrong environment/project), it returns 403.
-          // We must clear the bad token and retry as guest to allow the app to function.
+          // We must clear the bad token so the app can redirect to login.
           if (e.response?.statusCode == 403) {
             if (kDebugMode) {
-              debugPrint('⛔ 403 Forbidden detected. Clearing invalid auth and retrying as Guest...');
+              debugPrint('⛔ 403 Forbidden detected. Clearing invalid auth state...');
             }
 
             // 1. Clear invalid auth state locally
             await AppState.clearAuth();
-
-            // 2. Construct new options WITHOUT Authorization header
-            final newHeaders = Map<String, dynamic>.from(e.requestOptions.headers);
-            newHeaders.remove('Authorization');
-
-            final opts = Options(
-              method: e.requestOptions.method,
-              headers: newHeaders,
-              contentType: e.requestOptions.contentType,
-              responseType: e.requestOptions.responseType,
-            );
-
-            try {
-              // 3. Retry the request as guest
-              final response = await dio.request(
-                e.requestOptions.path,
-                options: opts,
-                data: e.requestOptions.data,
-                queryParameters: e.requestOptions.queryParameters,
-              );
-              return handler.resolve(response);
-            } catch (retryError) {
-              // If retry fails, return that error
-              // (e.g. maybe it really WAS a permission issue even for guest)
-              return handler.next(retryError is DioException ? retryError : e);
-            }
+            
+            // 2. Propagate error so UI (e.g. FlashPage) knows to redirect
+            return handler.next(e);
           }
 
           // Handle 401 Unauthorized - attempt token refresh

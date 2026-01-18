@@ -47,9 +47,13 @@ class _FlashPageState extends State<FlashPage>
         (AppState.sessionToken?.isNotEmpty ?? false)) {
       try {
         final api = AuthApi();
+        
+        // Add timeout to prevent hanging if network is weird, though Dio has its own timeout.
+        // If this throws (e.g. 403), the catch block will run.
         final profile = await api.getProfile(
           sessionToken: AppState.sessionToken!,
-        );
+        ).timeout(const Duration(seconds: 10));
+
         final first = (profile['first_name'] ?? '') as String;
         final last = (profile['last_name'] ?? '') as String;
         final mail = (profile['email'] ?? '') as String;
@@ -103,7 +107,13 @@ class _FlashPageState extends State<FlashPage>
             }
           }
         }
-      } catch (_) {}
+      } catch (e) {
+        // If an error occurs (e.g. 403 Forbidden), ApiClient has already cleared auth.
+        // We log it and rely on the navigation logic below to see !isAuthenticated
+        if (kDebugMode) {
+            print('FlashPage: Profile fetch failed: $e');
+        }
+      }
     }
     if (mounted) _controller.forward();
     _timer = Timer(const Duration(milliseconds: 2500), () {
@@ -121,12 +131,10 @@ class _FlashPageState extends State<FlashPage>
           MaterialPageRoute(builder: (_) => const MainShell()),
         );
       } else {
-        // Redirection for Guest Users: Skip LandingPage since we have a static HTML version for web 
-        // and mobile/windows should go straight to login.
+        // Redirection for Guest Users: Skip forced login and go to MainShell
+        // This allows Blinkit-style "browse first" experience.
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (_) => const AuthPage(toDetailsOnFinish: true),
-          ),
+          MaterialPageRoute(builder: (_) => const MainShell()),
         );
       }
     });
