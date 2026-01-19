@@ -32,11 +32,19 @@ String? buildImageUrl(String? url) {
     return trimmed;
   }
   // Resolve base per platform (handles Android emulator mapping)
-  final base = resolveBackendBase();
+  String base = resolveBackendBase();
+  if (base.endsWith('/')) {
+    base = base.substring(0, base.length - 1);
+  }
+  
   // Backend relative path
   if (trimmed.startsWith('/')) {
     return '$base$trimmed';
   }
   // Relative media path without leading slash
-  return '$base/$trimmed';
+  if (trimmed.startsWith('media/')) {
+    return '$base/$trimmed';
+  }
+  
+  return '$base/media/$trimmed';
 }
