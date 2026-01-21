@@ -351,7 +351,7 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
               },
         child: const Text(
           'ACTIVATE MEMBERSHIP',
-          style: TextStyle(fontWeight: FontWeight.w950, fontSize: 16, letterSpacing: 1),
+          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1),
         ),
       ),
     );
@@ -368,7 +368,7 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
   String _currencySymbol(String currency) {
     switch (currency.toUpperCase()) {
       case 'INR': return '₹';
-      case 'USD': return '$';
+      case 'USD': return '\$';
       case 'EUR': return '€';
       default: return currency;
     }

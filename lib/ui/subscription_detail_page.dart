@@ -261,7 +261,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
             onPressed: (AppState.isAuthenticated && !_submitting) ? () => _subscribe(widget.plan) : null,
             child: _submitting
                 ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(color: Colors.black, strokeWidth: 3))
-                : const Text('CONFIRM SUBSCRIPTION', style: TextStyle(fontWeight: FontWeight.w950, fontSize: 15, letterSpacing: 0.5)),
+                : const Text('CONFIRM SUBSCRIPTION', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 15, letterSpacing: 0.5)),
           ),
         ),
         if (!AppState.isAuthenticated) ...[
@@ -420,7 +420,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 onPressed: () => Navigator.pop(ctx),
-                child: const Text('DONE', style: TextStyle(fontWeight: FontWeight.w950)),
+                child: const Text('DONE', style: TextStyle(fontWeight: FontWeight.w900)),
               ),
             ),
           ],
@@ -432,7 +432,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
   String _currencySymbol(String? code) {
     switch (code?.toUpperCase()) {
       case 'INR': return '₹';
-      case 'USD': return '$';
+      case 'USD': return '\$';
       default: return '$code';
     }
   }
@@ -542,7 +542,7 @@ Widget _existingList(List<SubscriptionItem> items, Color accentColor) {
 String _currencySymbol(String? code) {
   switch (code?.toUpperCase()) {
     case 'INR': return '₹';
-    case 'USD': return '$';
+    case 'USD': return '\$';
     default: return '$code';
   }
 }

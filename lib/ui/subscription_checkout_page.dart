@@ -378,7 +378,7 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
         onPressed: _submitting ? null : _confirm,
         child: _submitting
             ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator(strokeWidth: 3, color: Colors.black))
-            : const Text('ACTIVATE MEMBERSHIP', style: TextStyle(fontWeight: FontWeight.w950, fontSize: 16, letterSpacing: 1)),
+            : const Text('ACTIVATE MEMBERSHIP', style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, letterSpacing: 1)),
       ),
     );
   }
@@ -491,8 +491,8 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
   String _currencySymbol(String currency) {
     switch (currency.toUpperCase()) {
       case 'INR': return '₹';
-      case 'USD': return '$';
-      default: return '$currency';
+      case 'USD': return '\$';
+      default: return '\$currency';
     }
   }
 }
