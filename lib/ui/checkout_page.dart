@@ -1,5 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/cart_provider.dart';
 import '../models/cart_item.dart';
 import '../data/app_state.dart';
@@ -453,12 +454,19 @@ class _OrderItemTile extends StatelessWidget {
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
               child: (item.imageUrl != null && item.imageUrl!.isNotEmpty)
-                  ? Image.network(
-                      item.imageUrl!.contains('http') 
-                        ? item.imageUrl! 
-                        : 'http://127.0.0.1:8000${item.imageUrl!}', // Fallback for local dev
+                  ? CachedNetworkImage(
+                      imageUrl: item.imageUrl!,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => const Icon(Icons.build, size: 24, color: Colors.white24),
+                      placeholder: (context, url) => Shimmer.fromColors(
+                        baseColor: Colors.grey[800]!,
+                        highlightColor: Colors.grey[700]!,
+                        child: Container(color: Colors.white),
+                      ),
+                      errorWidget: (context, url, error) => const Icon(
+                        Icons.build,
+                        size: 24,
+                        color: Colors.white24,
+                      ),
                     )
                   : const Icon(Icons.image, size: 28),
             ),

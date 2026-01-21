@@ -15,36 +15,24 @@ bool _looksImageLike(String s) {
   return false;
 }
 
-String? buildImageUrl(String? url) {
-  if (url == null || url.isEmpty) return null;
-  final trimmed = url.trim();
-  if (!_looksImageLike(trimmed)) return null; // guard against description text
-  // Absolute HTTP(S)
-  if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
-    return trimmed;
-  }
-  // Protocol-relative (rare)
-  if (trimmed.startsWith('//')) {
-    return 'https:$trimmed';
-  }
-  // Data URLs (base64 images)
-  if (trimmed.startsWith('data:')) {
-    return trimmed;
-  }
-  // Resolve base per platform (handles Android emulator mapping)
-  String base = resolveBackendBase();
-  if (base.endsWith('/')) {
-    base = base.substring(0, base.length - 1);
+String? buildImageUrl(dynamic media) {
+  if (media == null) return null;
+  
+  // Handle new standardized media object (Map)
+  if (media is Map) {
+    return media['original'] ?? media['thumbnail'];
   }
   
-  // Backend relative path
-  if (trimmed.startsWith('/')) {
-    return '$base$trimmed';
-  }
-  // Relative media path without leading slash
-  if (trimmed.startsWith('media/')) {
-    return '$base/$trimmed';
+  // Handle raw string (backward compatibility / direct URLs)
+  if (media is String) {
+    if (media.isEmpty) return null;
+    if (media.startsWith('http')) return media;
+    // Fallback for any remaining relative paths (should be minimal after backend refactor)
+    String base = resolveBackendBase();
+    if (base.endsWith('/')) base = base.substring(0, base.length - 1);
+    if (media.startsWith('/')) return '$base$media';
+    return '$base/media/$media';
   }
   
-  return '$base/media/$trimmed';
+  return null;
 }

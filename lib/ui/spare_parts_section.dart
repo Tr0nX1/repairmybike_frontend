@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:flutter/material.dart';
 import '../data/spare_parts_api.dart';
 import '../models/spare_part.dart';
 import '../providers/saved_parts_provider.dart';
@@ -158,10 +158,15 @@ class _PartCard extends ConsumerWidget {
                       children: [
                         Positioned.fill(
                           child: part.thumbnail != null && part.thumbnail!.isNotEmpty
-                              ? Image.network(
-                                  buildImageUrl(part.thumbnail)!,
+                              ? CachedNetworkImage(
+                                  imageUrl: buildImageUrl(part.thumbnail)!,
                                   fit: BoxFit.cover,
-                                  errorBuilder: (_, __, ___) => Container(
+                                  placeholder: (context, url) => Shimmer.fromColors(
+                                    baseColor: Colors.grey[800]!,
+                                    highlightColor: Colors.grey[700]!,
+                                    child: Container(color: Colors.white),
+                                  ),
+                                  errorWidget: (context, url, error) => Container(
                                     color: Colors.black38,
                                     child: Center(child: Icon(Icons.build, size: w * 0.25, color: Colors.white10)),
                                   ),

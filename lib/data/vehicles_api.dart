@@ -9,13 +9,15 @@ class VehicleTypeItem {
   VehicleTypeItem({required this.id, required this.name, this.image});
 
   factory VehicleTypeItem.fromJson(Map<String, dynamic> json) {
+    String? extractUrl(dynamic v) {
+      if (v == null) return null;
+      if (v is Map) return (v['original'] ?? v['thumbnail'])?.toString();
+      return v.toString();
+    }
     return VehicleTypeItem(
       id: (json['id'] as num).toInt(),
       name: json['name'] as String? ?? '',
-      image:
-          (json['image'] as String?) ??
-          (json['logo'] as String?) ??
-          (json['icon'] as String?),
+      image: extractUrl(json['image'] ?? json['logo'] ?? json['icon']),
     );
   }
 }
@@ -36,15 +38,17 @@ class VehicleBrandItem {
   });
 
   factory VehicleBrandItem.fromJson(Map<String, dynamic> json) {
+    String? extractUrl(dynamic v) {
+      if (v == null) return null;
+      if (v is Map) return (v['original'] ?? v['thumbnail'])?.toString();
+      return v.toString();
+    }
     return VehicleBrandItem(
       id: (json['id'] as num).toInt(),
       vehicleTypeId: (json['vehicle_type'] as num).toInt(),
       vehicleTypeName: json['vehicle_type_name'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      image:
-          (json['image'] as String?) ??
-          (json['logo'] as String?) ??
-          (json['icon'] as String?),
+      image: extractUrl(json['image'] ?? json['logo'] ?? json['icon']),
     );
   }
 }
@@ -67,16 +71,18 @@ class VehicleModelItem {
   });
 
   factory VehicleModelItem.fromJson(Map<String, dynamic> json) {
+    String? extractUrl(dynamic v) {
+      if (v == null) return null;
+      if (v is Map) return (v['original'] ?? v['thumbnail'])?.toString();
+      return v.toString();
+    }
     return VehicleModelItem(
       id: (json['id'] as num).toInt(),
       vehicleBrandId: (json['vehicle_brand'] as num).toInt(),
       brandName: json['brand_name'] as String? ?? '',
       vehicleTypeName: json['vehicle_type_name'] as String? ?? '',
       name: json['name'] as String? ?? '',
-      image:
-          (json['image'] as String?) ??
-          (json['logo'] as String?) ??
-          (json['icon'] as String?),
+      image: extractUrl(json['image'] ?? json['logo'] ?? json['icon']),
     );
   }
 }

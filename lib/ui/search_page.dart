@@ -1,3 +1,5 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/spare_parts_provider.dart';
@@ -7,6 +9,7 @@ import '../models/service.dart';
 import 'service_detail_page.dart';
 import 'spare_parts_page.dart';
 import 'spare_part_detail_page.dart';
+import '../utils/url_utils.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   final String? initialQuery;
@@ -195,7 +198,19 @@ class _PartsList extends StatelessWidget {
           leading: p.thumbnail != null
               ? ClipRRect(
                   borderRadius: BorderRadius.circular(6),
-                  child: Image.network(p.thumbnail!, width: 48, height: 48, fit: BoxFit.cover),
+                  child: CachedNetworkImage(
+                    imageUrl: buildImageUrl(p.thumbnail)!,
+                    width: 48,
+                    height: 48,
+                    fit: BoxFit.cover,
+                    placeholder: (context, url) => Shimmer.fromColors(
+                      baseColor: Colors.grey[800]!,
+                      highlightColor: Colors.grey[700]!,
+                      child: Container(color: Colors.white),
+                    ),
+                    errorWidget: (context, url, error) =>
+                        const Icon(Icons.handyman, color: Colors.white70),
+                  ),
                 )
               : const Icon(Icons.handyman, color: Colors.white70),
           title: Text(p.name, style: const TextStyle(color: Colors.white)),

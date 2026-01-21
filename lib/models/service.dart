@@ -43,7 +43,10 @@ class Service {
           .where((s) => s.isNotEmpty)
           .toList(),
       images: ((json['images'] as List?) ?? const [])
-          .map((e) => e?.toString() ?? '')
+          .map((e) {
+            if (e is Map) return (e['original'] ?? e['thumbnail'] ?? '').toString();
+            return e?.toString() ?? '';
+          })
           .where((s) => s.isNotEmpty)
           .toList(),
       price: (json['price'] as num?)?.toInt() ?? 0,

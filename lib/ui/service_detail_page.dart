@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../models/service.dart';
 import 'booking_form_page.dart';
 import 'booking_list_page.dart';
@@ -184,37 +185,41 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                         ),
                       );
                     }
-                    return Image.network(
-                      url,
+                    return CachedNetworkImage(
+                      imageUrl: url,
                       fit: BoxFit.cover,
-                      errorBuilder: (context, error, stack) {
-                        return Container(
-                          color: const Color(0xFF202020),
-                          child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Container(
-                                width: 96,
-                                height: 96,
-                                decoration: const BoxDecoration(
-                                  color: accent,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(Icons.build_rounded, size: 48, color: Colors.black),
+                      placeholder: (context, url) => Shimmer.fromColors(
+                        baseColor: Colors.grey[800]!,
+                        highlightColor: Colors.grey[700]!,
+                        child: Container(color: Colors.white),
+                      ),
+                      errorWidget: (context, url, error) => Container(
+                        color: const Color(0xFF202020),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Container(
+                              width: 96,
+                              height: 96,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF01C9F5),
+                                shape: BoxShape.circle,
                               ),
-                              const SizedBox(height: 16),
-                              Container(
-                                width: 8,
-                                height: 8,
-                                decoration: const BoxDecoration(
-                                  color: accent,
-                                  shape: BoxShape.circle,
-                                ),
-                              )
-                            ],
-                          ),
-                        );
-                      },
+                              child: const Icon(Icons.build_rounded,
+                                  size: 48, color: Colors.black),
+                            ),
+                            const SizedBox(height: 16),
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF01C9F5),
+                                shape: BoxShape.circle,
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
                     );
                   }),
                 ),

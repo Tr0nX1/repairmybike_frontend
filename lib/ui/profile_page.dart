@@ -1,7 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import 'dart:io';
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
 import 'auth_page.dart';
@@ -501,12 +500,16 @@ class _Avatar extends StatelessWidget {
           border: Border.all(color: border),
         ),
         clipBehavior: Clip.antiAlias,
-        child: Image.network(
-          url,
+        child: CachedNetworkImage(
+          imageUrl: url,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) {
-            return const Icon(Icons.person, color: Colors.white70, size: 32);
-          },
+          placeholder: (context, url) => Shimmer.fromColors(
+            baseColor: Colors.grey[800]!,
+            highlightColor: Colors.grey[700]!,
+            child: Container(color: Colors.white),
+          ),
+          errorWidget: (context, url, error) =>
+              const Icon(Icons.person, color: Colors.white70, size: 32),
         ),
       );
     }

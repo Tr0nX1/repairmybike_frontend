@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../providers/category_provider.dart';
 import '../models/category.dart';
 // import 'categories_page.dart';
@@ -597,16 +597,19 @@ class _LikedCard extends StatelessWidget {
                         topLeft: Radius.circular(16),
                         topRight: Radius.circular(16),
                       ),
-                      child: Image.network(
-                        imageUrl,
+                      child: CachedNetworkImage(
+                        imageUrl: imageUrl,
                         fit: BoxFit.contain,
                         alignment: Alignment.center,
                         width: double.infinity,
-                        errorBuilder: (context, error, stack) {
-                          return const Center(
-                            child: Icon(Icons.handyman, color: Colors.white54),
-                          );
-                        },
+                        placeholder: (context, url) => Shimmer.fromColors(
+                          baseColor: Colors.grey[800]!,
+                          highlightColor: Colors.grey[700]!,
+                          child: Container(color: Colors.white),
+                        ),
+                        errorWidget: (context, url, error) => const Center(
+                          child: Icon(Icons.handyman, color: Colors.white54),
+                        ),
                       ),
                     ),
             ),

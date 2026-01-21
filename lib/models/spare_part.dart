@@ -54,9 +54,19 @@ class SparePartListItem {
   });
 
   factory SparePartListItem.fromJson(Map<String, dynamic> json) {
+    String? extractUrl(dynamic v) {
+      if (v == null) return null;
+      if (v is Map) return (v['original'] ?? v['thumbnail'])?.toString();
+      return v.toString();
+    }
     List<String> normalizeImages(dynamic v) {
       final list = (v as List?) ?? const [];
-      return list.map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList();
+      return list.map((e) {
+        if (e is Map) {
+          return (e['original'] ?? e['thumbnail'] ?? e['image'] ?? e['url'] ?? '').toString();
+        }
+        return e?.toString() ?? '';
+      }).where((s) => s.isNotEmpty).toList();
     }
     Map<String, dynamic> normalizeMap(dynamic v) {
       return (v as Map<String, dynamic>?) ?? <String, dynamic>{};
@@ -83,12 +93,12 @@ class SparePartListItem {
           ? json['rating_average'] as num
           : num.tryParse(json['rating_average']?.toString() ?? '0') ?? 0,
       ratingCount: (json['rating_count'] as num?)?.toInt() ?? 0,
-      thumbnail: json['thumbnail'] as String?,
+      thumbnail: extractUrl(json['thumbnail'] ?? json['cloudinary_url']),
       images: normalizeImages(json['images'] ?? json['gallery'] ?? json['image_urls']),
       description: json['description'] as String?,
       specs: normalizeMap(json['specs'] ?? json['specifications'] ?? json['attributes']),
       dimensions: normalizeMap(json['dimensions']),
-      brandLogoUrl: json['brand_logo_url'] as String? ?? json['brand_logo'] as String?,
+      brandLogoUrl: extractUrl(json['brand_logo'] ?? json['brand_logo_url'] ?? json['brand_cloudinary_url']),
     );
   }
 }

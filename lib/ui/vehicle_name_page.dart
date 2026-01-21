@@ -1,4 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../data/app_state.dart';
 import '../data/vehicles_api.dart';
 import '../utils/url_utils.dart';
@@ -145,17 +146,16 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
               child: img != null
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(
-                        img,
+                      child: CachedNetworkImage(
+                        imageUrl: img,
                         fit: BoxFit.cover,
                         alignment: Alignment.center,
-                        loadingBuilder: (context, child, progress) {
-                          if (progress == null) return child;
-                          return const Center(
-                            child: CircularProgressIndicator(),
-                          );
-                        },
-                        errorBuilder: (_, __, ___) => const Icon(
+                        placeholder: (context, url) => Shimmer.fromColors(
+                          baseColor: Colors.grey[800]!,
+                          highlightColor: Colors.grey[700]!,
+                          child: Container(color: Colors.white),
+                        ),
+                        errorWidget: (context, url, error) => const Icon(
                           Icons.directions_bike,
                           color: Colors.white54,
                           size: 40,

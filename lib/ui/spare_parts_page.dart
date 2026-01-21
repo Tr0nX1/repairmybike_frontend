@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../models/spare_part.dart';
 import '../models/spare_part_category.dart';
 import '../models/spare_part_brand.dart';
@@ -186,7 +188,20 @@ class _SparePartCard extends StatelessWidget {
               child: item.thumbnail != null && item.thumbnail!.isNotEmpty
                   ? ClipRRect(
                       borderRadius: BorderRadius.circular(8),
-                      child: Image.network(buildImageUrl(item.thumbnail)!, fit: BoxFit.cover, width: double.infinity),
+                      child: CachedNetworkImage(
+                        imageUrl: buildImageUrl(item.thumbnail)!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        placeholder: (context, url) => Shimmer.fromColors(
+                          baseColor: Colors.grey[300]!,
+                          highlightColor: Colors.grey[100]!,
+                          child: Container(color: Colors.white),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: theme.colorScheme.surfaceVariant,
+                          child: const Icon(Icons.error_outline),
+                        ),
+                      ),
                     )
                   : Container(
                       decoration: BoxDecoration(

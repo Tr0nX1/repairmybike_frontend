@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../providers/category_provider.dart';
 import '../models/service.dart';
 import 'service_detail_page.dart';
@@ -258,23 +258,27 @@ class _ServiceCardState extends State<_ServiceCard> {
                             topLeft: Radius.circular(16),
                             topRight: Radius.circular(16),
                           ),
-                          child: Image.network(
-                            imageUrl,
+                      child: CachedNetworkImage(
+                            imageUrl: imageUrl,
                             fit: BoxFit.contain,
                             alignment: Alignment.center,
-                            errorBuilder: (context, error, stack) {
-                              return Center(
-                                child: Container(
-                                  width: 64,
-                                  height: 64,
-                                  decoration: const BoxDecoration(
-                                    color: Color(0xFF01C9F5),
-                                    shape: BoxShape.circle,
-                                  ),
-                                  child: const Icon(Icons.build_rounded, color: Colors.black, size: 32),
+                            placeholder: (context, url) => Shimmer.fromColors(
+                              baseColor: Colors.grey[800]!,
+                              highlightColor: Colors.grey[700]!,
+                              child: Container(color: Colors.white),
+                            ),
+                            errorWidget: (context, url, error) => Center(
+                              child: Container(
+                                width: 64,
+                                height: 64,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF01C9F5),
+                                  shape: BoxShape.circle,
                                 ),
-                              );
-                            },
+                                child: const Icon(Icons.build_rounded,
+                                    color: Colors.black, size: 32),
+                              ),
+                            ),
                           ),
                         ),
                 ),

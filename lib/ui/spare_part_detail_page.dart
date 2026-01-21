@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../models/spare_part.dart';
 import '../utils/url_utils.dart';
 import 'widgets/rm_app_bar.dart';
@@ -345,10 +345,15 @@ class _GalleryState extends State<_Gallery> {
                           duration: const Duration(milliseconds: 250),
                           child: InteractiveViewer(
                             key: ValueKey(index),
-                            child: Image(
-                              image: NetworkImage(_resolve(widget.images[index]) ?? ''),
+                            child: CachedNetworkImage(
+                              imageUrl: _resolve(widget.images[index]) ?? '',
                               fit: BoxFit.cover,
-                              errorBuilder: (_, __, ___) => Container(
+                              placeholder: (context, url) => Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(color: Colors.white),
+                              ),
+                              errorWidget: (context, url, error) => Container(
                                 color: cs.surfaceVariant,
                                 child: const Center(child: Icon(Icons.image_not_supported)),
                               ),
@@ -402,15 +407,20 @@ class _GalleryState extends State<_Gallery> {
                     border: Border.all(color: selected ? cs.primary : cs.outline),
                   ),
                   child: hasImages
-                      ? ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image(
-                            image: NetworkImage(thumbUrl),
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Center(child: Icon(Icons.image_not_supported)),
-                          ),
-                        )
-                      : const Center(child: Icon(Icons.image_not_supported)),
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: CachedNetworkImage(
+                              imageUrl: thumbUrl,
+                              fit: BoxFit.cover,
+                              placeholder: (context, url) => Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(color: Colors.white),
+                              ),
+                              errorWidget: (context, url, error) => const Center(child: Icon(Icons.image_not_supported)),
+                            ),
+                          )
+                        : const Center(child: Icon(Icons.image_not_supported)),
                 ),
               ),
             );
@@ -429,10 +439,11 @@ class _GalleryState extends State<_Gallery> {
           color: Colors.black.withOpacity(0.9),
           child: Center(
             child: InteractiveViewer(
-              child: Image(
-                image: NetworkImage(url),
+              child: CachedNetworkImage(
+                imageUrl: url,
                 fit: BoxFit.contain,
-                errorBuilder: (_, __, ___) => const Icon(Icons.image_not_supported, color: Colors.white),
+                placeholder: (context, url) => const CircularProgressIndicator(),
+                errorWidget: (context, url, error) => const Icon(Icons.image_not_supported, color: Colors.white),
               ),
             ),
           ),
