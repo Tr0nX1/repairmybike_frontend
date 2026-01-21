@@ -358,7 +358,7 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
   }
 
   List<SubscriptionPlan> _orderOptions(List<SubscriptionPlan> list) {
-    final order = {"quarterly": 1, "half_yearly": 2, "yearly": 3, "annual": 3};
+    final order = {"monthly": 0, "quarterly": 1, "half_yearly": 2, "yearly": 3, "annual": 3};
     final l = [...list];
     l.sort((a, b) => (order[a.billingPeriod.toLowerCase()] ?? 99)
         .compareTo(order[b.billingPeriod.toLowerCase()] ?? 99));
@@ -376,6 +376,7 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
 
   int _periodMonths(String p) {
     switch (p.toLowerCase()) {
+      case 'monthly': return 1;
       case 'quarterly': return 3;
       case 'half_yearly': return 6;
       case 'yearly':

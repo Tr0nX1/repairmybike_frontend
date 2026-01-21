@@ -46,9 +46,9 @@ class SubscriptionSection extends ConsumerWidget {
               itemCount: entries.length,
               gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: crossAxisCount,
-                mainAxisSpacing: 12,
-                crossAxisSpacing: 12,
-                childAspectRatio: 1.6,
+                mainAxisSpacing: 14,
+                crossAxisSpacing: 14,
+                childAspectRatio: 0.9,
               ),
               itemBuilder: (context, i) {
                 final e = entries[i];
@@ -261,7 +261,7 @@ String _shortTitle(SubscriptionPlan p) {
 bool _isMembershipPlan(SubscriptionPlan p) {
   final slug = (p.slug).toLowerCase();
   final name = p.name.toLowerCase();
-  final allowedPeriods = ['quarterly', 'half_yearly', 'yearly'];
+  final allowedPeriods = ['monthly', 'quarterly', 'half_yearly', 'yearly'];
   final isAllowedPeriod = allowedPeriods.contains(p.billingPeriod.toLowerCase());
   final tier = (p.tier ?? '').toLowerCase();
   final isBasicTier = tier == 'basic';
@@ -349,67 +349,90 @@ class _MembershipCard extends StatelessWidget {
     final minPrice = prices.isEmpty ? 0 : prices.reduce((a, b) => a < b ? a : b);
     final currency = options.isNotEmpty ? options.first.currency : 'INR';
     final planSymbol = _currencySymbol(currency);
-    final plan = options.first;
     final accentColor = _getAccent(tierName);
+    
+    // Find a representative plan to get the image
+    final planWithImage = options.firstWhere((o) => o.imageUrl != null && o.imageUrl!.isNotEmpty, orElse: () => options.first);
 
     return InkWell(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: BorderRadius.circular(24),
       onTap: onTap,
       child: Container(
         width: double.infinity,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: accentColor.withOpacity(0.2), width: 1.5),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: accentColor.withOpacity(0.3), width: 1.5),
           gradient: _getGradient(tierName),
           boxShadow: [
             BoxShadow(
-              color: accentColor.withOpacity(0.05),
-              blurRadius: 15,
-              offset: const Offset(0, 8),
+              color: Colors.black.withOpacity(0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 6),
             ),
           ],
         ),
         clipBehavior: Clip.antiAlias,
         child: Stack(
           children: [
-            // Decorative background pattern
+            // Background Image / Pattern
+            if (planWithImage.imageUrl != null && planWithImage.imageUrl!.isNotEmpty)
+              Positioned.fill(
+                child: Opacity(
+                  opacity: 0.25,
+                  child: Image.network(
+                    planWithImage.imageUrl!,
+                    fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
+                  ),
+                ),
+              ),
+            
+            // Decorative Icon Pattern
             Positioned(
-              right: -20,
-              top: -20,
+              right: -15,
+              top: -15,
               child: Icon(
                 Icons.workspace_premium,
-                size: 100,
-                color: accentColor.withOpacity(0.05),
+                size: 80,
+                color: accentColor.withOpacity(0.08),
               ),
             ),
+
+            // Content
             Padding(
-              padding: const EdgeInsets.all(20),
+              padding: const EdgeInsets.all(16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
+                   Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: accentColor.withOpacity(0.15),
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
                           color: accentColor.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(12),
+                          blurRadius: 8,
+                          spreadRadius: 1,
                         ),
-                        child: Icon(Icons.stars_rounded, color: accentColor, size: 24),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          tierName,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                          ),
-                        ),
-                      ),
-                    ],
+                      ],
+                    ),
+                    child: Icon(
+                      tierName.toLowerCase().contains('premium') ? Icons.auto_awesome : Icons.stars_rounded, 
+                      color: accentColor, 
+                      size: 20,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    tierName.toUpperCase(),
+                    maxLines: 2,
+                    style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 0.5,
+                    ),
                   ),
                   const Spacer(),
                   Column(
@@ -419,21 +442,21 @@ class _MembershipCard extends StatelessWidget {
                         'STARTS AT',
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.4),
-                          fontSize: 10,
+                          fontSize: 9,
                           fontWeight: FontWeight.w800,
-                          letterSpacing: 1.5,
+                          letterSpacing: 1.2,
                         ),
                       ),
-                      const SizedBox(height: 4),
+                      const SizedBox(height: 2),
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.baseline,
                         textBaseline: TextBaseline.alphabetic,
                         children: [
-                          Text(
+                           Text(
                             planSymbol,
                             style: TextStyle(
                               color: accentColor,
-                              fontSize: 16,
+                              fontSize: 14,
                               fontWeight: FontWeight.w900,
                             ),
                           ),
@@ -441,17 +464,8 @@ class _MembershipCard extends StatelessWidget {
                             minPrice.toStringAsFixed(0),
                             style: const TextStyle(
                               color: Colors.white,
-                              fontSize: 28,
+                              fontSize: 24,
                               fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            'ONLY',
-                            style: TextStyle(
-                              color: accentColor.withOpacity(0.5),
-                              fontSize: 10,
-                              fontWeight: FontWeight.w700,
                             ),
                           ),
                         ],
