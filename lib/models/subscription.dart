@@ -1,11 +1,53 @@
+class Benefit {
+  final int id;
+  final String text;
+  final bool isActive;
+
+  Benefit({
+    required this.id,
+    required this.text,
+    required this.isActive,
+  });
+
+  factory Benefit.fromJson(Map<String, dynamic> json) {
+    return Benefit(
+      id: (json['id'] as num).toInt(),
+      text: json['text'] as String? ?? '',
+      isActive: (json['is_active'] as bool?) ?? true,
+    );
+  }
+}
+
+class IncludedServiceDetail {
+  final int id;
+  final String name;
+  final String? category;
+
+  IncludedServiceDetail({
+    required this.id,
+    required this.name,
+    this.category,
+  });
+
+  factory IncludedServiceDetail.fromJson(Map<String, dynamic> json) {
+    return IncludedServiceDetail(
+      id: (json['id'] as num).toInt(),
+      name: json['name'] as String? ?? '',
+      category: json['category'] as String?,
+    );
+  }
+}
+
 class SubscriptionPlan {
   final int id;
   final String name;
   final String slug;
   final String description;
   final String? imageUrl;
-  final Map<String, dynamic> benefits;
-  final List<String> services;
+  final Map<String, dynamic> benefits; // Legacy JSON
+  final List<Benefit> benefitsList; // New structured benefits
+  final List<String> services; // Legacy JSON
+  final List<IncludedServiceDetail> includedServicesDetails; // New structured services
   final num price;
   final String currency;
   final String billingPeriod;
@@ -23,7 +65,9 @@ class SubscriptionPlan {
     required this.description,
     this.imageUrl,
     required this.benefits,
+    required this.benefitsList,
     required this.services,
+    required this.includedServicesDetails,
     required this.price,
     required this.currency,
     required this.billingPeriod,
@@ -43,7 +87,16 @@ class SubscriptionPlan {
       description: json['description'] as String? ?? '',
       imageUrl: json['image'] as String?,
       benefits: (json['benefits'] as Map<String, dynamic>?) ?? <String, dynamic>{},
-      services: ((json['services'] as List?) ?? const []).map((e) => e?.toString() ?? '').where((s) => s.isNotEmpty).toList(),
+      benefitsList: ((json['benefits_list'] as List?) ?? const [])
+          .map((e) => Benefit.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      services: ((json['services'] as List?) ?? const [])
+          .map((e) => e?.toString() ?? '')
+          .where((s) => s.isNotEmpty)
+          .toList(),
+      includedServicesDetails: ((json['included_services_details'] as List?) ?? const [])
+          .map((e) => IncludedServiceDetail.fromJson(e as Map<String, dynamic>))
+          .toList(),
       price: (json['price'] is num)
           ? json['price'] as num
           : num.tryParse(json['price']?.toString() ?? '0') ?? 0,

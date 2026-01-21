@@ -319,79 +319,146 @@ class _MembershipCard extends StatelessWidget {
   final VoidCallback onTap;
   const _MembershipCard({required this.tierName, required this.options, required this.onTap});
 
-  static const Color cardColor = Color(0xFF1C1C1C);
-  static const Color borderColor = Color(0xFF2A2A2A);
   static const Color accent = Color(0xFF01C9F5);
+
+  LinearGradient _getGradient(String name) {
+    if (name.toLowerCase().contains('premium')) {
+      return const LinearGradient(
+        begin: Alignment.topLeft,
+        end: Alignment.bottomRight,
+        colors: [Color(0xFF071A1D), Color(0xFF0D3D44)],
+      );
+    }
+    return const LinearGradient(
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+      colors: [Color(0xFF1A1A1A), Color(0xFF2C2C2C)],
+    );
+  }
+
+  Color _getAccent(String name) {
+    if (name.toLowerCase().contains('premium')) {
+      return const Color(0xFFFFD700); // Gold for premium
+    }
+    return const Color(0xFF00E5FF); // Cyan for basic
+  }
 
   @override
   Widget build(BuildContext context) {
     final prices = options.map((o) => o.price).toList();
-    final minPrice = prices.reduce((a, b) => a < b ? a : b);
+    final minPrice = prices.isEmpty ? 0 : prices.reduce((a, b) => a < b ? a : b);
     final currency = options.isNotEmpty ? options.first.currency : 'INR';
     final planSymbol = _currencySymbol(currency);
     final plan = options.first;
+    final accentColor = _getAccent(tierName);
+
     return InkWell(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(20),
       onTap: onTap,
       child: Container(
         width: double.infinity,
-        constraints: const BoxConstraints(minHeight: 140),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: borderColor, width: 1),
-          image: (plan.imageUrl != null && plan.imageUrl!.isNotEmpty)
-              ? DecorationImage(
-                  image: NetworkImage(
-                    plan.imageUrl!.contains('http') 
-                      ? plan.imageUrl! 
-                      : 'http://127.0.0.1:8000${plan.imageUrl!}'
-                  ),
-                  fit: BoxFit.cover,
-                  colorFilter: ColorFilter.mode(
-                    Colors.black.withOpacity(0.65), 
-                    BlendMode.darken
-                  ),
-                )
-              : null,
-          gradient: (plan.imageUrl == null || plan.imageUrl!.isEmpty)
-              ? const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFF1C1C1C), Color(0xFF212121)],
-                )
-              : null,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: accentColor.withOpacity(0.2), width: 1.5),
+          gradient: _getGradient(tierName),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 6, offset: const Offset(0, 3)),
+            BoxShadow(
+              color: accentColor.withOpacity(0.05),
+              blurRadius: 15,
+              offset: const Offset(0, 8),
+            ),
           ],
         ),
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        clipBehavior: Clip.antiAlias,
+        child: Stack(
           children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    tierName,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w900, letterSpacing: -0.5),
-                  ),
-                ),
-                const Icon(Icons.workspace_premium, color: accent, size: 24),
-              ],
-            ),
-            const Spacer(),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.6),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: accent.withOpacity(0.3)),
+            // Decorative background pattern
+            Positioned(
+              right: -20,
+              top: -20,
+              child: Icon(
+                Icons.workspace_premium,
+                size: 100,
+                color: accentColor.withOpacity(0.05),
               ),
-              child: Text(
-                'Starts at $planSymbol${minPrice.toStringAsFixed(0)}', 
-                style: const TextStyle(color: accent, fontWeight: FontWeight.w900, fontSize: 13)
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: accentColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        child: Icon(Icons.stars_rounded, color: accentColor, size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          tierName,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Spacer(),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'STARTS AT',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.4),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
+                        children: [
+                          Text(
+                            planSymbol,
+                            style: TextStyle(
+                              color: accentColor,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          Text(
+                            minPrice.toStringAsFixed(0),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 28,
+                              fontWeight: FontWeight.w900,
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'ONLY',
+                            style: TextStyle(
+                              color: accentColor.withOpacity(0.5),
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
