@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:cached_network_image/cached_network_image.dart';
+import 'package:shimmer/shimmer.dart';
 import '../providers/category_provider.dart';
 import '../models/category.dart';
 import 'services_page.dart';
+import '../utils/url_utils.dart';
 
 class CategoriesPage extends ConsumerStatefulWidget {
   const CategoriesPage({super.key});
@@ -150,7 +153,30 @@ class _CategoryCard extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(_iconForCategoryIcon(category), size: iconSize, color: Colors.white),
+              SizedBox(
+                height: iconSize,
+                width: iconSize,
+                child: category.image != null && category.image!.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: buildImageUrl(category.image)!,
+                        fit: BoxFit.contain,
+                        placeholder: (context, url) => Shimmer.fromColors(
+                          baseColor: Colors.grey[800]!,
+                          highlightColor: Colors.grey[700]!,
+                          child: Container(color: Colors.white),
+                        ),
+                        errorWidget: (context, url, error) => Icon(
+                          _iconForCategoryIcon(category),
+                          size: iconSize,
+                          color: Colors.white,
+                        ),
+                      )
+                    : Icon(
+                        _iconForCategoryIcon(category),
+                        size: iconSize,
+                        color: Colors.white,
+                      ),
+              ),
               SizedBox(height: gap),
               Flexible(
                 child: Text(

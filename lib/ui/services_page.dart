@@ -90,7 +90,7 @@ class _ServicesPageState extends ConsumerState<ServicesPage> {
               data: (cats) {
                 final items = [
                   const _ChipItem(id: null, label: 'All'),
-                  ...cats.map((c) => _ChipItem(id: c.id, label: c.name)),
+                  ...cats.map((c) => _ChipItem(id: c.id, label: c.name, image: c.image)),
                 ];
                 return ListView.separated(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -101,6 +101,17 @@ class _ServicesPageState extends ConsumerState<ServicesPage> {
                     final item = items[i];
                     final selected = selectedCategoryId == item.id;
                     return ChoiceChip(
+                      avatar: item.image != null
+                          ? CircleAvatar(
+                              backgroundColor: Colors.transparent,
+                              backgroundImage: CachedNetworkImageProvider(buildImageUrl(item.image)!),
+                            )
+                          : item.id == null 
+                              ? null 
+                              : const CircleAvatar(
+                                  backgroundColor: Colors.white10,
+                                  child: Icon(Icons.handyman, size: 14, color: Colors.white70),
+                                ),
                       label: Text(item.label),
                       selected: selected,
                       onSelected: (_) => setState(() {
@@ -185,7 +196,8 @@ class _ServicesPageState extends ConsumerState<ServicesPage> {
 class _ChipItem {
   final int? id;
   final String label;
-  const _ChipItem({required this.id, required this.label});
+  final String? image;
+  const _ChipItem({required this.id, required this.label, this.image});
 }
 
 class _ServiceCard extends StatefulWidget {
