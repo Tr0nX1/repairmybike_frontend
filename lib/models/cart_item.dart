@@ -20,6 +20,14 @@ class CartItem {
   factory CartItem.fromJson(Map<String, dynamic> json) {
     final idVal = (json['item_id'] as num?)?.toInt() ?? (json['id'] as num?)?.toInt() ?? 0;
     final prodVal = (json['product_id'] as num?)?.toInt() ?? (json['spare_part'] as num?)?.toInt() ?? (json['spare_part_id'] as num?)?.toInt() ?? 0;
+    int _toInt(dynamic v) {
+      if (v is num) return v.toInt();
+      if (v is String) {
+        final d = double.tryParse(v);
+        if (d != null) return d.round();
+      }
+      return 0;
+    }
     String? extractUrl(dynamic media) {
       if (media == null) return null;
       if (media is String) return media;

@@ -1,6 +1,7 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:flutter/material.dart';
 import '../data/spare_parts_api.dart';
 import '../models/spare_part.dart';
 import '../providers/saved_parts_provider.dart';

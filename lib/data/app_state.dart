@@ -73,6 +73,9 @@ class AppState {
   static bool get hasVehicle => vehicleName != null && vehicleName!.isNotEmpty;
   static bool get hasAddress => addrFlat != null && addrFlat!.isNotEmpty && addrPincode != null;
 
+  static String? get address => addrFlat;
+  static set address(String? value) => addrFlat = value;
+
   static String get fullAddress {
     final parts = [
       addrFlat,
@@ -177,13 +180,19 @@ class AppState {
 
   static Future<void> setVehicle({
     required String name,
+    String? type,
+    String? brand,
     int? modelId,
     bool syncToBackend = true,
   }) async {
     vehicleName = name;
     vehicleModelId = modelId;
+    if (type != null) vehicleType = type;
+    if (brand != null) vehicleBrand = brand;
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kVehicleName, name);
+    if (type != null) await prefs.setString(_kVehicleType, type);
+    if (brand != null) await prefs.setString(_kVehicleBrand, brand);
     if (modelId != null) await prefs.setInt(_kVehicleModelId, modelId);
     if (syncToBackend && sessionToken != null) {
       try {
@@ -218,8 +227,13 @@ class AppState {
     String? s,
     String? i,
     String? ph,
+    String? addr,
   }) async {
     final prefs = await SharedPreferences.getInstance();
+    if (addr != null) {
+      addrFlat = addr;
+      await prefs.setString(_kAddrFlat, addr);
+    }
     if (name != null) {
       fullName = name;
       await prefs.setString(_kFullName, name);
