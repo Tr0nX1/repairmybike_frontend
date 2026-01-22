@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter/foundation.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'dart:io';
@@ -10,7 +9,6 @@ import 'auth_page.dart';
 import 'profile_details_page.dart';
 import 'vehicle_type_page.dart';
 import 'booking_list_page.dart';
-import 'cart_page.dart';
 import 'saved_services_page.dart';
 import '../data/booking_api.dart'; // Added for fetching bookings
 import '../data/order_api.dart'; // Added for fetching spare parts orders
@@ -343,7 +341,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         onPressed: _edit,
                         style: OutlinedButton.styleFrom(
                           foregroundColor: accent,
-                          side: const BorderSide(color: accent),
+                          side: BorderSide(color: accent),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(12),
