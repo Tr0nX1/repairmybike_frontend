@@ -58,6 +58,8 @@ class AppState {
   static String? addrPhone;
 
   // Vehicle fields
+  static String? vehicleType;
+  static String? vehicleBrand;
   static String? vehicleName;
   static int? vehicleModelId;
   static String? vehicleImageUrl;

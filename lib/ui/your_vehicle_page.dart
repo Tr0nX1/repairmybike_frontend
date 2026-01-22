@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:url_launcher/url_launcher_string.dart';
 import '../data/app_state.dart';
 import 'main_shell.dart';
 import 'vehicle_type_page.dart';
