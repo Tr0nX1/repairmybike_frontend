@@ -25,10 +25,7 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
-  static const Color bg = Color(0xFF0F0F0F);
-  static const Color card = Color(0xFF1C1C1C);
-  static const Color border = Color(0xFF2A2A2A);
-  static const Color accent = Color(0xFF01C9F5);
+  // No longer using hardcoded colors; pulling from Theme.of(context) inside build
 
   bool _loggingOut = false;
   int _bookingCount = 0;  // Service bookings count
@@ -150,6 +147,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     final email = (AppState.email?.isNotEmpty == true)
         ? AppState.email!
         : 'Add email';
+    final colorScheme = Theme.of(context).colorScheme;
+    final bg = colorScheme.surface;
+    final card = colorScheme.surfaceVariant.withOpacity(0.5);
+    final border = colorScheme.outline.withOpacity(0.2);
+    final accent = colorScheme.primary;
+
     return Scaffold(
       backgroundColor: bg,
       body: SafeArea(
@@ -555,8 +558,10 @@ class _Tile extends StatelessWidget {
   const _Tile({required this.label, required this.value, required this.icon});
   @override
   Widget build(BuildContext context) {
-    const Color card = Color(0xFF1C1C1C);
-    const Color border = Color(0xFF2A2A2A);
+    final colorScheme = Theme.of(context).colorScheme;
+    final card = colorScheme.surfaceVariant.withOpacity(0.5);
+    final border = colorScheme.outline.withOpacity(0.2);
+
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
@@ -566,13 +571,27 @@ class _Tile extends StatelessWidget {
         border: Border.all(color: border),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start, // Better for wrapped lines
         children: [
-          Icon(icon, color: Colors.white60),
+          Icon(icon, color: colorScheme.onSurfaceVariant),
           const SizedBox(width: 12),
+          // Strategy 2: Using flex ratios to prevent label compression
           Expanded(
-            child: Text(label, style: const TextStyle(color: Colors.white70)),
+            flex: 2,
+            child: Text(
+              label, 
+              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13)
+            ),
           ),
-          Text(value, style: const TextStyle(color: Colors.white)),
+          const SizedBox(width: 8),
+          Expanded(
+            flex: 5,
+            child: Text(
+              value, 
+              textAlign: TextAlign.right,
+              style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.w500),
+            ),
+          ),
         ],
       ),
     );
