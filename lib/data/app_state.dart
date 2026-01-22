@@ -29,6 +29,9 @@ class AppState {
   static const _kVehicleBrand = 'vehicleBrand';
   static const _kVehicleName = 'vehicleName';
   static const _kVehicleModelId = 'vehicleModelId';
+  static const _kVehicleImageUrl = 'vehicleImageUrl';
+  static const _kVehicleBrandImageUrl = 'vehicleBrandImageUrl';
+  static const _kVehicleTypeImageUrl = 'vehicleTypeImageUrl';
   static const _kSession = 'session_token';
   static const _kRefresh = 'refresh_token';
   static const _kGuestId = 'guest_id';
@@ -55,10 +58,11 @@ class AppState {
   static String? addrPhone;
 
   // Vehicle fields
-  static String? vehicleType;
-  static String? vehicleBrand;
   static String? vehicleName;
   static int? vehicleModelId;
+  static String? vehicleImageUrl;
+  static String? vehicleBrandImageUrl;
+  static String? vehicleTypeImageUrl;
 
   static String? lastCustomerPhone;
   static Set<int> likedServiceIds = <int>{};
@@ -138,6 +142,9 @@ class AppState {
     vehicleBrand = prefs.getString(_kVehicleBrand);
     vehicleName = prefs.getString(_kVehicleName);
     vehicleModelId = prefs.getInt(_kVehicleModelId);
+    vehicleImageUrl = prefs.getString(_kVehicleImageUrl);
+    vehicleBrandImageUrl = prefs.getString(_kVehicleBrandImageUrl);
+    vehicleTypeImageUrl = prefs.getString(_kVehicleTypeImageUrl);
     sessionToken = prefs.getString(_kSession);
     refreshToken = prefs.getString(_kRefresh);
     guestId = prefs.getString(_kGuestId);
@@ -183,17 +190,27 @@ class AppState {
     String? type,
     String? brand,
     int? modelId,
+    String? imageUrl,
+    String? brandImageUrl,
+    String? typeImageUrl,
     bool syncToBackend = true,
   }) async {
     vehicleName = name;
     vehicleModelId = modelId;
     if (type != null) vehicleType = type;
     if (brand != null) vehicleBrand = brand;
+    if (imageUrl != null) vehicleImageUrl = imageUrl;
+    if (brandImageUrl != null) vehicleBrandImageUrl = brandImageUrl;
+    if (typeImageUrl != null) vehicleTypeImageUrl = typeImageUrl;
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kVehicleName, name);
     if (type != null) await prefs.setString(_kVehicleType, type);
     if (brand != null) await prefs.setString(_kVehicleBrand, brand);
     if (modelId != null) await prefs.setInt(_kVehicleModelId, modelId);
+    if (imageUrl != null) await prefs.setString(_kVehicleImageUrl, imageUrl);
+    if (brandImageUrl != null) await prefs.setString(_kVehicleBrandImageUrl, brandImageUrl);
+    if (typeImageUrl != null) await prefs.setString(_kVehicleTypeImageUrl, typeImageUrl);
     if (syncToBackend && sessionToken != null) {
       try {
         await VehiclesApi().addUserVehicle(
@@ -297,6 +314,9 @@ class AppState {
     vehicleBrand = null;
     vehicleName = null;
     vehicleModelId = null;
+    vehicleImageUrl = null;
+    vehicleBrandImageUrl = null;
+    vehicleTypeImageUrl = null;
     sessionToken = null;
     refreshToken = null;
     likedServiceIds.clear();

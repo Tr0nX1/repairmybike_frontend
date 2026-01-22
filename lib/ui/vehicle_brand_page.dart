@@ -50,7 +50,12 @@ class _VehicleBrandPageState extends State<VehicleBrandPage> {
   }
 
   void _select(VehicleBrandItem item) {
-    AppState.setVehicleBrand(item.name);
+    final imgUrl = buildImageUrl(item.image);
+    AppState.setVehicle(
+      name: AppState.vehicleName ?? '', 
+      brand: item.name, 
+      brandImageUrl: imgUrl,
+    );
     Navigator.push(
       context,
       MaterialPageRoute(

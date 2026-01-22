@@ -8,6 +8,7 @@ import '../data/auth_api.dart';
 import 'auth_page.dart';
 import 'profile_details_page.dart';
 import 'vehicle_type_page.dart';
+import 'your_vehicle_page.dart';
 import 'booking_list_page.dart';
 import 'saved_services_page.dart';
 import '../data/booking_api.dart'; // Added for fetching bookings
@@ -216,7 +217,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         title: 'Vehicles', 
                         value: (AppState.vehicleName?.isNotEmpty ?? false) ? '1' : '0',
                         isLoading: _loading,
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const VehicleTypePage())), 
+                        onTap: () {
+                          if (AppState.hasVehicle) {
+                             Navigator.push(context, MaterialPageRoute(builder: (_) => const YourVehiclePage()));
+                          } else {
+                             Navigator.push(context, MaterialPageRoute(builder: (_) => const VehicleTypePage())); 
+                          }
+                        },
                     ),
                     const SizedBox(width: 12),
                     _StatCard(
@@ -302,15 +309,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ),
                       TextButton(
                         onPressed: () {
-                          Navigator.of(context)
-                              .push(
-                                MaterialPageRoute(
-                                  builder: (_) => const VehicleTypePage(),
-                                ),
-                              )
-                              .then((_) => setState(() {}));
+                          if (AppState.hasVehicle) {
+                             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const YourVehiclePage()))
+                                .then((_) => setState(() {}));
+                          } else {
+                             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VehicleTypePage()))
+                                .then((_) => setState(() {}));
+                          }
                         },
-                        child: const Text('Change'),
+                        child: Text(AppState.hasVehicle ? 'View' : 'Add'),
                       ),
                     ],
                   ),

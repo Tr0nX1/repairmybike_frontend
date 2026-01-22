@@ -127,7 +127,11 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
     final img = buildImageUrl(item.image);
     return GestureDetector(
       onTap: () async {
-        await AppState.setVehicle(name: model, modelId: item.id);
+        await AppState.setVehicle(
+            name: model, 
+            modelId: item.id,
+            imageUrl: img,
+        );
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const MainShell()),
