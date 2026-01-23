@@ -41,7 +41,7 @@ class CartPage extends ConsumerWidget {
           ? Center(
               child: Text(
                 'Your cart is empty',
-                style: TextStyle(color: cs.onSurface.withOpacity(0.7)),
+                style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7)),
               ),
             )
           : ListView.separated(

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import '../data/booking_api.dart';
 import '../data/order_api.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import '../data/app_state.dart';
 
 class BookingListPage extends StatefulWidget {
@@ -569,7 +569,7 @@ class _BookingListPageState extends State<BookingListPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
