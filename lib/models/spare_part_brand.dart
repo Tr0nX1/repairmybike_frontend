@@ -13,11 +13,17 @@ class SparePartBrand {
   });
 
   factory SparePartBrand.fromJson(Map<String, dynamic> json) {
+    String? extractUrl(dynamic v) {
+      if (v == null) return null;
+      if (v is Map) return (v['original'] ?? v['thumbnail'])?.toString();
+      return v.toString();
+    }
+
     return SparePartBrand(
       id: (json['id'] as num).toInt(),
       name: json['name'] as String? ?? '',
       slug: json['slug'] as String? ?? '',
-      logo: json['cloudinary_url'] as String? ?? json['logo'] as String?,
+      logo: extractUrl(json['logo'] ?? json['cloudinary_url']),
     );
   }
 }
