@@ -24,16 +24,47 @@ class MySubscriptionsPage extends ConsumerWidget {
         },
         child: asyncSubs.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (err, stack) => Center(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Text(
-                'Failed to load subscriptions\n$err',
-                textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.redAccent),
+          error: (err, stack) {
+            final msg = err.toString();
+            final isAuthError = msg.contains('403') || msg.contains('401') || msg.contains('Authentication credentials were not provided');
+            
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                   mainAxisAlignment: MainAxisAlignment.center,
+                   children: [
+                      Icon(isAuthError ? Icons.lock_outline : Icons.error_outline, size: 48, color: Colors.orange),
+                      const SizedBox(height: 16),
+                      Text(
+                        isAuthError ? 'Session Expired' : 'Failed to load subscriptions',
+                        style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        isAuthError ? 'Please sign in again to view your membership.' : msg,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(color: Colors.white70),
+                      ),
+                      const SizedBox(height: 24),
+                      if (isAuthError)
+                        ElevatedButton(
+                          onPressed: () {
+                             // Navigate away or logout
+                             Navigator.of(context).pop(); 
+                          },
+                          child: const Text('Go Back'),
+                        )
+                      else
+                        ElevatedButton(
+                          onPressed: () => ref.refresh(mySubscriptionsProvider),
+                          child: const Text('Retry'),
+                        ),
+                   ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
           data: (subs) {
              if (subs.isEmpty) {
               return Center(
