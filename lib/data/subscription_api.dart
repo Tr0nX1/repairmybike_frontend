@@ -66,12 +66,8 @@ class SubscriptionApi {
     throw Exception('Unexpected response shape for subscription');
   }
 
-  Future<List<SubscriptionItem>> getSubscriptionsByPhone(String phone) async {
-    final res = await _dio.get(
-      'api/subscriptions/subscriptions/',
-      // Backend filter field is 'phone' (maps to contact_phone in queryset)
-      queryParameters: {'phone': phone},
-    );
+  Future<List<SubscriptionItem>> getMySubscriptions() async {
+    final res = await _dio.get('api/subscriptions/subscriptions/');
     final body = res.data;
     // Support plain list, paginated {results: [...]}, or wrapped {data: [...]}
     if (body is List) {

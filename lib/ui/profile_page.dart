@@ -11,6 +11,7 @@ import 'vehicle_type_page.dart';
 import 'your_vehicle_page.dart';
 import 'booking_list_page.dart';
 import 'saved_services_page.dart';
+import 'my_subscriptions_page.dart';
 import '../data/booking_api.dart'; // Added for fetching bookings
 import '../data/order_api.dart'; // Added for fetching spare parts orders
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -233,6 +234,56 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedServicesPage())),
                     ),
                   ],
+                ),
+
+                const SizedBox(height: 16),
+                
+                // My Subscriptions Ticket
+                InkWell(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MySubscriptionsPage())),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                         colors: [accent.withOpacity(0.2), accent.withOpacity(0.05)],
+                         begin: Alignment.topLeft,
+                         end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: accent.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(Icons.card_membership, color: accent, size: 28),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'My Subscriptions',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Manage your active plans',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Icon(Icons.arrow_forward_ios, color: accent, size: 16),
+                      ],
+                    ),
+                  ),
                 ),
                 
                 if (_recentBookings.isNotEmpty) ...[
