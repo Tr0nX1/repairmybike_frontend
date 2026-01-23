@@ -376,7 +376,10 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
       _errorText = null;
     });
     try {
-      final items = await SubscriptionApi().getSubscriptionsByPhone(phone);
+      if (!AppState.isAuthenticated) {
+        throw Exception('Please login to view subscriptions');
+      }
+      final items = await SubscriptionApi().getMySubscriptions();
       if (!mounted) return;
       setState(() => _existing = items);
     } catch (e) {
