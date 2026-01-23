@@ -319,7 +319,12 @@ class _MembershipCard extends StatelessWidget {
   final VoidCallback onTap;
   const _MembershipCard({required this.tierName, required this.options, required this.onTap});
 
-  static const Color accent = Color(0xFF01C9F5);
+  Color _getAccent(String name) {
+    if (name.toLowerCase().contains('premium')) {
+      return const Color(0xFFFFD700); // Gold for premium
+    }
+    return const Color(0xFF00E5FF); // Cyan for basic
+  }
 
   LinearGradient _getGradient(String name) {
     if (name.toLowerCase().contains('premium')) {
@@ -336,13 +341,6 @@ class _MembershipCard extends StatelessWidget {
     );
   }
 
-  Color _getAccent(String name) {
-    if (name.toLowerCase().contains('premium')) {
-      return const Color(0xFFFFD700); // Gold for premium
-    }
-    return const Color(0xFF00E5FF); // Cyan for basic
-  }
-
   @override
   Widget build(BuildContext context) {
     final prices = options.map((o) => o.price).toList();
@@ -351,135 +349,225 @@ class _MembershipCard extends StatelessWidget {
     final planSymbol = _currencySymbol(currency);
     final accentColor = _getAccent(tierName);
     
-    // Find a representative plan to get the image
-    final planWithImage = options.firstWhere((o) => o.imageUrl != null && o.imageUrl!.isNotEmpty, orElse: () => options.first);
+    // Header shape concept:
+    // A ticket shape with inward arcs at the top corners or sides.
+    // User requested "rectangular with half circle corner kind of UI (_____)"
+    // Typically this means an inverted rounded corner at the top.
 
     return InkWell(
-      borderRadius: BorderRadius.circular(24),
       onTap: onTap,
-      child: Container(
-        width: double.infinity,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          border: Border.all(color: accentColor.withOpacity(0.3), width: 1.5),
-          gradient: _getGradient(tierName),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.3),
-              blurRadius: 12,
-              offset: const Offset(0, 6),
+      child: ClipPath(
+        clipper: _TicketHeaderClipper(radius: 20),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            gradient: _getGradient(tierName),
+            border: Border(
+               // Simulated border via container nesting or CustomPainter is complex. 
+               // For now, simple border on the unclipped sides via container decoration won't work perfectly with ClipPath.
+               // We will rely on the gradient and inner content for style.
             ),
-          ],
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          children: [
-            // Background Image / Pattern
-            if (planWithImage.imageUrl != null && planWithImage.imageUrl!.isNotEmpty)
-              Positioned.fill(
-                child: Opacity(
-                  opacity: 0.25,
-                  child: Image.network(
-                    planWithImage.imageUrl!,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, __, ___) => const SizedBox.shrink(),
-                  ),
+          ),
+          child: Stack(
+            children: [
+               // Border Painter to draw the outline on the clipped path
+               Positioned.fill(
+                 child: CustomPaint(
+                   painter: _TicketBorderPainter(radius: 20, color: accentColor.withOpacity(0.3), width: 1.5),
+                 ),
+               ),
+              
+              // Decorative Icon Pattern
+              Positioned(
+                right: -10,
+                top: -10,
+                child: Icon(
+                  Icons.workspace_premium,
+                  size: 70,
+                  color: accentColor.withOpacity(0.08),
                 ),
               ),
-            
-            // Decorative Icon Pattern
-            Positioned(
-              right: -15,
-              top: -15,
-              child: Icon(
-                Icons.workspace_premium,
-                size: 80,
-                color: accentColor.withOpacity(0.08),
-              ),
-            ),
-
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                   Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: accentColor.withOpacity(0.15),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: accentColor.withOpacity(0.1),
-                          blurRadius: 8,
-                          spreadRadius: 1,
+              
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Icon Header
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: accentColor.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                           BoxShadow(color: accentColor.withOpacity(0.1), blurRadius: 8),
+                        ],
+                      ),
+                      child: Icon(
+                        tierName.toLowerCase().contains('premium') ? Icons.auto_awesome : Icons.stars_rounded, 
+                        color: accentColor, 
+                        size: 20,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    Text(
+                      tierName.toUpperCase(),
+                      maxLines: 2,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    
+                    const Spacer(),
+                    
+                    // Dashed Line Divider
+                    Row(
+                      children: List.generate(
+                        10, 
+                        (index) => Expanded(
+                          child: Container(
+                            height: 1, 
+                            color: Colors.white10, 
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    
+                    // Price Footer
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'STARTS AT',
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.4),
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.2,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: [
+                             Text(
+                              planSymbol,
+                              style: TextStyle(
+                                color: accentColor,
+                                fontSize: 14,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                            Text(
+                              minPrice.toStringAsFixed(0),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 22,
+                                fontWeight: FontWeight.w900,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                    child: Icon(
-                      tierName.toLowerCase().contains('premium') ? Icons.auto_awesome : Icons.stars_rounded, 
-                      color: accentColor, 
-                      size: 20,
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    tierName.toUpperCase(),
-                    maxLines: 2,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w900,
-                      letterSpacing: 0.5,
-                    ),
-                  ),
-                  const Spacer(),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'STARTS AT',
-                        style: TextStyle(
-                          color: Colors.white.withOpacity(0.4),
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 1.2,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: [
-                           Text(
-                            planSymbol,
-                            style: TextStyle(
-                              color: accentColor,
-                              fontSize: 14,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                          Text(
-                            minPrice.toStringAsFixed(0),
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.w900,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ],
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
+}
+
+class _TicketHeaderClipper extends CustomClipper<Path> {
+  final double radius;
+  _TicketHeaderClipper({this.radius = 20});
+
+  @override
+  Path getClip(Size size) {
+    final path = Path();
+    path.moveTo(0, radius);
+    
+    // Top Left Corner (Inverted arc? Or standard rounded?)
+    // User asked for "half circle corner kind of UI (_____)". 
+    // This usually means Top Left and Top Right have concave cutouts OR overly rounded convential corners.
+    // Let's implement Top Left/Right as large rounded corners (Standard) and Bottoms as standard, 
+    // BUT usually "ticket" implies a cutout. 
+    // Reviewing user request: "rectangular with half circle corner kind of UI (____________) (_________)"
+    // This likely refers to the "Tab" shape or "Inverted Rounded" where the top edge dips or the corners are concave.
+    // Let's go with Concave Cutout at Top Left and Top Right.
+    
+    // Start Top Left
+    path.lineTo(0, size.height - radius);
+    path.quadraticBezierTo(0, size.height, radius, size.height); // Bottom Left Rounded
+    path.lineTo(size.width - radius, size.height); 
+    path.quadraticBezierTo(size.width, size.height, size.width, size.height - radius); // Bottom Right Rounded
+    path.lineTo(size.width, radius);
+    
+    // Top Right Cutout (Concave)
+    path.arcToPoint(
+      Offset(size.width - radius, 0),
+      radius: Radius.circular(radius),
+      clockwise: false,
+    );
+    
+    path.lineTo(radius, 0);
+    
+    // Top Left Cutout (Concave)
+    path.arcToPoint(
+      Offset(0, radius),
+      radius: Radius.circular(radius),
+      clockwise: false,
+    );
+    
+    return path;
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => true;
+}
+
+class _TicketBorderPainter extends CustomPainter {
+  final double radius;
+  final Color color;
+  final double width;
+  
+  _TicketBorderPainter({required this.radius, required this.color, this.width = 1.0});
+  
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width;
+      
+    final path = Path();
+    path.moveTo(0, radius);
+    
+    path.lineTo(0, size.height - radius);
+    path.quadraticBezierTo(0, size.height, radius, size.height);
+    path.lineTo(size.width - radius, size.height);
+    path.quadraticBezierTo(size.width, size.height, size.width, size.height - radius);
+    path.lineTo(size.width, radius);
+    
+    path.arcToPoint(Offset(size.width - radius, 0), radius: Radius.circular(radius), clockwise: false);
+    path.lineTo(radius, 0);
+    path.arcToPoint(Offset(0, radius), radius: Radius.circular(radius), clockwise: false);
+    
+    canvas.drawPath(path, paint);
+  }
+  
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
 class _TwoColumnTitles extends StatelessWidget {

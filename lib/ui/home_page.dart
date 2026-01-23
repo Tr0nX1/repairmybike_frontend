@@ -225,12 +225,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
 
                 const SizedBox(height: 24),
-                // 2) Feature parts
-                if (_loadPartsSection) const SparePartsSection(),
-
-                const SizedBox(height: 32),
-                // 3) Membership
+                // 2) Membership (Moved up)
                 const SubscriptionSection(),
+                
+                const SizedBox(height: 32),
+
+                // 3) Feature parts
+                if (_loadPartsSection) const SparePartsSection(),
 
                 const SizedBox(height: 32),
                 // 4) Your likes

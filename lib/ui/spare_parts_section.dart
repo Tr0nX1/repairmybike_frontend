@@ -30,27 +30,13 @@ class SparePartsSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Featured Parts',
-                style: TextStyle(
-                  color: cs.onBackground,
-                  fontSize: isPhone ? 20 : 22,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute(builder: (_) => const SparePartsPage()),
-                );
-              },
-              child: const Text('View All'),
-            ),
-          ],
+        Text(
+          'Featured Parts',
+          style: TextStyle(
+            color: cs.onBackground,
+            fontSize: isPhone ? 20 : 22,
+            fontWeight: FontWeight.w800,
+          ),
         ),
         const SizedBox(height: 12),
         asyncParts.when(
@@ -68,30 +54,54 @@ class SparePartsSection extends ConsumerWidget {
                   style: TextStyle(color: Colors.white70)),
               );
             }
-            final show = parts.take(8).toList();
+            // Limit to 4 items as requested
+            final show = parts.take(4).toList();
             
             final width = MediaQuery.of(context).size.width;
             int crossAxisCount = 2; // Fixed 2x2 for mobile/Android
             if (width >= 600) crossAxisCount = 4;
-            if (width >= 1000) crossAxisCount = 6;
-            if (width >= 1400) crossAxisCount = 8;
             
             final isPhone = width < 600;
             // Industry Standard: 0.62 - 0.65 is the "Sweet Spot" for 2-column e-commerce cards.
-            // This provides enough height for Image, 2 lines of text, Brand, and Price/CTA.
             final tileRatio = isPhone ? 0.64 : 0.85;
 
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
-                childAspectRatio: tileRatio,
-              ),
-              itemCount: show.length,
-              itemBuilder: (context, i) => _PartCard(part: show[i]),
+            return Column(
+              children: [
+                GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    crossAxisSpacing: 12,
+                    mainAxisSpacing: 12,
+                    childAspectRatio: tileRatio,
+                  ),
+                  itemCount: show.length,
+                  itemBuilder: (context, i) => _PartCard(part: show[i]),
+                ),
+                if (parts.length > 4) ...[
+                  const SizedBox(height: 24),
+                  Center(
+                    child: SizedBox(
+                      width: 140,
+                      height: 48,
+                      child: OutlinedButton(
+                         style: OutlinedButton.styleFrom(
+                           foregroundColor: cs.primary,
+                           side: BorderSide(color: cs.primary.withOpacity(0.5), width: 1.5),
+                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+                         ),
+                         onPressed: () {
+                           Navigator.of(context).push(
+                             MaterialPageRoute(builder: (_) => const SparePartsPage()),
+                           );
+                         },
+                         child: const Text('View More', style: TextStyle(fontWeight: FontWeight.w700)),
+                      ),
+                    ),
+                  ),
+                ]
+              ],
             );
           },
         ),
