@@ -150,7 +150,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         style: TextStyle(
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.7),
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       );
                     }
@@ -291,15 +291,15 @@ class _CategoryCard extends StatelessWidget {
           return Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: accentColor.withOpacity(0.3), width: 1.2),
+              border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 1.2),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [cardColor, accentColor.withOpacity(0.08)],
+                colors: [cardColor, accentColor.withValues(alpha: 0.08)],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -313,11 +313,11 @@ class _CategoryCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.12),
+                    color: accentColor.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: accentColor.withOpacity(0.15),
+                        color: accentColor.withValues(alpha: 0.15),
                         blurRadius: 10,
                         spreadRadius: 1,
                       ),
@@ -412,9 +412,9 @@ class _HeroBanner extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            cs.primary.withOpacity(0.45),
-            cs.secondary.withOpacity(0.35),
-            const Color(0xFF01C9F5).withOpacity(0.25),
+            cs.primary.withValues(alpha: 0.45),
+            cs.secondary.withValues(alpha: 0.35),
+            const Color(0xFF01C9F5).withValues(alpha: 0.25),
           ],
         ),
       ),

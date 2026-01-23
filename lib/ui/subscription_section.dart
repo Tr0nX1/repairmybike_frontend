@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/subscription_provider.dart';
 import '../models/subscription.dart';
-import '../data/subscription_api.dart';
-import 'subscription_detail_page.dart';
+
+
 import 'membership_detail_page.dart';
 
 // Helper available to both home section and full page
@@ -83,132 +83,6 @@ class SubscriptionSection extends ConsumerWidget {
   }
 }
 
-class _SubscriptionCard extends StatelessWidget {
-  final SubscriptionPlan plan;
-  final bool isPopular;
-  const _SubscriptionCard({required this.plan, required this.isPopular});
-
-  static const Color cardColor = Color(0xFF1C1C1C);
-  static const Color borderColor = Color(0xFF2A2A2A);
-  static const Color accent = Color(0xFF01C9F5);
-
-  String _currencySymbol(String c) {
-    switch (c.toUpperCase()) {
-      case 'INR':
-        return '₹';
-      case 'USD':
-        return ''; // fallback, not expected
-      default:
-        return c;
-    }
-  }
-
-  String _periodLabel(String p) {
-    switch (p) {
-      case 'monthly':
-        return 'mo';
-      case 'quarterly':
-        return 'quarter';
-      case 'half_yearly':
-        return '6 mo';
-      case 'yearly':
-      case 'annual':
-        return 'yr';
-      default:
-        return p;
-    }
-  }
-
-  Color _accentForPlan() {
-    final palette = <Color>[
-      const Color(0xFF00E5FF), // cyan
-      const Color(0xFF8A2BE2), // blue violet
-      const Color(0xFFFFA726), // orange
-      const Color(0xFF66BB6A), // green
-      const Color(0xFFEF5350), // red
-      const Color(0xFF42A5F5), // blue
-    ];
-    final idx = (plan.id % palette.length).abs();
-    return palette[idx];
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final symbol = _currencySymbol(plan.currency);
-    final accentColor = _accentForPlan();
-    return InkWell(
-      borderRadius: BorderRadius.circular(16),
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => SubscriptionDetailPage(plan: plan)),
-        );
-      },
-      child: Container(
-        width: double.infinity,
-        constraints: const BoxConstraints(minHeight: 140),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isPopular ? accentColor : borderColor, width: isPopular ? 2 : 1),
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              const Color(0xFF1C1C1C),
-              accentColor.withOpacity(0.25),
-            ],
-          ),
-          boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.25), blurRadius: 6, offset: const Offset(0, 3)),
-          ],
-        ),
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    plan.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
-                  ),
-                ),
-                if (isPopular)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.black,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: accentColor),
-                    ),
-                    child: Text('Popular', style: TextStyle(color: accentColor, fontWeight: FontWeight.w700)),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Text(
-              '$symbol${plan.price.toStringAsFixed(2)}',
-              style: TextStyle(color: accentColor, fontSize: 20, fontWeight: FontWeight.w800),
-            ),
-            const Spacer(),
-            // Intentionally removed extra details to keep only name and price
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _firstBenefit(Map<String, dynamic> benefits) {
-    if (benefits.isEmpty) return 'Includes ${plan.includedVisits} visits';
-    final entries = benefits.entries.toList();
-    if (entries.isEmpty) return 'Includes ${plan.includedVisits} visits';
-    final k = entries.first.key;
-    final v = entries.first.value;
-    return '$k: $v';
-  }
-}
 
 class SubscriptionsPage extends ConsumerWidget {
   const SubscriptionsPage({super.key});
@@ -373,7 +247,7 @@ class _MembershipCard extends StatelessWidget {
                // Border Painter to draw the outline on the clipped path
                Positioned.fill(
                  child: CustomPaint(
-                   painter: _TicketBorderPainter(radius: 20, color: accentColor.withOpacity(0.3), width: 1.5),
+                    painter: _TicketBorderPainter(radius: 20, color: accentColor.withValues(alpha: 0.3), width: 1.5),
                  ),
                ),
               
@@ -384,7 +258,7 @@ class _MembershipCard extends StatelessWidget {
                 child: Icon(
                   Icons.workspace_premium,
                   size: 70,
-                  color: accentColor.withOpacity(0.08),
+                  color: accentColor.withValues(alpha: 0.08),
                 ),
               ),
               
@@ -397,10 +271,10 @@ class _MembershipCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: accentColor.withOpacity(0.15),
+                        color: accentColor.withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                         boxShadow: [
-                           BoxShadow(color: accentColor.withOpacity(0.1), blurRadius: 8),
+                           BoxShadow(color: accentColor.withValues(alpha: 0.1), blurRadius: 8),
                         ],
                       ),
                       child: Icon(
@@ -446,7 +320,7 @@ class _MembershipCard extends StatelessWidget {
                         Text(
                           'STARTS AT',
                           style: TextStyle(
-                            color: Colors.white.withOpacity(0.4),
+                            color: Colors.white.withValues(alpha: 0.4),
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 1.2,
