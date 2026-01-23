@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'api_client.dart';
+import 'app_state.dart';
 
 
 class BookingApi {
@@ -104,6 +105,10 @@ class BookingApi {
   /// List bookings for the authenticated user.
   /// Returns a list of booking summary maps per backend list serializer.
   Future<List<Map<String, dynamic>>> getBookings() async {
+    if (!AppState.isAuthenticated) {
+      // Prevent backend 401s by checking state first
+      return [];
+    }
     try {
       final res = await _dio.get(
         'api/bookings/bookings/',

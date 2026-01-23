@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'api_client.dart';
 import '../models/order.dart';
+import 'app_state.dart';
 
 import '../utils/api_config.dart';
 
@@ -98,6 +99,14 @@ class OrderApi {
   Future<List<Order>> listOrders({
     String? sessionId,
   }) async {
+    // If we have a sessionId (Guest), use it.
+    // If not, we MUST be authenticated to fetch user orders.
+    if (sessionId == null && !AppState.isAuthenticated) {
+      // Return empty list instead of crashing, or throw?
+      // Frontend expects a list.
+      return [];
+    }
+    
     return _fetchOrdersSafe(
       sessionId != null ? {'session_id': sessionId} : {},
       null,
