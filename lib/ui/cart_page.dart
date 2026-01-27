@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/cart_provider.dart';
 import '../models/cart_item.dart';
 import '../data/app_state.dart';
-import 'widgets/customer_details_sheet.dart';
 import 'checkout_page.dart';
 import 'widgets/login_required_dialog.dart';
 

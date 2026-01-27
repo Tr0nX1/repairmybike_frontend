@@ -258,7 +258,6 @@ class _CartActions extends ConsumerWidget {
 
   void _showAddAnimation(BuildContext context) {
     final overlay = Overlay.of(context);
-    if (overlay == null) return;
     late OverlayEntry entry;
     entry = OverlayEntry(
       builder: (_) {
@@ -306,7 +305,7 @@ class _RatingStars extends StatelessWidget {
     return Row(children: [
       ...stars,
       const SizedBox(width: 8),
-      Text('(${count})', style: TextStyle(color: cs.onSurface.withOpacity(0.7), fontSize: 12)),
+      Text('($count)', style: TextStyle(color: cs.onSurface.withOpacity(0.7), fontSize: 12)),
     ]);
   }
 }
@@ -324,7 +323,7 @@ class _GalleryState extends State<_Gallery> {
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final hasImages = widget.images.isNotEmpty;
-    String? _resolve(String src) {
+    String? resolve(String src) {
       final b = buildImageUrl(src);
       if (b != null) return b;
       if (src.isEmpty) return null;
@@ -342,13 +341,13 @@ class _GalleryState extends State<_Gallery> {
                   children: [
                     Positioned.fill(
                       child: GestureDetector(
-                        onTap: () => _openFullscreen(_resolve(widget.images[index]) ?? ''),
+                        onTap: () => _openFullscreen(resolve(widget.images[index]) ?? ''),
                         child: AnimatedSwitcher(
                           duration: const Duration(milliseconds: 250),
                           child: InteractiveViewer(
                             key: ValueKey(index),
                             child: CachedNetworkImage(
-                              imageUrl: _resolve(widget.images[index]) ?? '',
+                              imageUrl: resolve(widget.images[index]) ?? '',
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Shimmer.fromColors(
                                 baseColor: Colors.grey[300]!,
@@ -356,7 +355,7 @@ class _GalleryState extends State<_Gallery> {
                                 child: Container(color: Colors.white),
                               ),
                               errorWidget: (context, url, error) => Container(
-                                color: cs.surfaceVariant,
+                                color: cs.surfaceContainerHighest,
                                 child: const Center(child: Icon(Icons.image_not_supported)),
                               ),
                             ),
@@ -381,7 +380,7 @@ class _GalleryState extends State<_Gallery> {
                   ],
                 )
               : Container(
-                  color: cs.surfaceVariant,
+                  color: cs.surfaceContainerHighest,
                   child: const Center(child: Icon(Icons.handyman, size: 42)),
           ),
         ),
@@ -394,7 +393,7 @@ class _GalleryState extends State<_Gallery> {
           itemCount: widget.images.isNotEmpty ? widget.images.length : 1,
           separatorBuilder: (_, __) => const SizedBox(width: 8),
           itemBuilder: (_, i) {
-            final thumbUrl = hasImages ? (_resolve(widget.images[i]) ?? '') : '';
+            final thumbUrl = hasImages ? (resolve(widget.images[i]) ?? '') : '';
             final selected = i == index;
             return InkWell(
               onTap: () => setState(() => index = i),

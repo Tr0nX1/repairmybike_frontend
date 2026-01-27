@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'ui/main_shell.dart';
 import 'ui/flash_page.dart';
 // Theme fixed to dark; remove dynamic theme provider
 import 'utils/api_config.dart';
@@ -44,11 +43,9 @@ class MyApp extends ConsumerWidget {
       onPrimary: brandOnPrimary,
       secondary: brandSecondary,
       onSecondary: brandOnSecondary,
-      background: brandBackground,
-      onBackground: brandOnBackground,
       surface: brandSurface,
       onSurface: brandOnSurface,
-      surfaceVariant: brandSurfaceVariant,
+      surfaceContainerHighest: brandSurfaceVariant,
       onSurfaceVariant: brandOnSurfaceVariant,
       outline: brandOutline,
       error: brandError,

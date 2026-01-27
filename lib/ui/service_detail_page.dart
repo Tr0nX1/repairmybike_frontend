@@ -155,7 +155,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                   width: double.infinity,
                   child: Builder(builder: (context) {
                     final String? img = widget.service.images.isNotEmpty
-                        ? widget.service.images.first?.toString()
+                        ? widget.service.images.first.toString()
                         : null;
                     final url = buildImageUrl(img);
                     if (url == null) {
@@ -505,7 +505,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
 class _RatingRow extends StatelessWidget {
   final int current; // 0-5
   final ValueChanged<int> onChanged;
-  const _RatingRow({super.key, required this.current, required this.onChanged});
+  const _RatingRow({required this.current, required this.onChanged});
 
   @override
   Widget build(BuildContext context) {

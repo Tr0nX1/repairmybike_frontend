@@ -88,14 +88,12 @@ class _BookingFormPageState extends State<BookingFormPage> {
           (t) => t.name.toLowerCase() == vt.toLowerCase(),
           orElse: () => _vehicleTypes.isNotEmpty ? _vehicleTypes.first : null as VehicleTypeItem,
         );
-        if (match != null) {
-          setState(() {
-            _selectedType = match;
-            _autoType = true;
-          });
-          await _loadVehicleBrands(match.id);
-        }
-      }
+        setState(() {
+          _selectedType = match;
+          _autoType = true;
+        });
+        await _loadVehicleBrands(match.id);
+            }
     } catch (e) {
       _showSnack('Failed to load vehicle types: $e');
     }
@@ -113,14 +111,12 @@ class _BookingFormPageState extends State<BookingFormPage> {
           (b) => b.name.toLowerCase() == vb.toLowerCase(),
           orElse: () => _vehicleBrands.isNotEmpty ? _vehicleBrands.first : null as VehicleBrandItem,
         );
-        if (match != null) {
-          setState(() {
-            _selectedBrand = match;
-            _autoBrand = true;
-          });
-          await _loadVehicleModels(match.id);
-        }
-      }
+        setState(() {
+          _selectedBrand = match;
+          _autoBrand = true;
+        });
+        await _loadVehicleModels(match.id);
+            }
     } catch (e) {
       _showSnack('Failed to load vehicle brands: $e');
     }
@@ -138,13 +134,11 @@ class _BookingFormPageState extends State<BookingFormPage> {
           (m) => m.name.toLowerCase() == vm.toLowerCase(),
           orElse: () => _vehicleModels.isNotEmpty ? _vehicleModels.first : null as VehicleModelItem,
         );
-        if (match != null) {
-          setState(() {
-            _selectedModel = match;
-            _autoModel = true;
-          });
-        }
-      }
+        setState(() {
+          _selectedModel = match;
+          _autoModel = true;
+        });
+            }
     } catch (e) {
       _showSnack('Failed to load vehicle models: $e');
     }
@@ -318,7 +312,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
               title: 'Vehicle Type',
               child: DropdownButtonFormField<VehicleTypeItem>(
                 dropdownColor: card,
-                value: _selectedType,
+                initialValue: _selectedType,
                 items: _vehicleTypes
                     .map((t) => DropdownMenuItem(value: t, child: Text(t.name, style: const TextStyle(color: Colors.white))))
                     .toList(),
@@ -342,7 +336,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
               title: 'Vehicle Brand',
               child: DropdownButtonFormField<VehicleBrandItem>(
                 dropdownColor: card,
-                value: _selectedBrand,
+                initialValue: _selectedBrand,
                 items: _vehicleBrands
                     .map((b) => DropdownMenuItem(value: b, child: Text(b.name, style: const TextStyle(color: Colors.white))))
                     .toList(),
@@ -364,7 +358,7 @@ class _BookingFormPageState extends State<BookingFormPage> {
               title: 'Vehicle Model',
               child: DropdownButtonFormField<VehicleModelItem>(
                 dropdownColor: card,
-                value: _selectedModel,
+                initialValue: _selectedModel,
                 items: _vehicleModels
                     .map((m) => DropdownMenuItem(value: m, child: Text(m.name, style: const TextStyle(color: Colors.white))))
                     .toList(),

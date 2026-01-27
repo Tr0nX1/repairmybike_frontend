@@ -101,7 +101,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                           return 'Select Vehicle';
                         }
                         if (b == null || b.isEmpty) return m!;
-                        if (m == null || m.isEmpty) return b!;
+                        if (m == null || m.isEmpty) return b;
                         return "$b - $m";
                       })(),
                       style: TextStyle(
@@ -367,18 +367,21 @@ class _CategoryCard extends StatelessWidget {
     final n = c.name.toLowerCase();
     if (n.contains('air') && n.contains('filter')) return Icons.filter_alt;
     if (n.contains('oil') && n.contains('filter')) return Icons.oil_barrel;
-    if (n.contains('spark') && n.contains('plug'))
+    if (n.contains('spark') && n.contains('plug')) {
       return Icons.electrical_services;
+    }
     if (n.contains('clutch')) return Icons.settings_input_component;
     if (n.contains('suspension') || n.contains('shock')) return Icons.compress;
     if (n.contains('mirror')) return Icons.flip_camera_android;
-    if (n.contains('light') || n.contains('lamp') || n.contains('head'))
+    if (n.contains('light') || n.contains('lamp') || n.contains('head')) {
       return Icons.lightbulb;
+    }
     if (n.contains('indicator')) return Icons.priority_high;
     if (n.contains('horn')) return Icons.volume_up;
     if (n.contains('cable')) return Icons.cable;
-    if (n.contains('carb') || n.contains('fuel'))
+    if (n.contains('carb') || n.contains('fuel')) {
       return Icons.local_gas_station;
+    }
     if (n.contains('radiator') || n.contains('cool')) return Icons.ac_unit;
     if (n.contains('exhaust') || n.contains('silencer')) return Icons.cloud;
     if (n.contains('body') || n.contains('paint')) return Icons.color_lens;
@@ -386,10 +389,12 @@ class _CategoryCard extends StatelessWidget {
     if (n.contains('brake')) return Icons.stop_circle;
     if (n.contains('drive') || n.contains('gear')) return Icons.settings;
     if (n.contains('battery')) return Icons.battery_full;
-    if (n.contains('wash') || n.contains('clean'))
+    if (n.contains('wash') || n.contains('clean')) {
       return Icons.cleaning_services;
-    if (n.contains('engine') || n.contains('motor'))
+    }
+    if (n.contains('engine') || n.contains('motor')) {
       return Icons.precision_manufacturing;
+    }
     if (n.contains('inspect') || n.contains('diagn')) return Icons.search;
     if (n.contains('chain')) return Icons.link;
     return Icons.handyman;

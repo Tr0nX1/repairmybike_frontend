@@ -288,7 +288,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
         ),
         if (_existing != null) ...[
           const SizedBox(height: 12),
-          ..._existing!.map((s) => _buildExistingItem(s, accentColor)).toList(),
+          ..._existing!.map((s) => _buildExistingItem(s, accentColor)),
         ],
       ],
     );

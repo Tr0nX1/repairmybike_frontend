@@ -33,7 +33,7 @@ class SparePartsSection extends ConsumerWidget {
         Text(
           'Featured Parts',
           style: TextStyle(
-            color: cs.onBackground,
+            color: cs.onSurface,
             fontSize: isPhone ? 20 : 22,
             fontWeight: FontWeight.w800,
           ),

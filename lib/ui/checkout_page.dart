@@ -123,10 +123,11 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         _error = e.toString();
       });
     } finally {
-      if (mounted)
+      if (mounted) {
         setState(() {
           _submitting = false;
         });
+      }
     }
   }
 
@@ -274,7 +275,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
               ),
               const SizedBox(height: 12),
               DropdownButtonFormField<String>(
-                value: _selectedState,
+                initialValue: _selectedState,
                 decoration: const InputDecoration(labelText: 'State'),
                 items: _states.map((s) => DropdownMenuItem(value: s, child: Text(s))).toList(),
                 onChanged: (v) => setState(() => _selectedState = v),
@@ -449,7 +450,7 @@ class _OrderItemTile extends StatelessWidget {
             width: 56,
             height: 56,
             decoration: BoxDecoration(
-              color: cs.surfaceVariant,
+              color: cs.surfaceContainerHighest,
               borderRadius: BorderRadius.circular(8),
             ),
             child: ClipRRect(

@@ -64,7 +64,7 @@ class _MainShellState extends ConsumerState<MainShell> {
     for (final it in cart.items) {
       cartCount += it.quantity;
     }
-    Widget _withBadge(IconData icon, {int count = 0}) {
+    Widget withBadge(IconData icon, {int count = 0}) {
       if (count <= 0) return Icon(icon);
       return Stack(
         clipBehavior: Clip.none,
@@ -115,7 +115,7 @@ class _MainShellState extends ConsumerState<MainShell> {
             label: 'Search',
           ),
           BottomNavigationBarItem(
-            icon: _withBadge(Icons.shopping_cart, count: cartCount),
+            icon: withBadge(Icons.shopping_cart, count: cartCount),
             label: 'Cart',
           ),
           BottomNavigationBarItem(

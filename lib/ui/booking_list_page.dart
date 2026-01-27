@@ -22,7 +22,7 @@ class _BookingListPageState extends State<BookingListPage> {
   // State
   // Future sections: subscription and spare parts bookings.
   List<Map<String, dynamic>> _bookings = [];
-  List<Map<String, dynamic>> _subscriptionBookings = [];
+  final List<Map<String, dynamic>> _subscriptionBookings = [];
   List<Map<String, dynamic>> _sparePartsBookings = [];
   bool _loading = false;
   final BookingApi _bookingApi = BookingApi();

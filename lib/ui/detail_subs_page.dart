@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class MembershipPlanDetailPage extends StatefulWidget {
-  const MembershipPlanDetailPage({Key? key}) : super(key: key);
+  const MembershipPlanDetailPage({super.key});
 
   @override
   State<MembershipPlanDetailPage> createState() => _MembershipPlanDetailPageState();

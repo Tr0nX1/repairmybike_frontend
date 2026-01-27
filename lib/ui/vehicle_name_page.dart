@@ -5,7 +5,6 @@ import '../data/app_state.dart';
 import '../data/vehicles_api.dart';
 import '../utils/url_utils.dart';
 import 'main_shell.dart';
-import 'profile_details_page.dart';
 import 'widgets/rm_app_bar.dart';
 
 class VehicleNamePage extends StatefulWidget {

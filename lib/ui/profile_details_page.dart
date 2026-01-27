@@ -270,7 +270,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
         hintStyle: TextStyle(color: colorScheme.onSurface.withOpacity(0.3)),
         prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20, color: colorScheme.onSurface.withOpacity(0.5)) : null,
         filled: true,
-        fillColor: colorScheme.surfaceVariant.withOpacity(0.3),
+        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -284,7 +284,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceVariant.withOpacity(0.3),
+        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
         borderRadius: BorderRadius.circular(12),
       ),
       child: DropdownButtonHideUnderline(

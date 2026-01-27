@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/subscription.dart';
 import '../providers/subscription_provider.dart';
-import '../utils/api_config.dart';
 
 class MySubscriptionsPage extends ConsumerWidget {
   const MySubscriptionsPage({super.key});

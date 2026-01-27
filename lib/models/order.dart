@@ -1,4 +1,3 @@
-import 'cart_item.dart';
 
 class OrderItem {
   final int productId;
@@ -18,7 +17,7 @@ class OrderItem {
   });
 
   factory OrderItem.fromJson(Map<String, dynamic> json) {
-    int _toInt(dynamic v) {
+    int toInt(dynamic v) {
       if (v is num) return v.toInt();
       if (v is String) {
         final d = double.tryParse(v);
@@ -30,9 +29,9 @@ class OrderItem {
       productId: (json['spare_part'] as num?)?.toInt() ?? (json['spare_part_id'] as num?)?.toInt() ?? (json['product_id'] as num?)?.toInt() ?? 0,
       name: json['part_name'] as String? ?? (json['name'] as String? ?? ''),
       sku: json['sku'] as String? ?? '',
-      unitPrice: _toInt(json['unit_price'] ?? json['price']),
+      unitPrice: toInt(json['unit_price'] ?? json['price']),
       quantity: (json['quantity'] as num?)?.toInt() ?? (json['qty'] as num?)?.toInt() ?? 1,
-      lineTotal: _toInt(json['total_price'] ?? json['line_total']),
+      lineTotal: toInt(json['total_price'] ?? json['line_total']),
     );
   }
 
@@ -90,7 +89,7 @@ class Order {
         ? json['data'] as Map<String, dynamic>
         : json;
     final itemsList = (map['items'] ?? []) as List?;
-    int _toInt(dynamic v) {
+    int toInt(dynamic v) {
       if (v is num) return v.toInt();
       if (v is String) {
         final d = double.tryParse(v);
@@ -105,7 +104,7 @@ class Order {
       paymentMethod: map['payment_method'] as String? ?? 'cash',
       paymentStatus: map['payment_status'] as String? ?? 'cash_due',
       currency: map['currency'] as String? ?? 'INR',
-      total: _toInt(map['amount_total'] ?? map['total']),
+      total: toInt(map['amount_total'] ?? map['total']),
       customerName: map['customer_name'] as String? ?? '',
       phone: map['phone'] as String? ?? '',
       address: map['address'] as String? ?? '',

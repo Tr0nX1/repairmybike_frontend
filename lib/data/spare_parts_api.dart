@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'api_client.dart';
 import '../models/spare_part.dart';
 import '../models/spare_part_category.dart';

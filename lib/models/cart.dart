@@ -36,7 +36,7 @@ class Cart {
         : json;
     final itemsList = (map['items'] ?? map['cart_items'] ?? []) as List?;
     final totalField = map['total'] ?? map['total_amount'];
-    int _toInt(dynamic v) {
+    int toInt(dynamic v) {
       if (v is num) return v.toInt();
       if (v is String) {
         final d = double.tryParse(v);
@@ -51,10 +51,10 @@ class Cart {
           .whereType<Map<String, dynamic>>()
           .map(CartItem.fromJson)
           .toList(),
-      subtotal: _toInt(totalField),
+      subtotal: toInt(totalField),
       tax: 0,
       shippingFee: 0,
-      total: _toInt(totalField),
+      total: toInt(totalField),
     );
   }
 

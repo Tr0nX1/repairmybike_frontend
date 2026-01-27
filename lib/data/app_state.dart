@@ -1,9 +1,7 @@
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/foundation.dart';
-import 'dart:convert';
-import 'auth_api.dart';
-import 'vehicles_api.dart';
-import 'saved_services_api.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'api_client.dart';
+
 import 'spare_parts_api.dart';
 
 class AppState {

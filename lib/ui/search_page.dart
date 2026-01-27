@@ -7,7 +7,6 @@ import '../providers/category_provider.dart';
 import '../models/spare_part.dart';
 import '../models/service.dart';
 import 'service_detail_page.dart';
-import 'spare_parts_page.dart';
 import 'spare_part_detail_page.dart';
 import '../utils/url_utils.dart';
 

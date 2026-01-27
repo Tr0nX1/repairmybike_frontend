@@ -3,7 +3,6 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'main_shell.dart';
-import 'profile_details_page.dart';
 import '../data/auth_api.dart';
 import '../data/app_state.dart';
 import 'vehicle_type_page.dart';
@@ -264,10 +263,12 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       if (status == 429) {
         return 'Too many attempts. Please wait a minute and try again.';
       }
-      if (data is Map && data['message'] is String)
+      if (data is Map && data['message'] is String) {
         return data['message'] as String;
-      if (data is Map && data['error'] is String)
+      }
+      if (data is Map && data['error'] is String) {
         return data['error'] as String;
+      }
       if (data is String && data.isNotEmpty) return data;
       return fallback;
     }

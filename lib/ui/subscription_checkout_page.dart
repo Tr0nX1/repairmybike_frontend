@@ -202,7 +202,7 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
           ),
           Switch(
             value: _autoRenew,
-            activeColor: accentColor,
+            activeThumbColor: accentColor,
             onChanged: (v) => setState(() => _autoRenew = v),
           ),
         ],
@@ -224,7 +224,7 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
           Row(
             children: [
               Expanded(child: Text('Schedule first visit now?', style: TextStyle(color: Colors.white.withOpacity(0.7), fontWeight: FontWeight.w700))),
-              Switch(value: _requestSchedule, activeColor: accentColor, onChanged: (v) => setState(() => _requestSchedule = v)),
+              Switch(value: _requestSchedule, activeThumbColor: accentColor, onChanged: (v) => setState(() => _requestSchedule = v)),
             ],
           ),
           if (_requestSchedule) ...[

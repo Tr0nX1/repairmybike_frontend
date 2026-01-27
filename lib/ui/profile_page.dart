@@ -149,7 +149,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         : 'Add email';
     final colorScheme = Theme.of(context).colorScheme;
     final bg = colorScheme.surface;
-    final card = colorScheme.surfaceVariant.withOpacity(0.5);
+    final card = colorScheme.surfaceContainerHighest.withOpacity(0.5);
     final border = colorScheme.outline.withOpacity(0.2);
     final accent = colorScheme.primary;
 
@@ -305,7 +305,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                 trailing: const Icon(Icons.chevron_right, color: Colors.white54),
                             ),
                         );
-                    }).toList(),
+                    }),
                 ],
 
                 const SizedBox(height: 16),
@@ -615,7 +615,7 @@ class _Tile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final card = colorScheme.surfaceVariant.withOpacity(0.5);
+    final card = colorScheme.surfaceContainerHighest.withOpacity(0.5);
     final border = colorScheme.outline.withOpacity(0.2);
 
     return Container(

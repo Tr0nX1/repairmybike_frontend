@@ -10,7 +10,7 @@ import 'spare_part_detail_page.dart';
 import '../utils/url_utils.dart';
 
 class SparePartsPage extends ConsumerStatefulWidget {
-  const SparePartsPage({Key? key}) : super(key: key);
+  const SparePartsPage({super.key});
 
   @override
   ConsumerState<SparePartsPage> createState() => _SparePartsPageState();
@@ -165,7 +165,7 @@ class _SparePartsPageState extends ConsumerState<SparePartsPage> {
 
 class _SparePartCard extends StatelessWidget {
   final SparePartListItem item;
-  const _SparePartCard({Key? key, required this.item}) : super(key: key);
+  const _SparePartCard({required this.item});
 
   @override
   Widget build(BuildContext context) {
@@ -198,14 +198,14 @@ class _SparePartCard extends StatelessWidget {
                           child: Container(color: Colors.white),
                         ),
                         errorWidget: (context, url, error) => Container(
-                          color: theme.colorScheme.surfaceVariant,
+                          color: theme.colorScheme.surfaceContainerHighest,
                           child: const Icon(Icons.error_outline),
                         ),
                       ),
                     )
                   : Container(
                       decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceVariant,
+                        color: theme.colorScheme.surfaceContainerHighest,
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Center(child: Icon(Icons.handyman, size: 36)),

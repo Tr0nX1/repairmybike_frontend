@@ -49,7 +49,7 @@ class YourVehiclePage extends StatelessWidget {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    colorScheme.surfaceVariant, // Light/Dark grey depending on mode
+                    colorScheme.surfaceContainerHighest, // Light/Dark grey depending on mode
                     colorScheme.surface,
                   ],
                 ),
