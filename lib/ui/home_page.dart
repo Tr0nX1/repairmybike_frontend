@@ -17,6 +17,7 @@ import '../providers/category_provider.dart' as providers;
 import '../providers/saved_services_provider.dart';
 import '../models/service.dart';
 import '../utils/url_utils.dart';
+import 'widgets/dynamic_hero_carousel.dart';
 // Theme toggle removed
 
 class HomePage extends ConsumerStatefulWidget {
@@ -113,7 +114,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                const _HeroBanner(),
+                const DynamicHeroCarousel(),
                 const SizedBox(height: 12),
                 const _QuickActionsRow(),
                 const SizedBox(height: 24),

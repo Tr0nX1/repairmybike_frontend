@@ -16,6 +16,7 @@ import '../data/booking_api.dart'; // Added for fetching bookings
 import '../data/order_api.dart'; // Added for fetching spare parts orders
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/saved_services_provider.dart';
+import 'customer_care_page.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -455,6 +456,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   value: AppState.phoneNumber ?? '—',
                   icon: Icons.phone_outlined,
                 ),
+                _ActionTile(
+                  label: 'Customer Care',
+                  icon: Icons.support_agent,
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerCarePage())),
+                ),
 
                 const SizedBox(height: 24),
                 if (AppState.isAuthenticated)
@@ -649,6 +655,42 @@ class _Tile extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+class _ActionTile extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _ActionTile({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final cs = Theme.of(context).colorScheme;
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      decoration: BoxDecoration(
+        color: cs.surfaceContainerHighest.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: cs.outline.withOpacity(0.2)),
+      ),
+      child: ListTile(
+        onTap: onTap,
+        leading: Icon(icon, color: cs.primary),
+        title: Text(
+          label,
+          style: TextStyle(
+            color: cs.onSurface,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
       ),
     );
   }
