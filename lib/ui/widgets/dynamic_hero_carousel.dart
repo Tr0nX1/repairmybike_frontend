@@ -65,7 +65,7 @@ class _DynamicHeroCarouselState extends State<DynamicHeroCarousel> {
         autoPlay: isMulti,
         autoPlayInterval: const Duration(seconds: 5),
         enlargeCenterPage: true,
-        viewportFraction: 0.92,
+        viewportFraction: 1.0,
         enableInfiniteScroll: isMulti,
       ),
       items: _items.map((item) {
