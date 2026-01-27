@@ -17,6 +17,7 @@ import '../data/order_api.dart'; // Added for fetching spare parts orders
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/saved_services_provider.dart';
 import 'customer_care_page.dart';
+import 'quick_service_history_page.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -282,6 +283,54 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           ),
                         ),
                         Icon(Icons.arrow_forward_ios, color: accent, size: 16),
+                      ],
+                    ),
+                
+                const SizedBox(height: 12),
+
+                // Quick Service Ticket
+                InkWell(
+                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuickServiceHistoryPage())),
+                  borderRadius: BorderRadius.circular(16),
+                  child: Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                         colors: [Colors.orange.withOpacity(0.2), Colors.orange.withOpacity(0.05)],
+                         begin: Alignment.topLeft,
+                         end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.flash_on, color: Colors.orange, size: 28),
+                        const SizedBox(width: 16),
+                        const Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Quick Service History',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                              Text(
+                                'Track your calls and mechanic status',
+                                style: TextStyle(
+                                  color: Colors.white70,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.arrow_forward_ios, color: Colors.orange, size: 16),
                       ],
                     ),
                   ),

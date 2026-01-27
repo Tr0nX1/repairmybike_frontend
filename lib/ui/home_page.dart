@@ -18,6 +18,7 @@ import '../providers/saved_services_provider.dart';
 import '../models/service.dart';
 import '../utils/url_utils.dart';
 import 'widgets/dynamic_hero_carousel.dart';
+import 'quick_service_detail_page.dart';
 // Theme toggle removed
 
 class HomePage extends ConsumerStatefulWidget {
@@ -469,6 +470,15 @@ class _QuickActionsRow extends StatelessWidget {
           Navigator.of(
             context,
           ).push(MaterialPageRoute(builder: (_) => SearchPage()));
+        },
+      ),
+      (
+        icon: Icons.flash_on,
+        label: 'Quick Service',
+        onTap: () {
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const QuickServiceDetailsPage()));
         },
       ),
       (
