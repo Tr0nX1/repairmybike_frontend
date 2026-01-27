@@ -142,7 +142,7 @@ class _CategoryCard extends StatelessWidget {
             border: Border.all(color: borderColor),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withValues(alpha: 0.25),
+                color: Colors.black.withOpacity(0.25),
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),

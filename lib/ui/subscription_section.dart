@@ -247,7 +247,7 @@ class _MembershipCard extends StatelessWidget {
                // Border Painter to draw the outline on the clipped path
                Positioned.fill(
                  child: CustomPaint(
-                    painter: _TicketBorderPainter(radius: 20, color: accentColor.withValues(alpha: 0.3), width: 1.5),
+                    painter: _TicketBorderPainter(radius: 20, color: accentColor.withOpacity(0.3), width: 1.5),
                  ),
                ),
               
@@ -258,7 +258,7 @@ class _MembershipCard extends StatelessWidget {
                 child: Icon(
                   Icons.workspace_premium,
                   size: 70,
-                  color: accentColor.withValues(alpha: 0.08),
+                  color: accentColor.withOpacity(0.08),
                 ),
               ),
               
@@ -271,10 +271,10 @@ class _MembershipCard extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
-                        color: accentColor.withValues(alpha: 0.15),
+                        color: accentColor.withOpacity(0.15),
                         shape: BoxShape.circle,
                         boxShadow: [
-                           BoxShadow(color: accentColor.withValues(alpha: 0.1), blurRadius: 8),
+                           BoxShadow(color: accentColor.withOpacity(0.1), blurRadius: 8),
                         ],
                       ),
                       child: Icon(
@@ -320,7 +320,7 @@ class _MembershipCard extends StatelessWidget {
                         Text(
                           'STARTS AT',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.4),
+                            color: Colors.white.withOpacity(0.4),
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 1.2,
@@ -353,10 +353,10 @@ class _MembershipCard extends StatelessWidget {
                                 child: Text(
                                   '$planSymbol${options.first.originalPrice!.toStringAsFixed(0)}',
                                   style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.5),
+                                    color: Colors.white.withOpacity(0.5),
                                     fontSize: 14,
                                     decoration: TextDecoration.lineThrough,
-                                    decorationColor: Colors.white.withValues(alpha: 0.5),
+                                    decorationColor: Colors.white.withOpacity(0.5),
                                     fontWeight: FontWeight.w600,
                                   ),
                                 ),

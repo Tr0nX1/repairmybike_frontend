@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
-import 'dart:io';
+import 'package:flutter/foundation.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
 import 'auth_page.dart';
@@ -97,7 +97,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       // Fallback to exit(0) to ensure it closes
       // ignore: avoid_print
       print('Shutting down app...');
-      exit(0);
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -285,6 +284,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         Icon(Icons.arrow_forward_ios, color: accent, size: 16),
                       ],
                     ),
+                  ),
+                ),
                 
                 const SizedBox(height: 12),
 

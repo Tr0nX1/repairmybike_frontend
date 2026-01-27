@@ -88,7 +88,7 @@ class SparePartsSection extends ConsumerWidget {
                       child: OutlinedButton(
                          style: OutlinedButton.styleFrom(
                            foregroundColor: cs.primary,
-                           side: BorderSide(color: cs.primary.withValues(alpha: 0.5), width: 1.5),
+                           side: BorderSide(color: cs.primary.withOpacity(0.5), width: 1.5),
                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
                          ),
                          onPressed: () {
@@ -144,7 +144,7 @@ class _PartCard extends ConsumerWidget {
             child: Container(
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(18),
-                border: Border.all(color: cs.primary.withValues(alpha: 0.25), width: 1.2),
+                border: Border.all(color: cs.primary.withOpacity(0.25), width: 1.2),
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
@@ -152,7 +152,7 @@ class _PartCard extends ConsumerWidget {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.5),
+                    color: Colors.black.withOpacity(0.5),
                     blurRadius: 12,
                     offset: const Offset(0, 6),
                   ),
@@ -343,9 +343,9 @@ class _PartCard extends ConsumerWidget {
                                     child: Container(
                                       padding: const EdgeInsets.all(7),
                                       decoration: BoxDecoration(
-                                        color: cs.primary.withValues(alpha: 0.12),
+                                        color: cs.primary.withOpacity(0.12),
                                         borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(color: cs.primary.withValues(alpha: 0.2)),
+                                        border: Border.all(color: cs.primary.withOpacity(0.2)),
                                       ),
                                       child: Icon(Icons.add_shopping_cart_rounded, size: 18, color: cs.primary),
                                     ),

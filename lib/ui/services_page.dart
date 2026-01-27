@@ -330,7 +330,7 @@ class _ServiceCardState extends State<_ServiceCard> {
                                   child: Text(
                                     '₹${s.originalPrice}.00',
                                     style: TextStyle(
-                                      color: Colors.white.withValues(alpha: 0.5),
+                                      color: Colors.white.withOpacity(0.5),
                                       fontSize: 12,
                                       decoration: TextDecoration.lineThrough,
                                       fontWeight: FontWeight.w600,
