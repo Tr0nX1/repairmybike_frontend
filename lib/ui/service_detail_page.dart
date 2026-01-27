@@ -246,6 +246,19 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                           ),
                           Row(
                             children: [
+                              if (widget.service.originalPrice != null && widget.service.originalPrice! > widget.service.price)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 8.0),
+                                  child: Text(
+                                    '₹${widget.service.originalPrice}.00',
+                                    style: const TextStyle(
+                                      color: Colors.white54,
+                                      fontSize: 16,
+                                      decoration: TextDecoration.lineThrough,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
                               Text(
                                 '₹${widget.service.price}.00',
                                 style: const TextStyle(

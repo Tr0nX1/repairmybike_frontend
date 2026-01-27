@@ -48,6 +48,7 @@ class SubscriptionPlan {
   final List<Benefit> benefitsList; // New structured benefits
   final List<String> services; // Legacy JSON
   final List<IncludedServiceDetail> includedServicesDetails; // New structured services
+  final num? originalPrice;
   final num price;
   final String currency;
   final String billingPeriod;
@@ -68,6 +69,7 @@ class SubscriptionPlan {
     required this.benefitsList,
     required this.services,
     required this.includedServicesDetails,
+    this.originalPrice,
     required this.price,
     required this.currency,
     required this.billingPeriod,
@@ -97,6 +99,9 @@ class SubscriptionPlan {
       includedServicesDetails: ((json['included_services_details'] as List?) ?? const [])
           .map((e) => IncludedServiceDetail.fromJson(e as Map<String, dynamic>))
           .toList(),
+      originalPrice: (json['original_price'] is num)
+          ? json['original_price'] as num
+          : num.tryParse(json['original_price']?.toString() ?? ''),
       price: (json['price'] is num)
           ? json['price'] as num
           : num.tryParse(json['price']?.toString() ?? '0') ?? 0,

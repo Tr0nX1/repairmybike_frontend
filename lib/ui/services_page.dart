@@ -322,9 +322,26 @@ class _ServiceCardState extends State<_ServiceCard> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          Text(
-                            '₹${s.price}.00',
-                            style: const TextStyle(color: Color(0xFF00D0FF), fontWeight: FontWeight.bold),
+                          Row(
+                            children: [
+                              if (s.originalPrice != null && s.originalPrice! > s.price)
+                                Padding(
+                                  padding: const EdgeInsets.only(right: 6.0),
+                                  child: Text(
+                                    '₹${s.originalPrice}.00',
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(alpha: 0.5),
+                                      fontSize: 12,
+                                      decoration: TextDecoration.lineThrough,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                              Text(
+                                '₹${s.price}.00',
+                                style: const TextStyle(color: Color(0xFF00D0FF), fontWeight: FontWeight.bold),
+                              ),
+                            ],
                           ),
                           Row(
                             children: [

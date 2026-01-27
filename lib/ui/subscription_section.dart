@@ -347,6 +347,20 @@ class _MembershipCard extends StatelessWidget {
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
+                            if (options.isNotEmpty && options.first.originalPrice != null && options.first.originalPrice! > options.first.price)
+                              Padding(
+                                padding: const EdgeInsets.only(left: 8.0),
+                                child: Text(
+                                  '$planSymbol${options.first.originalPrice!.toStringAsFixed(0)}',
+                                  style: TextStyle(
+                                    color: Colors.white.withValues(alpha: 0.5),
+                                    fontSize: 14,
+                                    decoration: TextDecoration.lineThrough,
+                                    decorationColor: Colors.white.withValues(alpha: 0.5),
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
                           ],
                         ),
                       ],

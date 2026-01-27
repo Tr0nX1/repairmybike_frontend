@@ -8,6 +8,7 @@ class Service {
   final int reviewsCount;
   final List<String> specifications; // normalized to strings
   final List<String> images; // normalized to strings
+  final int? originalPrice;
   final int price;
   final bool isFeatured;
   final DateTime createdAt;
@@ -23,6 +24,7 @@ class Service {
     required this.reviewsCount,
     required this.specifications,
     required this.images,
+    this.originalPrice,
     required this.price,
     required this.isFeatured,
     required this.createdAt,
@@ -49,6 +51,7 @@ class Service {
           })
           .where((s) => s.isNotEmpty)
           .toList(),
+      originalPrice: (json['original_price'] as num?)?.toInt(),
       price: (json['price'] as num?)?.toInt() ?? 0,
       isFeatured: json['is_featured'] == true,
       createdAt: DateTime.parse(json['created_at'] as String),

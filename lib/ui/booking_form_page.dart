@@ -460,7 +460,21 @@ class _BookingFormPageState extends State<BookingFormPage> {
                 Text(widget.service.name,
                     style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
                 const SizedBox(height: 4),
-                Text('Starting at ₹${widget.service.price}.00', style: const TextStyle(color: Colors.white70)),
+                Row(
+                  children: [
+                    Text('Starting at ', style: const TextStyle(color: Colors.white70)),
+                    if (widget.service.originalPrice != null && widget.service.originalPrice! > widget.service.price)
+                      Text(
+                        '₹${widget.service.originalPrice}.00 ',
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          decoration: TextDecoration.lineThrough,
+                          fontSize: 13,
+                        ),
+                      ),
+                    Text('₹${widget.service.price}.00', style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold)),
+                  ],
+                ),
               ],
             ),
           )
