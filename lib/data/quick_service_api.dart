@@ -6,24 +6,35 @@ class QuickServiceApi {
 
   Future<QuickServiceConfig?> getConfig() async {
     try {
+      print('DEBUG: QuickServiceApi.getConfig() calling api/quick-service/config/');
       final response = await _client.get('api/quick-service/config/');
-      final list = (response.data as List).cast<Map<String, dynamic>>();
-      if (list.isNotEmpty) {
-        return QuickServiceConfig.fromJson(list.first);
+      print('DEBUG: QuickServiceApi.getConfig() response: ${response.data}');
+      
+      if (response.data is List) {
+        final list = (response.data as List).cast<Map<String, dynamic>>();
+        if (list.isNotEmpty) {
+          return QuickServiceConfig.fromJson(list.first);
+        }
+      } else if (response.data is Map) {
+         return QuickServiceConfig.fromJson(response.data as Map<String, dynamic>);
       }
       return null;
-    } catch (_) {
+    } catch (e) {
+      print('DEBUG: QuickServiceApi.getConfig() error: $e');
       return null;
     }
   }
 
   Future<QuickServiceRequest?> createRequest(String phoneNumber) async {
     try {
+      print('DEBUG: QuickServiceApi.createRequest() calling api/quick-service/requests/ for $phoneNumber');
       final response = await _client.post('api/quick-service/requests/', data: {
         'phone_number': phoneNumber,
       });
+      print('DEBUG: QuickServiceApi.createRequest() response: ${response.data}');
       return QuickServiceRequest.fromJson(response.data);
-    } catch (_) {
+    } catch (e) {
+      print('DEBUG: QuickServiceApi.createRequest() error: $e');
       return null;
     }
   }
