@@ -64,11 +64,11 @@ class _QuickServiceHistoryPageState extends State<QuickServiceHistoryPage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.history, size: 64, color: cs.onSurface.withOpacity(0.3)),
+                      Icon(Icons.history, size: 64, color: cs.onSurface.withValues(alpha: 0.3)),
                       const SizedBox(height: 16),
                       Text(
                         'No requests found',
-                        style: TextStyle(color: cs.onSurface.withOpacity(0.5)),
+                        style: TextStyle(color: cs.onSurface.withValues(alpha: 0.5)),
                       ),
                     ],
                   ),
@@ -84,9 +84,9 @@ class _QuickServiceHistoryPageState extends State<QuickServiceHistoryPage> {
                     return Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: cs.surfaceContainerHighest.withOpacity(0.3),
+                        color: cs.surfaceContainerHighest.withValues(alpha: 0.3),
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: cs.outline.withOpacity(0.1)),
+                        border: Border.all(color: cs.outline.withValues(alpha: 0.1)),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,9 +101,9 @@ class _QuickServiceHistoryPageState extends State<QuickServiceHistoryPage> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                                 decoration: BoxDecoration(
-                                  color: color.withOpacity(0.1),
+                                  color: color.withValues(alpha: 0.1),
                                   borderRadius: BorderRadius.circular(8),
-                                  border: Border.all(color: color.withOpacity(0.3)),
+                                  border: Border.all(color: color.withValues(alpha: 0.3)),
                                 ),
                                 child: Text(
                                   _formatStatus(req.status),
@@ -115,11 +115,11 @@ class _QuickServiceHistoryPageState extends State<QuickServiceHistoryPage> {
                           const SizedBox(height: 12),
                           Row(
                             children: [
-                              Icon(Icons.calendar_today, size: 14, color: cs.onSurface.withOpacity(0.5)),
+                              Icon(Icons.calendar_today, size: 14, color: cs.onSurface.withValues(alpha: 0.5)),
                               const SizedBox(width: 8),
                               Text(
                                 DateFormat('dd MMM yyyy, hh:mm a').format(req.createdAt),
-                                style: TextStyle(color: cs.onSurface.withOpacity(0.6), fontSize: 13),
+                                style: TextStyle(color: cs.onSurface.withValues(alpha: 0.6), fontSize: 13),
                               ),
                             ],
                           ),
@@ -129,7 +129,7 @@ class _QuickServiceHistoryPageState extends State<QuickServiceHistoryPage> {
                             const SizedBox(height: 8),
                             const Text('Services Rendered:', style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14)),
                             const SizedBox(height: 4),
-                            Text(req.servicesGrabbed!, style: TextStyle(color: cs.onSurface.withOpacity(0.8), fontSize: 13)),
+                            Text(req.servicesGrabbed!, style: TextStyle(color: cs.onSurface.withValues(alpha: 0.8), fontSize: 13)),
                           ],
                           if (req.totalAmount > 0) ...[
                             const SizedBox(height: 12),

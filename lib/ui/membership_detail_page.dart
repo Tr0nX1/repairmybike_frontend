@@ -129,16 +129,16 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
       width: double.infinity,
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: Colors.white.withValues(alpha: 0.03),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
+              color: accentColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(Icons.workspace_premium, color: accentColor, size: 40),
@@ -159,7 +159,7 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
             selected?.description ?? 'Premium maintenance for your bike',
             textAlign: TextAlign.center,
             style: TextStyle(
-              color: Colors.white.withOpacity(0.6),
+              color: Colors.white.withValues(alpha: 0.6),
               fontSize: 15,
               fontWeight: FontWeight.w500,
             ),
@@ -204,10 +204,10 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
             duration: const Duration(milliseconds: 200),
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: isSelected ? accentColor.withOpacity(0.15) : Colors.white.withOpacity(0.03),
+              color: isSelected ? accentColor.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.03),
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isSelected ? accentColor : Colors.white.withOpacity(0.1),
+                color: isSelected ? accentColor : Colors.white.withValues(alpha: 0.1),
                 width: 1.5,
               ),
             ),
@@ -224,13 +224,29 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
                 ),
                 const SizedBox(height: 4),
                 FittedBox(
-                  child: Text(
-                    '$symbol${p.price.toStringAsFixed(0)}',
-                    style: TextStyle(
-                      color: isSelected ? accentColor : Colors.white,
-                      fontSize: 22,
-                      fontWeight: FontWeight.w900,
-                    ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '$symbol${(p.discountPrice ?? p.price).toStringAsFixed(0)}',
+                        style: TextStyle(
+                          color: isSelected ? accentColor : Colors.white,
+                          fontSize: 22,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ),
+                      if (p.discountPrice != null) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          '$symbol${p.price.toStringAsFixed(0)}',
+                          style: TextStyle(
+                            color: Colors.white54,
+                            fontSize: 14,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
               ],
@@ -252,9 +268,9 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
           decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.02),
+            color: Colors.white.withValues(alpha: 0.02),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
           ),
           child: Row(
             children: [
@@ -290,9 +306,9 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
         return Container(
           padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
           decoration: BoxDecoration(
-            color: accentColor.withOpacity(0.08),
+            color: accentColor.withValues(alpha: 0.08),
             borderRadius: BorderRadius.circular(30),
-            border: Border.all(color: accentColor.withOpacity(0.2)),
+            border: Border.all(color: accentColor.withValues(alpha: 0.2)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -321,7 +337,7 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
         borderRadius: BorderRadius.circular(18),
         boxShadow: [
           BoxShadow(
-            color: accentColor.withOpacity(0.3),
+            color: accentColor.withValues(alpha: 0.3),
             blurRadius: 15,
             offset: const Offset(0, 8),
           ),
@@ -338,14 +354,15 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
         onPressed: selected == null
             ? null
             : () async {
+                final nav = Navigator.of(context);
                 if (!AppState.isAuthenticated) {
                   await AppState.setPendingAction({'type': 'subscribe'});
-                  if (context.mounted) {
-                    await showLoginRequiredDialog(context);
-                  }
+                  if (!context.mounted) return;
+                  await showLoginRequiredDialog(context);
+                  if (!context.mounted) return;
                   return;
                 }
-                Navigator.of(context).push(
+                nav.push(
                   MaterialPageRoute(builder: (_) => SubscriptionCheckoutPage(plan: selected)),
                 );
               },

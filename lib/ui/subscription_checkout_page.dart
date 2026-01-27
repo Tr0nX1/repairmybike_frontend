@@ -111,9 +111,9 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: accentColor.withOpacity(0.05),
+        color: accentColor.withValues(alpha: 0.05),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: accentColor.withOpacity(0.2)),
+        border: Border.all(color: accentColor.withValues(alpha: 0.2)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -129,10 +129,13 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('$symbol${p.price.toStringAsFixed(0)} / $months months', style: TextStyle(color: Colors.white.withOpacity(0.6), fontWeight: FontWeight.w700)),
+              Text(
+                '$symbol${(p.discountPrice ?? p.price).toStringAsFixed(0)} / $months months',
+                style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontWeight: FontWeight.w700),
+              ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: accentColor.withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
+                decoration: BoxDecoration(color: accentColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
                 child: Text('${p.includedVisits} Visits', style: TextStyle(color: accentColor, fontSize: 12, fontWeight: FontWeight.w900)),
               ),
             ],
@@ -147,9 +150,9 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         children: [
@@ -186,16 +189,16 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(
             children: [
-              Icon(Icons.autorenew_rounded, color: accentColor.withOpacity(0.6), size: 20),
+              Icon(Icons.autorenew_rounded, color: accentColor.withValues(alpha: 0.6), size: 20),
               const SizedBox(width: 12),
               const Text('Auto-renew', style: TextStyle(color: Colors.white70, fontWeight: FontWeight.w600)),
             ],
@@ -214,16 +217,16 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
-              Expanded(child: Text('Schedule first visit now?', style: TextStyle(color: Colors.white.withOpacity(0.7), fontWeight: FontWeight.w700))),
+              Expanded(child: Text('Schedule first visit now?', style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontWeight: FontWeight.w700))),
               Switch(value: _requestSchedule, activeThumbColor: accentColor, onChanged: (v) => setState(() => _requestSchedule = v)),
             ],
           ),
@@ -290,9 +293,9 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? accent.withOpacity(0.15) : Colors.white.withOpacity(0.03),
+          color: isSelected ? accent.withValues(alpha: 0.15) : Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isSelected ? accent : Colors.white.withOpacity(0.1)),
+          border: Border.all(color: isSelected ? accent : Colors.white.withValues(alpha: 0.1)),
         ),
         child: Text(
           label,
@@ -309,14 +312,14 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white.withOpacity(0.08)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: accent.withOpacity(0.7), size: 18),
+            Icon(icon, color: accent.withValues(alpha: 0.7), size: 18),
             const SizedBox(width: 8),
             Text(label, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
           ],
@@ -342,17 +345,17 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
       style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
       decoration: InputDecoration(
         labelText: label,
-        labelStyle: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 13),
-        prefixIcon: Icon(icon, color: accentColor.withOpacity(0.4), size: 20),
+        labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 13),
+        prefixIcon: Icon(icon, color: accentColor.withValues(alpha: 0.4), size: 20),
         filled: true,
-        fillColor: Colors.white.withOpacity(0.02),
+        fillColor: Colors.white.withValues(alpha: 0.02),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: Colors.white.withOpacity(0.05)),
+          borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.05)),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: accentColor.withOpacity(0.5)),
+          borderSide: BorderSide(color: accentColor.withValues(alpha: 0.5)),
         ),
       ),
     );
@@ -365,7 +368,7 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
-          BoxShadow(color: accentColor.withOpacity(0.3), blurRadius: 15, offset: const Offset(0, 8)),
+          BoxShadow(color: accentColor.withValues(alpha: 0.3), blurRadius: 15, offset: const Offset(0, 8)),
         ],
       ),
       child: ElevatedButton(

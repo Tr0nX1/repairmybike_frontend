@@ -77,12 +77,12 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
                     padding: const EdgeInsets.all(24),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [accentColor.withOpacity(0.15), Colors.white.withOpacity(0.02)],
+                        colors: [accentColor.withValues(alpha: 0.15), Colors.white.withValues(alpha: 0.02)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(24),
-                      border: Border.all(color: accentColor.withOpacity(0.2)),
+                      border: Border.all(color: accentColor.withValues(alpha: 0.2)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -90,7 +90,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
                         Container(
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
-                            color: accentColor.withOpacity(0.1),
+                            color: accentColor.withValues(alpha: 0.1),
                             shape: BoxShape.circle,
                           ),
                           child: Icon(Icons.stars_rounded, color: accentColor, size: 32),
@@ -112,7 +112,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
                               style: const TextStyle(color: Colors.white, fontSize: 36, fontWeight: FontWeight.w900),
                             ),
                             const SizedBox(width: 4),
-                            Text('/$period', style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 14, fontWeight: FontWeight.w600)),
+                            Text('/$period', style: TextStyle(color: Colors.white.withValues(alpha: 0.5), fontSize: 14, fontWeight: FontWeight.w600)),
                           ],
                         ),
                       ],
@@ -151,7 +151,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
       return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.03),
+          color: Colors.white.withValues(alpha: 0.03),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Row(
@@ -169,9 +169,9 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.02),
+          color: Colors.white.withValues(alpha: 0.02),
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white.withOpacity(0.05)),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
         ),
         child: Row(
           children: [
@@ -207,13 +207,13 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
             decoration: InputDecoration(
               hintText: 'Contact Phone Number',
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.3)),
-              prefixIcon: Icon(Icons.phone_android, color: accentColor.withOpacity(0.5)),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.3)),
+              prefixIcon: Icon(Icons.phone_android, color: accentColor.withValues(alpha: 0.5)),
               filled: true,
-              fillColor: Colors.white.withOpacity(0.03),
+              fillColor: Colors.white.withValues(alpha: 0.03),
               enabledBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
-                borderSide: BorderSide(color: Colors.white.withOpacity(0.1)),
+                borderSide: BorderSide(color: Colors.white.withValues(alpha: 0.1)),
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(16),
@@ -225,9 +225,9 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.05),
+              color: accentColor.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: accentColor.withOpacity(0.2)),
+              border: Border.all(color: accentColor.withValues(alpha: 0.2)),
             ),
             child: Row(
               children: [
@@ -236,7 +236,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Subscribing as', style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11, fontWeight: FontWeight.w700)),
+                    Text('Subscribing as', style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 11, fontWeight: FontWeight.w700)),
                     Text(phone, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.w800)),
                   ],
                 ),
@@ -266,7 +266,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
         ),
         if (!AppState.isAuthenticated) ...[
           const SizedBox(height: 12),
-          Center(child: Text('Login required to subscribe', style: TextStyle(color: Colors.redAccent.withOpacity(0.8), fontWeight: FontWeight.w700))),
+          Center(child: Text('Login required to subscribe', style: TextStyle(color: Colors.redAccent.withValues(alpha: 0.8), fontWeight: FontWeight.w700))),
         ],
       ],
     );
@@ -277,7 +277,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
       children: [
         Row(
           children: [
-            Expanded(child: Text('Already have a subscription?', style: TextStyle(color: Colors.white.withOpacity(0.6), fontWeight: FontWeight.w600))),
+            Expanded(child: Text('Already have a subscription?', style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontWeight: FontWeight.w600))),
             TextButton(
               onPressed: _loadingExisting ? null : _loadExistingByPhone,
               child: _loadingExisting
@@ -299,9 +299,9 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.02),
+        color: Colors.white.withValues(alpha: 0.02),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.05)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,7 +314,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                 decoration: BoxDecoration(
-                  color: s.isActive ? Colors.green.withOpacity(0.1) : Colors.red.withOpacity(0.1),
+                  color: s.isActive ? Colors.green.withValues(alpha: 0.1) : Colors.red.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(s.isActive ? 'ACTIVE' : 'EXPIRED', style: TextStyle(color: s.isActive ? Colors.greenAccent : Colors.redAccent, fontSize: 10, fontWeight: FontWeight.w900)),
@@ -336,7 +336,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(label, style: TextStyle(color: Colors.white.withOpacity(0.3), fontSize: 13, fontWeight: FontWeight.w600)),
+          Text(label, style: TextStyle(color: Colors.white.withValues(alpha: 0.3), fontSize: 13, fontWeight: FontWeight.w600)),
           Text(value, style: const TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w800)),
         ],
       ),
@@ -403,7 +403,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
           children: [
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.green.withOpacity(0.1), shape: BoxShape.circle),
+              decoration: BoxDecoration(color: Colors.green.withValues(alpha: 0.1), shape: BoxShape.circle),
               child: const Icon(Icons.check_circle, color: Colors.greenAccent, size: 40),
             ),
             const SizedBox(height: 16),
@@ -451,111 +451,3 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
   }
 }
 
-Widget _infoRow(String label, String value, Color accentColor) {
-  return Padding(
-    padding: const EdgeInsets.symmetric(vertical: 8),
-    child: Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(label, style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 13, fontWeight: FontWeight.w600)),
-        Text(value, style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w800)),
-      ],
-    ),
-  );
-}
-
-Widget _benefitsChips(List<Benefit> benefitsList, int includedVisits, Color accentColor) {
-  if (benefitsList.isEmpty) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.02), borderRadius: BorderRadius.circular(12)),
-      child: Row(
-        children: [
-          Icon(Icons.info_outline, color: accentColor.withOpacity(0.5), size: 18),
-          const SizedBox(width: 10),
-          Text('Includes $includedVisits visits per period', style: const TextStyle(color: Colors.white70)),
-        ],
-      ),
-    );
-  }
-  return Column(
-    children: benefitsList.map((b) => Padding(
-      padding: const EdgeInsets.only(bottom: 10),
-      child: Row(
-        children: [
-          Icon(Icons.check_circle_outline, color: b.isActive ? accentColor : Colors.white24, size: 18),
-          const SizedBox(width: 12),
-          Expanded(child: Text(b.text, style: TextStyle(color: b.isActive ? Colors.white : Colors.white38, fontSize: 14, fontWeight: FontWeight.w500))),
-        ],
-      ),
-    )).toList(),
-  );
-}
-
-Widget _existingList(List<SubscriptionItem> items, Color accentColor) {
-  return Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: items.map((s) => Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.white.withOpacity(0.06)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(color: accentColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                child: Icon(Icons.history_edu_rounded, color: accentColor, size: 18),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(s.planName ?? 'Active Plan', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: 15)),
-                    Text(s.status.toUpperCase(), style: TextStyle(color: s.isActive ? Colors.greenAccent : Colors.white38, fontSize: 10, fontWeight: FontWeight.w900, letterSpacing: 0.5)),
-                  ],
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: Colors.black, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.white.withOpacity(0.1))),
-                child: Text('${s.remainingVisits} Visits Left', style: TextStyle(color: accentColor, fontSize: 11, fontWeight: FontWeight.w900)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          const Divider(color: Colors.white10, height: 1),
-          const SizedBox(height: 8),
-          _infoRow('Started On', s.startDate.split('T')[0], accentColor),
-          if (s.endDate != null) _infoRow('Expiry Date', s.endDate!.split('T')[0], accentColor),
-          _infoRow('Auto-renew', s.autoRenew ? 'Enabled' : 'Disabled', accentColor),
-        ],
-      ),
-    )).toList(),
-  );
-}
-
-String _currencySymbol(String? code) {
-  switch (code?.toUpperCase()) {
-    case 'INR': return '₹';
-    case 'USD': return '\$';
-    default: return '$code';
-  }
-}
-
-String _periodLabel(String? period) {
-  switch (period?.toLowerCase()) {
-    case 'monthly': return 'month';
-    case 'half_yearly': return '6 mo';
-    case 'yearly':
-    case 'annual': return 'year';
-    default: return 'period';
-  }
-}

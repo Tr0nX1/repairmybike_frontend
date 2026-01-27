@@ -23,8 +23,6 @@ class MyApp extends ConsumerWidget {
     const Color brandOnPrimary = Color(0xFF0B0F12);
     const Color brandSecondary = Color(0xFF005B8E);
     const Color brandOnSecondary = Color(0xFFFFFFFF);
-    const Color brandBackground = Color(0xFFFFFFFF);
-    const Color brandOnBackground = Color(0xFF0F1A1D);
     const Color brandSurface = Color(0xFFF7F9FB);
     const Color brandOnSurface = Color(0xFF0F1A1D);
     const Color brandSurfaceVariant = Color(0xFFEEF2F6);

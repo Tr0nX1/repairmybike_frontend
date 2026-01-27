@@ -76,12 +76,12 @@ class _QuickServiceDetailsPageState extends State<QuickServiceDetailsPage> {
                         padding: const EdgeInsets.all(24),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [cs.primary.withOpacity(0.2), cs.primary.withOpacity(0.05)],
+                            colors: [cs.primary.withValues(alpha: 0.2), cs.primary.withValues(alpha: 0.05)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: cs.primary.withOpacity(0.3)),
+                          border: Border.all(color: cs.primary.withValues(alpha: 0.3)),
                         ),
                         child: Column(
                           children: [
@@ -121,7 +121,7 @@ class _QuickServiceDetailsPageState extends State<QuickServiceDetailsPage> {
                       // In a real app we'd use flutter_widget_from_html
                       Text(
                         _config!.rulesHtml.replaceAll('<br>', '\n').replaceAll(RegExp(r'<[^>]*>'), ''),
-                        style: TextStyle(color: cs.onSurface.withOpacity(0.8), height: 1.5),
+                        style: TextStyle(color: cs.onSurface.withValues(alpha: 0.8), height: 1.5),
                       ),
                       const SizedBox(height: 48),
                       SizedBox(

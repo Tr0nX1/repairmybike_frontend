@@ -226,30 +226,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     }
   }
 
-  Future<void> _logout() async {
-    setState(() => _loading = true);
-    try {
-      await _api.logout(
-        refreshToken: AppState.refreshToken,
-        sessionToken: AppState.sessionToken,
-      );
-      await AppState.clearAuth();
-      await AppState.setLastCustomerPhone(null);
-      // Invalidate cart to clear/reset state for guest or new user
-      ref.invalidate(cartProvider);
-      setState(() {
-        _otpStep = false;
-        _mode = 'customer';
-        _usernameCtrl.clear();
-        _passwordCtrl.clear();
-      });
-      _showSnack('Logged out');
-    } catch (e) {
-      _showSnack(_extractError(e, fallback: 'Logout failed'));
-    } finally {
-      setState(() => _loading = false);
-    }
-  }
 
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
@@ -702,26 +678,3 @@ class _StaffFields extends StatelessWidget {
   }
 }
 
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-  const _InfoRow({required this.label, required this.value});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text(label, style: const TextStyle(color: Colors.white54)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            value,
-            textAlign: TextAlign.right,
-            overflow: TextOverflow.ellipsis,
-            style: const TextStyle(color: Colors.white70),
-          ),
-        ),
-      ],
-    );
-  }
-}

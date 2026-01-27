@@ -1,19 +1,5 @@
 import 'api_config.dart';
 
-bool _looksImageLike(String s) {
-  final t = s.trim().toLowerCase();
-  if (t.isEmpty) return false;
-  if (t.startsWith('http://') || t.startsWith('https://') || t.startsWith('data:image/')) {
-    return true;
-  }
-  if (t.startsWith('/') || t.startsWith('media/')) {
-    return true;
-  }
-  for (final ext in ['.jpg', '.jpeg', '.png', '.webp', '.gif', '.bmp', '.tiff']) {
-    if (t.endsWith(ext)) return true;
-  }
-  return false;
-}
 
 String? buildImageUrl(dynamic media) {
   if (media == null) return null;

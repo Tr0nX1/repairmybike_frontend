@@ -84,15 +84,17 @@ class _BookingFormPageState extends State<BookingFormPage> {
       // Try auto-select type
       final vt = AppState.vehicleType;
       if (vt != null && vt.isNotEmpty) {
-        final match = _vehicleTypes.firstWhere(
+        final match = _vehicleTypes.isEmpty ? null : _vehicleTypes.firstWhere(
           (t) => t.name.toLowerCase() == vt.toLowerCase(),
-          orElse: () => _vehicleTypes.isNotEmpty ? _vehicleTypes.first : null as VehicleTypeItem,
+          orElse: () => _vehicleTypes.first,
         );
         setState(() {
           _selectedType = match;
           _autoType = true;
         });
-        await _loadVehicleBrands(match.id);
+        if (match != null) {
+          await _loadVehicleBrands(match.id);
+        }
             }
     } catch (e) {
       _showSnack('Failed to load vehicle types: $e');
@@ -107,15 +109,17 @@ class _BookingFormPageState extends State<BookingFormPage> {
       });
       final vb = AppState.vehicleBrand;
       if (vb != null && vb.isNotEmpty) {
-        final match = _vehicleBrands.firstWhere(
+        final match = _vehicleBrands.isEmpty ? null : _vehicleBrands.firstWhere(
           (b) => b.name.toLowerCase() == vb.toLowerCase(),
-          orElse: () => _vehicleBrands.isNotEmpty ? _vehicleBrands.first : null as VehicleBrandItem,
+          orElse: () => _vehicleBrands.first,
         );
         setState(() {
           _selectedBrand = match;
           _autoBrand = true;
         });
-        await _loadVehicleModels(match.id);
+        if (match != null) {
+          await _loadVehicleModels(match.id);
+        }
             }
     } catch (e) {
       _showSnack('Failed to load vehicle brands: $e');
@@ -130,9 +134,9 @@ class _BookingFormPageState extends State<BookingFormPage> {
       });
       final vm = AppState.vehicleName;
       if (vm != null && vm.isNotEmpty) {
-        final match = _vehicleModels.firstWhere(
+        final match = _vehicleModels.isEmpty ? null : _vehicleModels.firstWhere(
           (m) => m.name.toLowerCase() == vm.toLowerCase(),
-          orElse: () => _vehicleModels.isNotEmpty ? _vehicleModels.first : null as VehicleModelItem,
+          orElse: () => _vehicleModels.first,
         );
         setState(() {
           _selectedModel = match;
@@ -250,7 +254,9 @@ class _BookingFormPageState extends State<BookingFormPage> {
         mail: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
       );
 
-      Navigator.of(context).pop();
+      if (context.mounted) {
+        Navigator.of(context).pop();
+      }
     } catch (e) {
       _showSnack('Failed to create booking: $e');
     } finally {

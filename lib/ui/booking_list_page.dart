@@ -33,6 +33,7 @@ class _BookingListPageState extends State<BookingListPage> {
   DateTime? _lastSync;
   bool _loadedFromCache = false;
 
+
   String _monthName(int m) => const [
     'Jan',
     'Feb',
@@ -100,13 +101,7 @@ class _BookingListPageState extends State<BookingListPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  String _formatTimeSince(DateTime time) {
-    final diff = DateTime.now().difference(time);
-    if (diff.inSeconds < 60) return 'just now';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m ago';
-    if (diff.inHours < 24) return '${diff.inHours}h ago';
-    return '${diff.inDays}d ago';
-  }
+
 
   Future<void> _loadFromCache() async {
     // Load cached data immediately for offline support
@@ -569,7 +564,7 @@ class _BookingListPageState extends State<BookingListPage> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.white.withOpacity(0.05),
+                color: Colors.white.withValues(alpha: 0.05),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Column(
@@ -779,7 +774,7 @@ class _BookingListPageState extends State<BookingListPage> {
                         appointmentDate: date,
                         appointmentTime: time,
                       );
-                      if (mounted) Navigator.of(ctx).pop();
+                      if (context.mounted) Navigator.of(ctx).pop();
                       _showSnack('Schedule updated');
                       _search();
                     } catch (e) {
@@ -859,13 +854,13 @@ class _BookingListPageState extends State<BookingListPage> {
                         status: selected,
                         sessionToken: AppState.sessionToken ?? '',
                       );
-                      Navigator.of(ctx).pop();
+                      if (!context.mounted) return;
                       _showSnack(
                         'Status updated to ${updated['booking_status'] ?? selected}',
                       );
                       _search();
                     } catch (e) {
-                      _showSnack('Failed to update status: $e');
+                      if (context.mounted) _showSnack('Failed to update status: $e');
                     }
                   },
                   child: const Text('Save'),
@@ -901,9 +896,9 @@ class OrderTrackingTimeline extends StatelessWidget {
         margin: const EdgeInsets.only(top: 8),
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
-          color: Colors.red.withOpacity(0.1),
+          color: Colors.red.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
-          border: Border.all(color: Colors.red.withOpacity(0.3)),
+          border: Border.all(color: Colors.red.withValues(alpha: 0.3)),
         ),
         child: Row(
           children: [

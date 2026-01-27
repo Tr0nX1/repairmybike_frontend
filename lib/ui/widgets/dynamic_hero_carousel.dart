@@ -98,7 +98,7 @@ class _DynamicHeroCarouselState extends State<DynamicHeroCarousel> {
                           end: Alignment.bottomCenter,
                           colors: [
                             Colors.transparent,
-                            Colors.black.withOpacity(0.7),
+                            Colors.black.withValues(alpha: 0.7),
                           ],
                           stops: const [0.6, 1.0],
                         ),
@@ -161,9 +161,9 @@ class _StaticFallbackBanner extends StatelessWidget {
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
           colors: [
-            cs.primary.withOpacity(0.45),
-            cs.secondary.withOpacity(0.35),
-            const Color(0xFF01C9F5).withOpacity(0.25),
+            cs.primary.withValues(alpha: 0.45),
+            cs.secondary.withValues(alpha: 0.35),
+            const Color(0xFF01C9F5).withValues(alpha: 0.25),
           ],
         ),
       ),

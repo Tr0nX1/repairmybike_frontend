@@ -18,7 +18,6 @@ class MainShell extends ConsumerStatefulWidget {
 
 class _MainShellState extends ConsumerState<MainShell> {
   int _currentIndex = 0;
-  bool _initialized = false;
 
   @override
   void initState() {
@@ -33,11 +32,9 @@ class _MainShellState extends ConsumerState<MainShell> {
       if (mounted && savedIndex >= 0 && savedIndex < 5) {
         setState(() {
           _currentIndex = savedIndex;
-          _initialized = true;
         });
       }
     } catch (_) {
-      if (mounted) setState(() => _initialized = true);
     }
   }
 
@@ -132,38 +129,4 @@ class _MainShellState extends ConsumerState<MainShell> {
   }
 }
 
-class _PlaceholderPage extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  const _PlaceholderPage({required this.title, required this.icon});
 
-  @override
-  Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
-    return Scaffold(
-      backgroundColor: scheme.surface,
-      appBar: AppBar(backgroundColor: scheme.surface, title: Text(title)),
-      body: Center(
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: scheme.surface,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: scheme.outlineVariant),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.info_outline, color: scheme.primary),
-              const SizedBox(width: 8),
-              Text(
-                'Coming soon',
-                style: TextStyle(color: scheme.onSurface.withOpacity(0.7)),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}

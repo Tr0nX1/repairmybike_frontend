@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:flutter/foundation.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
 import 'auth_page.dart';
@@ -150,8 +149,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         : 'Add email';
     final colorScheme = Theme.of(context).colorScheme;
     final bg = colorScheme.surface;
-    final card = colorScheme.surfaceContainerHighest.withOpacity(0.5);
-    final border = colorScheme.outline.withOpacity(0.2);
+    final card = colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
+    final border = colorScheme.outline.withValues(alpha: 0.2);
     final accent = colorScheme.primary;
 
     return Scaffold(
@@ -248,12 +247,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                         colors: [accent.withOpacity(0.2), accent.withOpacity(0.05)],
+                         colors: [accent.withValues(alpha: 0.2), accent.withValues(alpha: 0.05)],
                          begin: Alignment.topLeft,
                          end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: accent.withOpacity(0.3)),
+                      border: Border.all(color: accent.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
@@ -298,12 +297,12 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                     padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                         colors: [Colors.orange.withOpacity(0.2), Colors.orange.withOpacity(0.05)],
+                         colors: [Colors.orange.withValues(alpha: 0.2), Colors.orange.withValues(alpha: 0.05)],
                          begin: Alignment.topLeft,
                          end: Alignment.bottomRight,
                       ),
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.orange.withOpacity(0.3)),
+                      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
                     ),
                     child: Row(
                       children: [
@@ -671,8 +670,8 @@ class _Tile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final card = colorScheme.surfaceContainerHighest.withOpacity(0.5);
-    final border = colorScheme.outline.withOpacity(0.2);
+    final card = colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
+    final border = colorScheme.outline.withValues(alpha: 0.2);
 
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
@@ -726,9 +725,9 @@ class _ActionTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withOpacity(0.5),
+        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.outline.withOpacity(0.2)),
+        border: Border.all(color: cs.outline.withValues(alpha: 0.2)),
       ),
       child: ListTile(
         onTap: onTap,

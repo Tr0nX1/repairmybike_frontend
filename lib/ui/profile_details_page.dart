@@ -207,7 +207,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text('Default address', style: TextStyle(color: colorScheme.onSurface.withOpacity(0.8))),
+                Text('Default address', style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.8))),
               ],
             ),
             const SizedBox(height: 32),
@@ -255,7 +255,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
     final colorScheme = Theme.of(context).colorScheme;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
-      child: Text(text, style: TextStyle(fontWeight: FontWeight.w500, color: colorScheme.onSurface.withOpacity(0.7), fontSize: 13)),
+      child: Text(text, style: TextStyle(fontWeight: FontWeight.w500, color: colorScheme.onSurface.withValues(alpha: 0.7), fontSize: 13)),
     );
   }
 
@@ -267,10 +267,10 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
       style: TextStyle(color: colorScheme.onSurface),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: colorScheme.onSurface.withOpacity(0.3)),
-        prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20, color: colorScheme.onSurface.withOpacity(0.5)) : null,
+        hintStyle: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.3)),
+        prefixIcon: prefixIcon != null ? Icon(prefixIcon, size: 20, color: colorScheme.onSurface.withValues(alpha: 0.5)) : null,
         filled: true,
-        fillColor: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        fillColor: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
         enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
@@ -284,7 +284,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: colorScheme.surfaceContainerHighest.withOpacity(0.3),
+        color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.3),
         borderRadius: BorderRadius.circular(12),
       ),
       child: DropdownButtonHideUnderline(
@@ -292,7 +292,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
           value: _selectedState,
           isExpanded: true,
           dropdownColor: colorScheme.surface,
-          hint: Text('Select State', style: TextStyle(color: colorScheme.onSurface.withOpacity(0.3))),
+          hint: Text('Select State', style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.3))),
           items: _states.map((s) => DropdownMenuItem(value: s, child: Text(s, style: TextStyle(color: colorScheme.onSurface)))).toList(),
           onChanged: (v) => setState(() => _selectedState = v),
         ),

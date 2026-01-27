@@ -139,7 +139,6 @@ class _FlashPageState extends State<FlashPage>
 
   @override
   Widget build(BuildContext context) {
-    final scheme = Theme.of(context).colorScheme;
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),
       body: SafeArea(

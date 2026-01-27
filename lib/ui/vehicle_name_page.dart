@@ -131,6 +131,7 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
             modelId: item.id,
             imageUrl: img,
         );
+        if (!context.mounted) return;
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const MainShell()),
@@ -230,6 +231,7 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
                   if (customController.text.trim().isNotEmpty) {
                     final name = customController.text.trim();
                     await AppState.setVehicle(name: name);
+                    if (!context.mounted) return;
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(builder: (_) => const MainShell()),

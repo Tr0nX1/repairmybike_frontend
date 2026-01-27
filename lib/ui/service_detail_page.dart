@@ -438,7 +438,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                               rating: _myRating,
                               text: _feedbackCtrl.text.trim(),
                             );
-                            if (!mounted) return;
+                            if (!context.mounted) return;
                             ScaffoldMessenger.of(context)
                                 .showSnackBar(const SnackBar(content: Text('Feedback saved')));
                           },

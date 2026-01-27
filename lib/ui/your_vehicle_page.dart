@@ -65,9 +65,9 @@ class YourVehiclePage extends StatelessWidget {
                       height: 200,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: colorScheme.primary.withOpacity(0.2),
+                        color: colorScheme.primary.withValues(alpha: 0.2),
                         boxShadow: [
-                           BoxShadow(color: colorScheme.primary.withOpacity(0.2), blurRadius: 100, spreadRadius: 50),
+                           BoxShadow(color: colorScheme.primary.withValues(alpha: 0.2), blurRadius: 100, spreadRadius: 50),
                         ]
                       ),
                     ),
@@ -146,7 +146,7 @@ class YourVehiclePage extends StatelessWidget {
                      style: TextStyle(
                        fontSize: 14, 
                        fontWeight: FontWeight.w500, 
-                       color: colorScheme.onSurface.withOpacity(0.6),
+                       color: colorScheme.onSurface.withValues(alpha: 0.6),
                        letterSpacing: 1.0,
                      )
                    ),
@@ -157,15 +157,15 @@ class YourVehiclePage extends StatelessWidget {
                    Container(
                      padding: const EdgeInsets.all(16),
                      decoration: BoxDecoration(
-                       color: colorScheme.surfaceContainerHighest.withOpacity(0.5),
+                       color: colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                        borderRadius: BorderRadius.circular(16),
-                       border: Border.all(color: colorScheme.outline.withOpacity(0.1)),
+                       border: Border.all(color: colorScheme.outline.withValues(alpha: 0.1)),
                      ),
                      child: Row(
                        mainAxisAlignment: MainAxisAlignment.spaceAround,
                        children: [
                           _StatusItem(label: 'Status', value: 'Active', icon: Icons.check_circle, color: Colors.green),
-                          Container(width: 1, height: 40, color: colorScheme.outline.withOpacity(0.2)),
+                          Container(width: 1, height: 40, color: colorScheme.outline.withValues(alpha: 0.2)),
                           _StatusItem(label: 'Service', value: 'Due Soon', icon: Icons.build_circle, color: Colors.orange),
                        ],
                      ),
@@ -211,7 +211,7 @@ class YourVehiclePage extends StatelessWidget {
                         );
                        },
                        style: OutlinedButton.styleFrom(
-                         side: BorderSide(color: colorScheme.outline.withOpacity(0.3)),
+                         side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.3)),
                          foregroundColor: colorScheme.onSurface,
                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                        ),
@@ -246,7 +246,7 @@ class _StatusItem extends StatelessWidget {
         Icon(icon, color: color, size: 24),
         const SizedBox(height: 6),
         Text(value, style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.bold)),
-        Text(label, style: TextStyle(color: colorScheme.onSurface.withOpacity(0.5), fontSize: 10)),
+        Text(label, style: TextStyle(color: colorScheme.onSurface.withValues(alpha: 0.5), fontSize: 10)),
       ],
     );
   }

@@ -40,7 +40,7 @@ class CartPage extends ConsumerWidget {
           ? Center(
               child: Text(
                 'Your cart is empty',
-                style: TextStyle(color: cs.onSurface.withOpacity(0.7)),
+                style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7)),
               ),
             )
           : ListView.separated(
@@ -57,6 +57,7 @@ class CartPage extends ConsumerWidget {
                     onCheckout: () async {
                       if (!(AppState.isAuthenticated)) {
                         await AppState.setPendingAction({'type': 'checkout'});
+                        if (!context.mounted) return;
                         await showLoginRequiredDialog(context);
                         return;
                       }

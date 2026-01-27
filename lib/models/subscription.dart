@@ -50,6 +50,7 @@ class SubscriptionPlan {
   final List<IncludedServiceDetail> includedServicesDetails; // New structured services
   final num? originalPrice;
   final num price;
+  final num? discountPrice;
   final String currency;
   final String billingPeriod;
   final int includedVisits;
@@ -71,6 +72,7 @@ class SubscriptionPlan {
     required this.includedServicesDetails,
     this.originalPrice,
     required this.price,
+    this.discountPrice,
     required this.currency,
     required this.billingPeriod,
     required this.includedVisits,
@@ -105,6 +107,9 @@ class SubscriptionPlan {
       price: (json['price'] is num)
           ? json['price'] as num
           : num.tryParse(json['price']?.toString() ?? '0') ?? 0,
+      discountPrice: (json['discount_price'] is num)
+          ? json['discount_price'] as num
+          : num.tryParse(json['discount_price']?.toString() ?? ''),
       currency: json['currency'] as String? ?? 'INR',
       billingPeriod: json['billing_period'] as String? ?? 'monthly',
       includedVisits: (json['included_visits'] as num?)?.toInt() ?? 0,

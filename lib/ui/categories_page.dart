@@ -142,7 +142,7 @@ class _CategoryCard extends StatelessWidget {
             border: Border.all(color: borderColor),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.25),
+                color: Colors.black.withValues(alpha: 0.25),
                 blurRadius: 6,
                 offset: const Offset(0, 3),
               ),
@@ -193,14 +193,7 @@ class _CategoryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-              Text(
-                '${category.serviceCount} services',
-                style: TextStyle(
-                  color: Colors.white60,
-                  fontSize: countSize,
-                ),
-                textScaleFactor: scale,
-              ),
+                textScaler: TextScaler.linear(scale),
             ],
           ),
         );

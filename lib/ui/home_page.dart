@@ -32,10 +32,8 @@ class _HomePageState extends ConsumerState<HomePage> {
   bool _showAllCategories = false;
   bool _loadPartsSection = false;
 
-  static const Color bg = Color(0xFF0F0F0F);
   static const Color card = Color(0xFF1C1C1C);
   static const Color border = Color(0xFF2A2A2A);
-  static const Color accent = Color(0xFF01C9F5);
 
   @override
   void initState() {
@@ -152,7 +150,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                         style: TextStyle(
                           color: Theme.of(
                             context,
-                          ).colorScheme.onSurface.withOpacity(0.7),
+                          ).colorScheme.onSurface.withValues(alpha: 0.7),
                         ),
                       );
                     }
@@ -293,15 +291,15 @@ class _CategoryCard extends StatelessWidget {
           return Container(
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: accentColor.withOpacity(0.3), width: 1.2),
+              border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 1.2),
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [cardColor, accentColor.withOpacity(0.08)],
+                colors: [cardColor, accentColor.withValues(alpha: 0.08)],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.4),
+                  color: Colors.black.withValues(alpha: 0.4),
                   blurRadius: 8,
                   offset: const Offset(0, 4),
                 ),
@@ -315,11 +313,11 @@ class _CategoryCard extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: accentColor.withOpacity(0.12),
+                    color: accentColor.withValues(alpha: 0.12),
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: accentColor.withOpacity(0.15),
+                        color: accentColor.withValues(alpha: 0.15),
                         blurRadius: 10,
                         spreadRadius: 1,
                       ),
@@ -403,58 +401,6 @@ class _CategoryCard extends StatelessWidget {
   }
 }
 
-class _HeroBanner extends StatelessWidget {
-  const _HeroBanner();
-
-  @override
-  Widget build(BuildContext context) {
-    final w = MediaQuery.of(context).size.width;
-    final isPhone = w < 600;
-    final cs = Theme.of(context).colorScheme;
-    return Container(
-      height: w < 360 ? 160 : (isPhone ? 190 : 220),
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(16),
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            cs.primary.withOpacity(0.45),
-            cs.secondary.withOpacity(0.35),
-            const Color(0xFF01C9F5).withOpacity(0.25),
-          ],
-        ),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                Text(
-                  'Fast scooter repair, right at home',
-                  style: TextStyle(
-                    fontSize: 20,
-                    fontWeight: FontWeight.w800,
-                    color: Colors.white,
-                  ),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'Book a service or browse parts — no waiting.',
-                  style: TextStyle(color: Colors.white70),
-                ),
-              ],
-            ),
-          ),
-          const Icon(Icons.handyman, size: 56, color: Colors.white70),
-        ],
-      ),
-    );
-  }
-}
 
 class _QuickActionsRow extends StatelessWidget {
   const _QuickActionsRow();

@@ -50,16 +50,14 @@ class _CustomerCarePageState extends State<CustomerCarePage> {
         break;
     }
 
-    if (url != null) {
-      try {
-        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-      } catch (e) {
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (e) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Could not launch ${option.type.name}')),
           );
         }
-      }
     }
   }
 
@@ -92,11 +90,11 @@ class _CustomerCarePageState extends State<CustomerCarePage> {
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.support_agent, size: 64, color: cs.onSurface.withOpacity(0.5)),
+                      Icon(Icons.support_agent, size: 64, color: cs.onSurface.withValues(alpha: 0.5)),
                       const SizedBox(height: 16),
                       Text(
                         'No support options available.',
-                        style: TextStyle(color: cs.onSurface.withOpacity(0.7)),
+                        style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7)),
                       ),
                     ],
                   ),
@@ -123,9 +121,9 @@ class _CustomerCarePageState extends State<CustomerCarePage> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: bgColor.withOpacity(0.15), // Tinted background
+                          color: bgColor.withValues(alpha: 0.15), // Tinted background
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: bgColor.withOpacity(0.3)),
+                          border: Border.all(color: bgColor.withValues(alpha: 0.3)),
                         ),
                         child: Row(
                           children: [
@@ -133,7 +131,7 @@ class _CustomerCarePageState extends State<CustomerCarePage> {
                               width: 48,
                               height: 48,
                               decoration: BoxDecoration(
-                                color: bgColor.withOpacity(0.2),
+                                color: bgColor.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                               child: opt.iconImage != null
@@ -162,7 +160,7 @@ class _CustomerCarePageState extends State<CustomerCarePage> {
                                   Text(
                                     opt.value,
                                     style: TextStyle(
-                                      color: cs.onSurface.withOpacity(0.7),
+                                      color: cs.onSurface.withValues(alpha: 0.7),
                                       fontSize: 13,
                                     ),
                                     maxLines: 1,
@@ -171,7 +169,7 @@ class _CustomerCarePageState extends State<CustomerCarePage> {
                                 ],
                               ),
                             ),
-                            Icon(Icons.arrow_forward_ios, size: 16, color: cs.onSurface.withOpacity(0.5)),
+                            Icon(Icons.arrow_forward_ios, size: 16, color: cs.onSurface.withValues(alpha: 0.5)),
                           ],
                         ),
                       ),

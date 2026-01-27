@@ -6,7 +6,6 @@ class VehicleTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const Color border = Color(0xFF2A2A2A);
     const Color accent = Color(0xFF01C9F5);
     return Column(
       mainAxisSize: MainAxisSize.min,

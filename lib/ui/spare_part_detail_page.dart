@@ -66,7 +66,7 @@ class SparePartDetailPage extends StatelessWidget {
                       item.categoryName,
                       textAlign: TextAlign.center,
                       style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface.withOpacity(0.85),
+                        color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.85),
                         fontWeight: FontWeight.w600,
                       ),
                     ),
@@ -81,13 +81,13 @@ class SparePartDetailPage extends StatelessWidget {
                   SelectableText(
                     item.brandName,
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: cs.onSurface.withOpacity(0.85), fontWeight: FontWeight.w600),
+                    style: TextStyle(color: cs.onSurface.withValues(alpha: 0.85), fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 4),
                   SelectableText(
                     'SKU: ${item.sku}',
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: cs.onSurface.withOpacity(0.7)),
+                    style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7)),
                   ),
                   const SizedBox(height: 8),
                   _RatingStars(avg: item.ratingAverage, count: item.ratingCount),
@@ -174,6 +174,7 @@ class _CartActions extends ConsumerWidget {
               String address = AppState.fullAddress;
               final hasAll = (AppState.fullName?.isNotEmpty ?? false) && (phone.isNotEmpty) && (address.isNotEmpty);
               if (!hasAll) {
+                if (!context.mounted) return;
                 final res = await showCustomerDetailsSheet(context);
                 if (res == null) return;
                 phone = res.phone;
@@ -221,12 +222,13 @@ class _CartActions extends ConsumerWidget {
         OutlinedButton(
           onPressed: () async {
             try {
-              if (!(AppState.isAuthenticated)) {
+            if (!(AppState.isAuthenticated)) {
                 await AppState.setPendingAction({
                   'type': 'buy_now',
                   'partId': partId,
                   'qty': 1,
                 });
+                if (!context.mounted) return;
                 await showLoginRequiredDialog(context);
                 return;
               }
@@ -305,7 +307,7 @@ class _RatingStars extends StatelessWidget {
     return Row(children: [
       ...stars,
       const SizedBox(width: 8),
-      Text('($count)', style: TextStyle(color: cs.onSurface.withOpacity(0.7), fontSize: 12)),
+      Text('($count)', style: TextStyle(color: cs.onSurface.withValues(alpha: 0.7), fontSize: 12)),
     ]);
   }
 }
@@ -368,7 +370,7 @@ class _GalleryState extends State<_Gallery> {
                       bottom: 8,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.35),
+                          color: Colors.black.withValues(alpha: 0.35),
                           borderRadius: BorderRadius.circular(20),
                         ),
                         child: const Padding(
@@ -437,7 +439,7 @@ class _GalleryState extends State<_Gallery> {
       builder: (_) => GestureDetector(
         onTap: () => Navigator.pop(context),
         child: Container(
-          color: Colors.black.withOpacity(0.9),
+          color: Colors.black.withValues(alpha: 0.9),
           child: Center(
             child: InteractiveViewer(
               child: CachedNetworkImage(
@@ -464,7 +466,7 @@ class _StockBadge extends StatelessWidget {
     final label = inStock ? 'In Stock • $qty' : 'Out of Stock';
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: color.withOpacity(0.15), borderRadius: BorderRadius.circular(12), border: Border.all(color: color)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(12), border: Border.all(color: color)),
       child: Text(label, style: TextStyle(color: inStock ? cs.onTertiary : cs.onError)),
     );
   }

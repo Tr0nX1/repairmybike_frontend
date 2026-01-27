@@ -11,7 +11,6 @@ class LandingPage extends StatelessWidget {
     final isDesktop = size.width > 900;
     
     const bg = Color(0xFF0F0F0F);
-    const card = Color(0xFF1C1C1C);
     const border = Color(0xFF2A2A2A);
     const accent = Color(0xFF01C9F5);
 
@@ -24,7 +23,7 @@ class LandingPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.8),
+                color: Colors.black.withValues(alpha: 0.8),
                 border: Border(bottom: BorderSide(color: border, width: 1)),
               ),
               child: Row(
@@ -148,7 +147,7 @@ class LandingPage extends StatelessWidget {
                             padding: const EdgeInsets.symmetric(horizontal: 48, vertical: 24),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
                             elevation: 8,
-                            shadowColor: accent.withOpacity(0.5),
+                            shadowColor: accent.withValues(alpha: 0.5),
                           ),
                           child: const Text(
                             'Book a Service Now',
@@ -375,9 +374,9 @@ class LandingPage extends StatelessWidget {
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    accent.withOpacity(0.1),
+                    accent.withValues(alpha: 0.1),
                     const Color(0xFF0A1F23),
-                    accent.withOpacity(0.1),
+                    accent.withValues(alpha: 0.1),
                   ],
                 ),
               ),
@@ -564,7 +563,7 @@ class _StepCard extends StatelessWidget {
                 width: 80,
                 height: 80,
                 decoration: BoxDecoration(
-                  color: const Color(0xFF01C9F5).withOpacity(0.1),
+                  color: const Color(0xFF01C9F5).withValues(alpha: 0.1),
                   shape: BoxShape.circle,
                 ),
               ),
