@@ -59,6 +59,9 @@ class ApiClient {
         onError: (DioException e, handler) async {
           if (kDebugMode) {
             debugPrint('❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message} [${e.response?.statusCode}]');
+            if (e.response?.data != null) {
+              debugPrint('   📄 Response Body: ${e.response?.data}');
+            }
           }
           
 
