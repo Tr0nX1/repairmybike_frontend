@@ -31,7 +31,7 @@ class SparePartsSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Featured Parts',
+          'Spare Parts',
           style: TextStyle(
             color: cs.onSurface,
             fontSize: isPhone ? 20 : 22,
