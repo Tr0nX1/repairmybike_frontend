@@ -21,7 +21,25 @@ class PartsFilter {
   final int? brandId;
   final bool? inStock;
   final String? search;
+  
   const PartsFilter({this.categoryId, this.brandId, this.inStock, this.search});
+  
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is PartsFilter &&
+          runtimeType == other.runtimeType &&
+          categoryId == other.categoryId &&
+          brandId == other.brandId &&
+          inStock == other.inStock &&
+          search == other.search;
+
+  @override
+  int get hashCode =>
+      categoryId.hashCode ^
+      brandId.hashCode ^
+      inStock.hashCode ^
+      search.hashCode;
 }
 
 final sparePartsByFilterProvider = FutureProvider.autoDispose.family<List<SparePartListItem>, PartsFilter>((ref, filter) async {
