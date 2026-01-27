@@ -1,9 +1,11 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'dart:convert';
+import 'dart:convert' as convert;
 import 'api_client.dart';
 
 import 'spare_parts_api.dart';
+import 'vehicles_api.dart';
+import 'saved_services_api.dart';
 
 class AppState {
   // Keys for persistence
@@ -109,8 +111,8 @@ class AppState {
       final parts = jwt.split('.');
       if (parts.length < 2) return null;
       String norm(String s) => s.padRight(s.length + (4 - s.length % 4) % 4, '=');
-      final payload = utf8.decode(base64Url.decode(norm(parts[1])));
-      final map = jsonDecode(payload);
+      final payload = convert.utf8.decode(convert.base64Url.decode(norm(parts[1])));
+      final map = convert.jsonDecode(payload);
       if (map is Map && map['exp'] is num) return (map['exp'] as num).toInt();
     } catch (_) {}
     return null;
@@ -166,7 +168,7 @@ class AppState {
     final fbJson = prefs.getString('serviceFeedbacks');
     if (fbJson != null) {
       try {
-        final Map<String, dynamic> deco = jsonDecode(fbJson);
+        final Map<String, dynamic> deco = convert.jsonDecode(fbJson);
         serviceFeedbacks = deco.map((k, v) => MapEntry(int.parse(k), v as Map<String, dynamic>));
       } catch (_) {}
     }
@@ -469,7 +471,7 @@ class AppState {
   }) async {
     serviceFeedbacks[serviceId] = {'rating': rating, 'text': text};
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('serviceFeedbacks', jsonEncode(serviceFeedbacks.map((k, v) => MapEntry(k.toString(), v))));
+    await prefs.setString('serviceFeedbacks', convert.jsonEncode(serviceFeedbacks.map((k, v) => MapEntry(k.toString(), v))));
   }
 
   static Future<List<Map<String, dynamic>>> getCachedBookings() async {
@@ -477,7 +479,7 @@ class AppState {
     final s = prefs.getString('cachedBookings');
     if (s == null) return [];
     try {
-      final List l = jsonDecode(s);
+      final List l = convert.jsonDecode(s);
       return l.cast<Map<String, dynamic>>();
     } catch (_) {
       return [];
@@ -489,7 +491,7 @@ class AppState {
     final s = prefs.getString('cachedOrders');
     if (s == null) return [];
     try {
-      final List l = jsonDecode(s);
+      final List l = convert.jsonDecode(s);
       return l.cast<Map<String, dynamic>>();
     } catch (_) {
       return [];
@@ -510,13 +512,13 @@ class AppState {
 
   static Future<void> cacheBookings(List<Map<String, dynamic>> data) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('cachedBookings', jsonEncode(data));
+    await prefs.setString('cachedBookings', convert.jsonEncode(data));
     await prefs.setInt('lastSyncBookings', DateTime.now().millisecondsSinceEpoch);
   }
 
   static Future<void> cacheOrders(List<Map<String, dynamic>> data) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('cachedOrders', jsonEncode(data));
+    await prefs.setString('cachedOrders', convert.jsonEncode(data));
     await prefs.setInt('lastSyncOrders', DateTime.now().millisecondsSinceEpoch);
   }
 
