@@ -9,6 +9,7 @@ import '../data/app_state.dart';
 import 'widgets/login_required_dialog.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/saved_services_provider.dart';
+import 'widgets/reviews_list.dart';
 
 class ServiceDetailPage extends StatefulWidget {
   final Service service;
@@ -35,11 +36,6 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
     super.initState();
     _feedbackCtrl = TextEditingController();
     _liked = AppState.isServiceLiked(widget.service.id);
-    final fb = AppState.getServiceFeedback(widget.service.id);
-    if (fb != null) {
-      _myRating = (fb['rating'] as int?) ?? 0;
-      _feedbackCtrl.text = (fb['text'] as String?) ?? '';
-    }
   }
 
   @override
@@ -395,56 +391,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                       ),
 
                       const SizedBox(height: 24),
-
-                      const Text(
-                        'Your Feedback',
-                        style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
-                      ),
-                      const SizedBox(height: 8),
-                      _RatingRow(
-                        current: _myRating,
-                        onChanged: (v) => setState(() => _myRating = v),
-                      ),
-                      const SizedBox(height: 12),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: card,
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: border),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: TextField(
-                          controller: _feedbackCtrl,
-                          maxLines: 3,
-                          style: const TextStyle(color: Colors.white),
-                          decoration: const InputDecoration(
-                            hintText: 'Share your experience...',
-                            hintStyle: TextStyle(color: Colors.white54),
-                            border: InputBorder.none,
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      SizedBox(
-                        height: 44,
-                        child: OutlinedButton(
-                          style: OutlinedButton.styleFrom(
-                            side: const BorderSide(color: accent),
-                            foregroundColor: accent,
-                          ),
-                          onPressed: () async {
-                            await AppState.setServiceFeedback(
-                              serviceId: widget.service.id,
-                              rating: _myRating,
-                              text: _feedbackCtrl.text.trim(),
-                            );
-                            if (!context.mounted) return;
-                            ScaffoldMessenger.of(context)
-                                .showSnackBar(const SnackBar(content: Text('Feedback saved')));
-                          },
-                          child: const Text('Save Feedback'),
-                        ),
-                      ),
+                      _ReviewsList(type: 'SERVICE', targetId: widget.service.id),
                     ],
                   ),
                 ),
@@ -510,34 +457,6 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
         border: Border.all(color: border),
       ),
       child: child,
-    );
-  }
-
-}
-
-class _RatingRow extends StatelessWidget {
-  final int current; // 0-5
-  final ValueChanged<int> onChanged;
-  const _RatingRow({required this.current, required this.onChanged});
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: List.generate(5, (i) {
-        final idx = i + 1;
-        final filled = idx <= current;
-        return GestureDetector(
-          onTap: () => onChanged(idx),
-          child: Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: Icon(
-              Icons.star,
-              color: filled ? Colors.amber : Colors.white24,
-              size: 24,
-            ),
-          ),
-        );
-      }),
     );
   }
 }

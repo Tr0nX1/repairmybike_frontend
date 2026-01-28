@@ -19,7 +19,7 @@ class QuickServiceConfig {
       title: json['title'],
       rulesHtml: json['rules_html'],
       basePrice: double.tryParse(json['base_price'].toString()) ?? 0.0,
-      supportPhone: json['support_phone'],
+      supportPhone: json['support_phone']?.toString() ?? '',
     );
   }
 }

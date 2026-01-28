@@ -4,6 +4,7 @@ import '../data/booking_api.dart';
 import '../data/order_api.dart';
 
 import '../data/app_state.dart';
+import 'widgets/feedback_bottom_sheet.dart';
 
 class BookingListPage extends StatefulWidget {
   const BookingListPage({super.key});
@@ -625,10 +626,31 @@ class _BookingListPageState extends State<BookingListPage> {
             
           const SizedBox(height: 12),
 
-          Row(
+            Row(
             children: [
+              // Show Feedback/Rating button if completed/delivered
+              if ((status.toLowerCase() == 'completed' || status.toLowerCase() == 'delivered' || status.toLowerCase() == 'fulfilled')) ...[
+                Expanded(
+                  child: SizedBox(
+                    height: 40,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF01C9F5).withOpacity(0.1),
+                        foregroundColor: const Color(0xFF01C9F5),
+                        side: const BorderSide(color: Color(0xFF01C9F5)),
+                        elevation: 0,
+                      ),
+                      icon: const Icon(Icons.star_rounded, size: 18),
+                      onPressed: () => _openFeedback(b),
+                      label: const Text('Rate Experience', style: TextStyle(fontWeight: FontWeight.w700)),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+              ],
+
               // Only show Edit Schedule for service bookings, not spare parts orders
-              if (!isSparePartOrder) ...[
+              if (!isSparePartOrder && status.toLowerCase() == 'pending') ...[
                 Expanded(
                   child: SizedBox(
                     height: 40,
@@ -870,6 +892,35 @@ class _BookingListPageState extends State<BookingListPage> {
           },
         );
       },
+    );
+  }
+
+  void _openFeedback(Map<String, dynamic> b) {
+    final isSparePartOrder = b['isSparePartOrder'] == true;
+    final services = (b['services'] as List?) ?? const [];
+    
+    // For service bookings, targetId is the first service id.
+    // For spare parts, targetId is the first item id.
+    int targetId = 0;
+    String title = "";
+    
+    if (services.isNotEmpty) {
+      final first = services.first;
+      targetId = first['id'] ?? 0;
+      title = first['name'] ?? "";
+    }
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => FeedbackBottomSheet(
+        type: isSparePartOrder ? 'PRODUCT' : 'SERVICE',
+        targetId: targetId,
+        bookingId: isSparePartOrder ? null : b['id'],
+        orderId: isSparePartOrder ? b['id'] : null,
+        title: title,
+      ),
     );
   }
 }

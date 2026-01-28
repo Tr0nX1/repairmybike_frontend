@@ -12,6 +12,7 @@ import '../data/app_state.dart';
 import 'widgets/customer_details_sheet.dart';
 import 'widgets/login_required_dialog.dart';
 import 'cart_page.dart';
+import 'widgets/reviews_list.dart';
 
 class SparePartDetailPage extends StatelessWidget {
   final SparePartListItem item;
@@ -138,6 +139,8 @@ class SparePartDetailPage extends StatelessWidget {
                   _FitmentCard(item: item),
                   const SizedBox(height: 16),
                   _CartActions(partId: item.id),
+                  const SizedBox(height: 24),
+                  ReviewsList(type: 'PRODUCT', targetId: item.id),
                 ],
               ),
             ),

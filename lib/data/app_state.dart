@@ -69,7 +69,6 @@ class AppState {
   static String? lastCustomerPhone;
   static Set<int> likedServiceIds = <int>{};
   static Set<int> likedPartIds = <int>{};
-  static Map<int, Map<String, dynamic>> serviceFeedbacks = {};
   static Map<String, dynamic>? pendingAction;
 
   static bool get isAuthenticated => sessionToken != null && sessionToken!.isNotEmpty;
@@ -158,19 +157,11 @@ class AppState {
       guestId = "00000000-0000-4000-8000-$timestamp";
       await prefs.setString(_kGuestId, guestId!);
     }
-    lastCustomerPhone = prefs.getString(_kLastCustomerPhone);
+    // lastCustomerPhone = prefs.getString(_kLastCustomerPhone);
     final likedS = prefs.getStringList(_kLikedServices);
     if (likedS != null) likedServiceIds = likedS.map(int.parse).toSet();
     final likedP = prefs.getStringList(_kLikedParts);
     if (likedP != null) likedPartIds = likedP.map(int.parse).toSet();
-    
-    final fbJson = prefs.getString('serviceFeedbacks');
-    if (fbJson != null) {
-      try {
-        final Map<String, dynamic> deco = convert.jsonDecode(fbJson);
-        serviceFeedbacks = deco.map((k, v) => MapEntry(int.parse(k), v as Map<String, dynamic>));
-      } catch (_) {}
-    }
   }
 
   static Future<void> setPhone(String phone) async {
@@ -459,18 +450,6 @@ class AppState {
     final a = pendingAction;
     pendingAction = null;
     return a;
-  }
-
-  static Map<String, dynamic>? getServiceFeedback(int id) => serviceFeedbacks[id];
-
-  static Future<void> setServiceFeedback({
-    required int serviceId,
-    required int rating,
-    required String text,
-  }) async {
-    serviceFeedbacks[serviceId] = {'rating': rating, 'text': text};
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('serviceFeedbacks', convert.jsonEncode(serviceFeedbacks.map((k, v) => MapEntry(k.toString(), v))));
   }
 
   static Future<List<Map<String, dynamic>>> getCachedBookings() async {

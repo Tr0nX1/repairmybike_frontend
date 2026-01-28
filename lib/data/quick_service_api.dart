@@ -10,17 +10,25 @@ class QuickServiceApi {
       final response = await _client.get('api/quick-service/config/');
       print('DEBUG: QuickServiceApi.getConfig() response: ${response.data}');
       
-      if (response.data is List) {
-        final list = (response.data as List).cast<Map<String, dynamic>>();
-        if (list.isNotEmpty) {
-          return QuickServiceConfig.fromJson(list.first);
+      final data = response.data;
+      if (data is List) {
+        if (data.isNotEmpty) {
+          try {
+            return QuickServiceConfig.fromJson(data.first as Map<String, dynamic>);
+          } catch (e) {
+            print('DEBUG: QuickServiceConfig.fromJson error: $e');
+          }
         }
-      } else if (response.data is Map) {
-         return QuickServiceConfig.fromJson(response.data as Map<String, dynamic>);
+      } else if (data is Map) {
+        try {
+          return QuickServiceConfig.fromJson(data as Map<String, dynamic>);
+        } catch (e) {
+          print('DEBUG: QuickServiceConfig.fromJson error: $e');
+        }
       }
       return null;
     } catch (e) {
-      print('DEBUG: QuickServiceApi.getConfig() error: $e');
+      print('DEBUG: QuickServiceApi.getConfig() global error: $e');
       return null;
     }
   }
