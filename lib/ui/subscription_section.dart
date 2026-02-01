@@ -39,29 +39,48 @@ class SubscriptionSection extends ConsumerWidget {
             final grouped = _groupMemberships(filtered);
             final entries = grouped.entries.toList();
             final width = MediaQuery.of(context).size.width;
-            final crossAxisCount = width < 900 ? 2 : 2; // always two cards
-            return GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: entries.length,
-              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: crossAxisCount,
-                mainAxisSpacing: 14,
-                crossAxisSpacing: 14,
-                childAspectRatio: 0.9,
-              ),
-              itemBuilder: (context, i) {
-                final e = entries[i];
-                return _MembershipCard(
-                  tierName: e.key,
-                  options: e.value,
-                  onTap: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(builder: (_) => MembershipDetailPage(tierName: e.key, options: e.value)),
+            
+            // Responsive settings
+            final int crossAxisCount;
+            final double aspectRatio;
+            if (width < 600) {
+              crossAxisCount = 1;
+              aspectRatio = 1.3;
+            } else if (width < 1100) {
+              crossAxisCount = 2;
+              aspectRatio = 1.0;
+            } else {
+              crossAxisCount = entries.length > 2 ? 3 : 2;
+              aspectRatio = 1.1;
+            }
+
+            return Center(
+              child: ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 1200),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: entries.length,
+                  gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: crossAxisCount,
+                    mainAxisSpacing: 16,
+                    crossAxisSpacing: 16,
+                    childAspectRatio: aspectRatio,
+                  ),
+                  itemBuilder: (context, i) {
+                    final e = entries[i];
+                    return _MembershipCard(
+                      tierName: e.key,
+                      options: e.value,
+                      onTap: () {
+                        Navigator.of(context).push(
+                          MaterialPageRoute(builder: (_) => MembershipDetailPage(tierName: e.key, options: e.value)),
+                        );
+                      },
                     );
                   },
-                );
-              },
+                ),
+              ),
             );
           },
         ),
