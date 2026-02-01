@@ -44,7 +44,7 @@ class ReviewsList extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                   decoration: BoxDecoration(
-                    color: const Color(0xFF01C9F5).withOpacity(0.1),
+                    color: const Color(0xFF01C9F5).withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
@@ -83,7 +83,7 @@ class ReviewsList extends StatelessWidget {
                         children: [
                           CircleAvatar(
                             radius: 18,
-                            backgroundColor: const Color(0xFF01C9F5).withOpacity(0.1),
+                            backgroundColor: const Color(0xFF01C9F5).withValues(alpha: 0.1),
                             child: Text(
                               user.substring(0, 1).toUpperCase(),
                               style: const TextStyle(color: Color(0xFF01C9F5), fontSize: 14, fontWeight: FontWeight.w800),
@@ -134,7 +134,7 @@ class ReviewsList extends StatelessWidget {
                           children: chips.map((c) => Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.03),
+                              color: Colors.white.withValues(alpha: 0.03),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: Colors.white10),
                             ),

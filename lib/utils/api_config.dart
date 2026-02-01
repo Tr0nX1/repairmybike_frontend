@@ -9,3 +9,5 @@ String resolveBackendBase() => backendBase;
 String get apiBaseSpareParts => '${backendBase}api/spare-parts';
 String get apiBaseVehicles => '${backendBase}api/vehicles';
 String get apiBaseServices => '${backendBase}api/services';
+String get apiBaseFeedback => '${backendBase}api/feedback';
+String get apiBaseUrl => '${backendBase}api';

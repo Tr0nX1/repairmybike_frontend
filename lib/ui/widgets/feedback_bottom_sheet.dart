@@ -125,7 +125,7 @@ class _FeedbackBottomSheetState extends State<FeedbackBottomSheet> {
                   child: Container(
                     padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
-                      color: selected ? const Color(0xFF01C9F5).withOpacity(0.1) : Colors.white.withOpacity(0.05),
+                      color: selected ? const Color(0xFF01C9F5).withValues(alpha: 0.1) : Colors.white.withValues(alpha: 0.05),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: selected ? const Color(0xFF01C9F5) : Colors.white12),
                     ),
@@ -147,7 +147,7 @@ class _FeedbackBottomSheetState extends State<FeedbackBottomSheet> {
                 hintText: 'Add a comment (optional)...',
                 hintStyle: const TextStyle(color: Colors.white24),
                 filled: true,
-                fillColor: Colors.white.withOpacity(0.05),
+                fillColor: Colors.white.withValues(alpha: 0.05),
                 border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: BorderSide.none),
               ),
             ),

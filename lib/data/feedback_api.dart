@@ -8,7 +8,7 @@ class FeedbackApi {
 
   FeedbackApi({Dio? dio, String? base})
       : _dio = dio ?? ApiClient().dio,
-        baseUrl = base ?? '$apiBaseUrl/feedback';
+        baseUrl = base ?? apiBaseFeedback;
 
   Future<Map<String, dynamic>> submitReview({
     required String reviewType, // 'SERVICE', 'PRODUCT', 'APP'

@@ -391,7 +391,7 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                       ),
 
                       const SizedBox(height: 24),
-                      _ReviewsList(type: 'SERVICE', targetId: widget.service.id),
+                      ReviewsList(type: 'SERVICE', targetId: widget.service.id),
                     ],
                   ),
                 ),
