@@ -214,7 +214,24 @@ class _SparePartCard extends StatelessWidget {
             const SizedBox(height: 8),
             Text(item.name, style: theme.textTheme.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
             const SizedBox(height: 4),
-            Text('${item.currency} ${item.salePrice}', style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold)),
+            Row(
+              children: [
+                Text(
+                  '${item.currency} ${item.salePrice > 0 ? item.salePrice : item.mrp}',
+                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
+                ),
+                if (item.salePrice > 0 && item.salePrice < item.mrp) ...[
+                  const SizedBox(width: 6),
+                  Text(
+                    '${item.currency} ${item.mrp}',
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      decoration: TextDecoration.lineThrough,
+                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
+                    ),
+                  ),
+                ],
+              ],
+            ),
             const SizedBox(height: 4),
           ],
         ),

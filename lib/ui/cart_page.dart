@@ -103,9 +103,24 @@ class _CartItemTile extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  '₹${item.price}',
-                  style: TextStyle(color: cs.onSurfaceVariant),
+                Row(
+                  children: [
+                    if (item.mrp > item.price) ...[
+                      Text(
+                        '₹${item.mrp}',
+                        style: TextStyle(
+                          color: cs.onSurfaceVariant.withValues(alpha: 0.5),
+                          fontSize: 12,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                    ],
+                    Text(
+                      '₹${item.price}',
+                      style: TextStyle(color: cs.onSurfaceVariant, fontWeight: FontWeight.w600),
+                    ),
+                  ],
                 ),
               ],
             ),

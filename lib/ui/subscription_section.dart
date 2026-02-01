@@ -331,7 +331,20 @@ class _MembershipCard extends StatelessWidget {
                           crossAxisAlignment: CrossAxisAlignment.baseline,
                           textBaseline: TextBaseline.alphabetic,
                           children: [
-                             Text(
+                            if (options.isNotEmpty && options.first.discountPrice != null) ...[
+                              Text(
+                                '$planSymbol${options.first.price.toStringAsFixed(0)}',
+                                style: TextStyle(
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                  fontSize: 14,
+                                  decoration: TextDecoration.lineThrough,
+                                  decorationColor: Colors.white.withValues(alpha: 0.5),
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Text(
                               planSymbol,
                               style: TextStyle(
                                 color: accentColor,
@@ -349,20 +362,6 @@ class _MembershipCard extends StatelessWidget {
                                 fontWeight: FontWeight.w900,
                               ),
                             ),
-                            if (options.isNotEmpty && options.first.discountPrice != null)
-                              Padding(
-                                padding: const EdgeInsets.only(left: 8.0),
-                                child: Text(
-                                  '$planSymbol${options.first.price.toStringAsFixed(0)}',
-                                  style: TextStyle(
-                                    color: Colors.white.withValues(alpha: 0.5),
-                                    fontSize: 14,
-                                    decoration: TextDecoration.lineThrough,
-                                    decorationColor: Colors.white.withValues(alpha: 0.5),
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
-                              ),
                           ],
                         ),
                       ],

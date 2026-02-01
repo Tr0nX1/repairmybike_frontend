@@ -129,9 +129,24 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                '$symbol${(p.discountPrice ?? p.price).toStringAsFixed(0)} / $months months',
-                style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontWeight: FontWeight.w700),
+              Row(
+                children: [
+                  if (p.discountPrice != null) ...[
+                    Text(
+                      '$symbol${p.price.toStringAsFixed(0)}',
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.4),
+                        fontSize: 12,
+                        decoration: TextDecoration.lineThrough,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  Text(
+                    '$symbol${(p.discountPrice ?? p.price).toStringAsFixed(0)} / $months months',
+                    style: TextStyle(color: Colors.white.withValues(alpha: 0.6), fontWeight: FontWeight.w700),
+                  ),
+                ],
               ),
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),

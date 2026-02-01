@@ -4,6 +4,7 @@ class CartItem {
   final String name;
   final String brandName;
   final int price;
+  final int mrp;
   final int quantity;
   final String? imageUrl;
 
@@ -13,6 +14,7 @@ class CartItem {
     required this.name,
     required this.brandName,
     required this.price,
+    required this.mrp,
     required this.quantity,
     this.imageUrl,
   });
@@ -35,12 +37,14 @@ class CartItem {
       return null;
     }
     final priceVal = toInt(json['unit_price'] ?? json['price']);
+    final mrpVal = toInt(json['mrp'] ?? json['unit_price'] ?? json['price']);
     return CartItem(
       id: idVal,
       productId: prodVal,
       name: json['part_name'] as String? ?? (json['name'] as String? ?? ''),
       brandName: json['brand_name'] as String? ?? (json['brand'] as String? ?? ''),
       price: priceVal,
+      mrp: mrpVal,
       quantity: (json['qty'] as num?)?.toInt() ?? (json['quantity'] as num?)?.toInt() ?? 1,
       imageUrl: extractUrl(json['image'] ?? json['image_url']),
     );
@@ -53,6 +57,7 @@ class CartItem {
       'name': name,
       'brand_name': brandName,
       'unit_price': price,
+      'mrp': mrp,
       'qty': quantity,
       'image_url': imageUrl,
     };

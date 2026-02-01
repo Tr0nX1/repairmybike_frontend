@@ -227,6 +227,17 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      if (p.discountPrice != null) ...[
+                        Text(
+                          '$symbol${p.price.toStringAsFixed(0)}',
+                          style: const TextStyle(
+                            color: Colors.white54,
+                            fontSize: 14,
+                            decoration: TextDecoration.lineThrough,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
                       Text(
                         '$symbol${(p.discountPrice ?? p.price).toStringAsFixed(0)}',
                         style: TextStyle(
@@ -235,17 +246,6 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
                           fontWeight: FontWeight.w900,
                         ),
                       ),
-                      if (p.discountPrice != null) ...[
-                        const SizedBox(width: 8),
-                        Text(
-                          '$symbol${p.price.toStringAsFixed(0)}',
-                          style: TextStyle(
-                            color: Colors.white54,
-                            fontSize: 14,
-                            decoration: TextDecoration.lineThrough,
-                          ),
-                        ),
-                      ],
                     ],
                   ),
                 ),

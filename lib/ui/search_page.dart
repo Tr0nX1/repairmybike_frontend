@@ -214,9 +214,24 @@ class _PartsList extends StatelessWidget {
               : const Icon(Icons.handyman, color: Colors.white70),
           title: Text(p.name, style: const TextStyle(color: Colors.white)),
           subtitle: Text(p.brandName.isNotEmpty ? p.brandName : p.categoryName, style: const TextStyle(color: Colors.white60)),
-          trailing: Text(
-            '${p.currency} ${p.salePrice > 0 ? p.salePrice : p.mrp}',
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          trailing: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              if (p.salePrice > 0 && p.salePrice < p.mrp)
+                Text(
+                  '${p.currency} ${p.mrp}',
+                  style: const TextStyle(
+                    color: Colors.white54,
+                    fontSize: 12,
+                    decoration: TextDecoration.lineThrough,
+                  ),
+                ),
+              Text(
+                '${p.currency} ${p.salePrice > 0 ? p.salePrice : p.mrp}',
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              ),
+            ],
           ),
           onTap: () {
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => SparePartDetailPage(item: p)));
@@ -244,7 +259,25 @@ class _ServicesList extends StatelessWidget {
           title: Text(s.name, style: const TextStyle(color: Colors.white)),
           subtitle: Text(s.categoryName.isNotEmpty ? s.categoryName : 'Service', style: const TextStyle(color: Colors.white60)),
           trailing: s.price > 0
-              ? Text('₹ ${s.price}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600))
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    if (s.originalPrice != null && s.originalPrice! > s.price)
+                      Text(
+                        '₹ ${s.originalPrice}',
+                        style: const TextStyle(
+                          color: Colors.white54,
+                          fontSize: 12,
+                          decoration: TextDecoration.lineThrough,
+                        ),
+                      ),
+                    Text(
+                      '₹ ${s.price}',
+                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                    ),
+                  ],
+                )
               : null,
           onTap: () {
             Navigator.of(context).push(MaterialPageRoute(builder: (_) => ServiceDetailPage(service: s)));
