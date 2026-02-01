@@ -19,7 +19,7 @@ class ContactApi {
     };
 
     final response = await _dio.post(
-      'api/accounts/contact/',
+      'api/auth/contact/',
       data: payload,
     );
 

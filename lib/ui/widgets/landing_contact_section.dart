@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../data/contact_api.dart';
 
 class LandingContactSection extends StatefulWidget {
@@ -347,9 +348,9 @@ class _LandingContactSectionState extends State<LandingContactSection> {
                 width: double.infinity,
                 height: 54,
                 child: ElevatedButton.icon(
-                  onPressed: () {},
+                  onPressed: () => launchUrl(Uri.parse('tel:+918168121711')),
                   icon: const Icon(Icons.phone, size: 20),
-                  label: const Text('Call Emergency Service', style: TextStyle(fontWeight: FontWeight.bold)),
+                  label: const Text('Call: +91 816-812-1711', style: TextStyle(fontWeight: FontWeight.bold)),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: accent,
                     foregroundColor: Colors.black,
