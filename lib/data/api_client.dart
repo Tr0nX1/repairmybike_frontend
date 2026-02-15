@@ -14,7 +14,9 @@ class ApiClient {
   ApiClient._internal() {
     dio = Dio(
       BaseOptions(
-        baseUrl: backendBase,
+        baseUrl: backendBase.endsWith('/') 
+            ? backendBase.substring(0, backendBase.length - 1) 
+            : backendBase,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 15),
       ),
