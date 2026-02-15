@@ -6,7 +6,7 @@ import '../data/auth_api.dart';
 import '../data/vehicles_api.dart';
 import 'main_shell.dart';
 import 'vehicle_type_page.dart';
-import 'landing_page.dart';
+import 'auth_page.dart';
 
 class FlashPage extends StatefulWidget {
   const FlashPage({super.key});
@@ -129,10 +129,9 @@ class _FlashPageState extends State<FlashPage>
           MaterialPageRoute(builder: (_) => const MainShell()),
         );
       } else {
-        // Redirection for Guest Users: Show the redesigned LandingPage
-        // This provides the "e-commerce" entry point requested by the user.
+        // Mobile App: Direct unauthenticated users to login/signup
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const LandingPage()),
+          MaterialPageRoute(builder: (_) => const AuthPage()),
         );
       }
     });
