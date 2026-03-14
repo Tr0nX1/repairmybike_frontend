@@ -360,7 +360,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: const Color(0xFF071A1D),
-        title: const Text('Welcome Back'),
+        title: const Text('RepairMyBike'),
         actions: const [],
       ),
       body: Center(
