@@ -315,7 +315,7 @@ class AppState {
     refreshToken = null;
     likedServiceIds.clear();
     likedPartIds.clear();
-    await prefs.remove(_kLastTabIndex);
+    await prefs.remove(kLastTabIndex);
   }
 
   static Future<void> setAuth({required String phone, required String session, String? refresh}) async {
@@ -354,7 +354,7 @@ class AppState {
     await prefs.remove(_kPhone);
     await prefs.remove(_kIsStaff);
     await prefs.remove(_kUsername);
-    await prefs.remove(_kLastTabIndex);
+    await prefs.remove(kLastTabIndex);
   }
   
   static Future<void> setAvatarUrl(String? url) async {
