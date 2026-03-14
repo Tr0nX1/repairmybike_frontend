@@ -35,6 +35,7 @@ class AppState {
   static const _kSession = 'session_token';
   static const _kRefresh = 'refresh_token';
   static const _kGuestId = 'guest_id';
+  static const kLastTabIndex = 'last_tab_index';
 
   // Auth state
   static String? phoneNumber;
@@ -314,6 +315,7 @@ class AppState {
     refreshToken = null;
     likedServiceIds.clear();
     likedPartIds.clear();
+    await prefs.remove(_kLastTabIndex);
   }
 
   static Future<void> setAuth({required String phone, required String session, String? refresh}) async {
@@ -352,6 +354,7 @@ class AppState {
     await prefs.remove(_kPhone);
     await prefs.remove(_kIsStaff);
     await prefs.remove(_kUsername);
+    await prefs.remove(_kLastTabIndex);
   }
   
   static Future<void> setAvatarUrl(String? url) async {

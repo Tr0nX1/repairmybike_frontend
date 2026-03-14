@@ -28,7 +28,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   Future<void> _restoreTabIndex() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final savedIndex = prefs.getInt('last_tab_index') ?? 0;
+      final savedIndex = prefs.getInt(AppState.kLastTabIndex) ?? 0;
       if (mounted && savedIndex >= 0 && savedIndex < 5) {
         setState(() {
           _currentIndex = savedIndex;
@@ -41,7 +41,7 @@ class _MainShellState extends ConsumerState<MainShell> {
   Future<void> _saveTabIndex(int index) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt('last_tab_index', index);
+      await prefs.setInt(AppState.kLastTabIndex, index);
     } catch (_) {}
   }
 
