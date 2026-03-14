@@ -80,6 +80,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
           firstName: first,
           lastName: last,
           email: email.isNotEmpty ? email : null,
+          phoneNumber: phone.isNotEmpty ? phone : null,
         );
 
         await AuthApi().addAddress(
