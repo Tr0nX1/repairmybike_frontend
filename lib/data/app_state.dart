@@ -5,6 +5,7 @@ import 'dart:convert' as convert;
 import 'spare_parts_api.dart';
 import 'vehicles_api.dart';
 import 'saved_services_api.dart';
+import '../models/postal_address.dart';
 
 class AppState {
   // Keys for persistence
@@ -35,6 +36,7 @@ class AppState {
   static const _kSession = 'session_token';
   static const _kRefresh = 'refresh_token';
   static const _kGuestId = 'guest_id';
+  static const _kLastPostalAddress = 'last_postal_address';
   static const kLastTabIndex = 'last_tab_index';
 
   // Auth state
@@ -68,6 +70,7 @@ class AppState {
   static String? vehicleTypeImageUrl;
 
   static String? lastCustomerPhone;
+  static PostalAddress? lastAddress;
   static Set<int> likedServiceIds = <int>{};
   static Set<int> likedPartIds = <int>{};
   static Map<String, dynamic>? pendingAction;
@@ -159,6 +162,13 @@ class AppState {
       await prefs.setString(_kGuestId, guestId!);
     }
     // lastCustomerPhone = prefs.getString(_kLastCustomerPhone);
+    final addrJson = prefs.getString(_kLastPostalAddress);
+    if (addrJson != null) {
+      try {
+        lastAddress = PostalAddress.fromJson(convert.jsonDecode(addrJson));
+      } catch (_) {}
+    }
+
     final likedS = prefs.getStringList(_kLikedServices);
     if (likedS != null) likedServiceIds = likedS.map(int.parse).toSet();
     final likedP = prefs.getStringList(_kLikedParts);
@@ -287,6 +297,12 @@ class AppState {
     }
   }
 
+  static Future<void> updateLastAddress(PostalAddress address) async {
+    lastAddress = address;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kLastPostalAddress, convert.jsonEncode(address.toJson()));
+  }
+
   static Future<void> clearAllData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -316,6 +332,8 @@ class AppState {
     likedServiceIds.clear();
     likedPartIds.clear();
     await prefs.remove(kLastTabIndex);
+    await prefs.remove(_kLastPostalAddress);
+    lastAddress = null;
   }
 
   static Future<void> setAuth({required String phone, required String session, String? refresh}) async {

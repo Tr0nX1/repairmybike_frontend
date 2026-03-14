@@ -3,6 +3,8 @@ import '../models/service.dart';
 import '../data/vehicles_api.dart';
 import '../data/booking_api.dart';
 import '../data/app_state.dart';
+import '../models/postal_address.dart';
+import 'widgets/address_form_fields.dart';
 
 class BookingFormPage extends StatefulWidget {
   final Service service;
@@ -22,7 +24,12 @@ class _BookingFormPageState extends State<BookingFormPage> {
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
-  final _addressCtrl = TextEditingController();
+  final _flatCtrl = TextEditingController();
+  final _areaCtrl = TextEditingController();
+  final _landmarkCtrl = TextEditingController();
+  final _pincodeCtrl = TextEditingController();
+  final _cityCtrl = TextEditingController();
+  String? _selectedState;
   final _notesCtrl = TextEditingController();
 
   final _vehiclesApi = VehiclesApi();
@@ -69,9 +76,18 @@ class _BookingFormPageState extends State<BookingFormPage> {
       _emailCtrl.text = AppState.email!;
       _autoEmail = true;
     }
-    if ((AppState.fullAddress).isNotEmpty) {
-      _addressCtrl.text = AppState.fullAddress;
+    
+    final addr = AppState.lastAddress;
+    if (addr != null) {
+      _flatCtrl.text = addr.flatHouseNo;
+      _areaCtrl.text = addr.areaStreet;
+      _landmarkCtrl.text = addr.landmark;
+      _pincodeCtrl.text = addr.pincode;
+      _cityCtrl.text = addr.townCity;
+      _selectedState = addr.state;
       _autoAddress = true;
+    } else if ((AppState.fullAddress).isNotEmpty) {
+       // Legacy fallback if needed, but structured is better
     }
   }
 
@@ -207,8 +223,17 @@ class _BookingFormPageState extends State<BookingFormPage> {
       return;
     }
 
-    setState(() => _submitting = true);
-    try {
+      final address = PostalAddress(
+        fullName: _nameCtrl.text.trim(),
+        phoneNumber: effectivePhone,
+        flatHouseNo: _flatCtrl.text.trim(),
+        areaStreet: _areaCtrl.text.trim(),
+        landmark: _landmarkCtrl.text.trim(),
+        pincode: _pincodeCtrl.text.trim(),
+        townCity: _cityCtrl.text.trim(),
+        state: _selectedState ?? '',
+      );
+
       final data = await _bookingApi.createBooking(
         customerName: _nameCtrl.text.trim(),
         customerPhone: effectivePhone,
@@ -216,11 +241,16 @@ class _BookingFormPageState extends State<BookingFormPage> {
         vehicleModelId: _selectedModel!.id,
         serviceIds: [widget.service.id],
         serviceLocation: _serviceLocation,
-        address: _serviceLocation == 'home' ? _addressCtrl.text.trim() : null,
+        address: _serviceLocation == 'home' ? address.toFullString() : null,
+        addressDetails: _serviceLocation == 'home' ? address.toJson() : null,
         appointmentDate: _formatDate(_selectedDate!),
         appointmentTime: _formatTime(_selectedTime!),
         notes: _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
       );
+
+      if (_serviceLocation == 'home') {
+        await AppState.updateLastAddress(address);
+      }
 
       // NOTE: For payment gateway integration later, after creating booking
       // you can create a payment order then verify post transaction.
@@ -386,8 +416,19 @@ class _BookingFormPageState extends State<BookingFormPage> {
             if (_serviceLocation == 'home') ...[
               const SizedBox(height: 16),
               _inputCard(
-                title: 'Address',
-                child: _textField(_addressCtrl, 'Your address'),
+                title: 'Service Address',
+                child: AddressFormFields(
+                  nameCtrl: _nameCtrl,
+                  phoneCtrl: _phoneCtrl,
+                  flatCtrl: _flatCtrl,
+                  areaCtrl: _areaCtrl,
+                  landmarkCtrl: _landmarkCtrl,
+                  pincodeCtrl: _pincodeCtrl,
+                  cityCtrl: _cityCtrl,
+                  selectedState: _selectedState,
+                  onStateChanged: (v) => setState(() => _selectedState = v),
+                  compact: true,
+                ),
               ),
             ],
             const SizedBox(height: 16),

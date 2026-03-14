@@ -27,6 +27,7 @@ class BookingApi {
     required List<int> serviceIds,
     required String serviceLocation, // 'home' | 'shop'
     String? address,
+    Map<String, dynamic>? addressDetails,
     required String appointmentDate, // YYYY-MM-DD
     required String appointmentTime, // HH:MM:SS
     String? notes,
@@ -40,6 +41,7 @@ class BookingApi {
       'service_ids': serviceIds,
       'service_location': serviceLocation,
       if (address != null) 'address': address,
+      if (addressDetails != null) 'address_details': addressDetails,
       'appointment_date': appointmentDate,
       'appointment_time': appointmentTime,
       // Cash only for now

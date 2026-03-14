@@ -103,7 +103,12 @@ class CartNotifier extends Notifier<Cart> {
     await _persist(updated);
   }
 
-  Future<Order> checkoutCash({required String shippingAddress, required String phone}) async {
+  Future<Order> checkoutCash({
+    required String shippingAddress,
+    required String phone,
+    String? shippingMethod,
+    Map<String, dynamic>? addressDetails,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     final sessionId = await _ensureSessionId();
     final name = AppState.fullName ?? 'Customer';
@@ -113,6 +118,8 @@ class CartNotifier extends Notifier<Cart> {
       customerName: name,
       phone: phone,
       address: shippingAddress,
+      shippingMethod: shippingMethod,
+      addressDetails: addressDetails,
     );
     // Clear cart on successful checkout
     state = Cart.empty();
@@ -120,7 +127,14 @@ class CartNotifier extends Notifier<Cart> {
     return order;
   }
 
-  Future<Order> buyNow({required int sparePartId, int quantity = 1, required String shippingAddress, required String phone}) async {
+  Future<Order> buyNow({
+    required int sparePartId,
+    int quantity = 1,
+    required String shippingAddress,
+    required String phone,
+    String? shippingMethod,
+    Map<String, dynamic>? addressDetails,
+  }) async {
     final sessionId = await _ensureSessionId();
     final name = AppState.fullName ?? 'Customer';
     final orderApi = OrderApi();
@@ -131,6 +145,8 @@ class CartNotifier extends Notifier<Cart> {
       customerName: name,
       phone: phone,
       address: shippingAddress,
+      shippingMethod: shippingMethod,
+      addressDetails: addressDetails,
     );
     return order;
   }
