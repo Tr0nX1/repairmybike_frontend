@@ -104,9 +104,9 @@ flutter:
   # see https://flutter.dev/to/font-from-package
 flutter_launcher_icons:
   android: true
-  ios: false
-  image_path: assets/images/logo/mipmap-mdpi/launcher.png
-  adaptive_icon_foreground: assets/images/logo/mipmap-mdpi/launcher.png
-  adaptive_icon_background: "#00000000"
+  ios: true
+  image_path: "assets/launcher icon/repairmybike2.o logo.png"
+  adaptive_icon_foreground: "assets/launcher icon/repairmybike2.o logo.png"
+  adaptive_icon_background: "#0F0F0F"
   min_sdk_android: 21
   remove_alpha_ios: true
