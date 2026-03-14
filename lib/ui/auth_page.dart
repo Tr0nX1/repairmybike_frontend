@@ -126,7 +126,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         _phoneLocked = true;
         _lockedPhone = phone;
       });
-      _startCountdown();
+      _startCountdown(0);
       _showSnack('OTP sent');
     } catch (e) {
       _showSnack(_extractError(e, fallback: 'Failed to send OTP'));
