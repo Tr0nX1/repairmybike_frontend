@@ -12,11 +12,14 @@ class ApiClient {
   factory ApiClient() => _instance;
 
   ApiClient._internal() {
+    // Ensure baseUrl always ends with / for proper path concatenation
+    final normalizedBase = backendBase.endsWith('/') 
+        ? backendBase 
+        : '$backendBase/';
+    
     dio = Dio(
       BaseOptions(
-        baseUrl: backendBase.endsWith('/') 
-            ? backendBase.substring(0, backendBase.length - 1) 
-            : backendBase,
+        baseUrl: normalizedBase,
         connectTimeout: const Duration(seconds: 10),
         receiveTimeout: const Duration(seconds: 15),
       ),
@@ -108,11 +111,19 @@ class ApiClient {
                   
                   if (newSessionToken != null) {
                     // Update AppState with new tokens
-                    await AppState.setAuth(
-                      phone: AppState.phoneNumber ?? '',
-                      session: newSessionToken,
-                      refresh: newRefreshToken ?? refreshToken,
-                    );
+                    if (AppState.isStaff) {
+                      await AppState.setStaffAuth(
+                        username: AppState.staffUsername ?? '',
+                        session: newSessionToken,
+                        refresh: newRefreshToken ?? refreshToken,
+                      );
+                    } else {
+                      await AppState.setAuth(
+                        phone: AppState.phoneNumber ?? '',
+                        session: newSessionToken,
+                        refresh: newRefreshToken ?? refreshToken,
+                      );
+                    }
                     
                     if (kDebugMode) {
                       debugPrint('✅ Token refreshed successfully');
