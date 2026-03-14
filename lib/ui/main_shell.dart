@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/cart_provider.dart';
+import '../data/app_state.dart';
 import 'home_page.dart';
 // import 'services_page.dart';
 import 'booking_list_page.dart';
