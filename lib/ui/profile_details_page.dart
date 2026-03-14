@@ -14,6 +14,7 @@ class ProfileDetailsPage extends StatefulWidget {
 
 class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
   late final _nameCtrl = TextEditingController(text: AppState.fullName ?? '');
+  late final _emailCtrl = TextEditingController(text: AppState.email ?? '');
   late final _phoneCtrl = TextEditingController(text: widget.phoneHint ?? AppState.phoneNumber ?? '');
   late final _flatCtrl = TextEditingController(text: AppState.addrFlat ?? '');
   late final _areaCtrl = TextEditingController(text: AppState.addrArea ?? '');
@@ -38,6 +39,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
   @override
   void dispose() {
     _nameCtrl.dispose();
+    _emailCtrl.dispose();
     _phoneCtrl.dispose();
     _flatCtrl.dispose();
     _areaCtrl.dispose();
@@ -50,6 +52,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
 
   Future<void> _save() async {
     final name = _nameCtrl.text.trim();
+    final email = _emailCtrl.text.trim();
     final phone = _phoneCtrl.text.trim();
     final flat = _flatCtrl.text.trim();
     final area = _areaCtrl.text.trim();
@@ -76,6 +79,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
           sessionToken: token,
           firstName: first,
           lastName: last,
+          email: email.isNotEmpty ? email : null,
         );
 
         await AuthApi().addAddress(
@@ -103,6 +107,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
         s: state,
         i: instr,
         ph: phone,
+        mail: email,
       );
 
       if (mounted) {
@@ -152,6 +157,9 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
             _sectionHeader('Personal Info'),
             _label('Full Name'),
             _field(_nameCtrl, prefixIcon: Icons.person_outline),
+            const SizedBox(height: 16),
+            _label('Email Address (Optional)'),
+            _field(_emailCtrl, keyboardType: TextInputType.emailAddress, prefixIcon: Icons.email_outlined),
             const SizedBox(height: 16),
             _label('Mobile Number'),
             _field(_phoneCtrl, keyboardType: TextInputType.phone, prefixIcon: Icons.phone_outlined),
