@@ -36,6 +36,7 @@ class AppState {
   static const _kVehicleTypeImageUrl = 'vehicleTypeImageUrl';
   static const _kSession = 'session_token';
   static const _kRefresh = 'refresh_token';
+  static const _kGuestId = 'guest_id';
   static const _kLastPostalAddress = 'last_postal_address';
   static const kLastTabIndex = 'last_tab_index';
 
