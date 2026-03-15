@@ -1,5 +1,6 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert' as convert;
+import 'package:flutter/foundation.dart';
 
 
 import 'spare_parts_api.dart';
@@ -311,27 +312,48 @@ class AppState {
 
     // 2. Address Info (Sync default address)
     final List? addresses = data['addresses'];
+    if (kDebugMode) {
+      debugPrint('📦 Syncing profile addresses: ${addresses?.length ?? 0} found');
+    }
+
     if (addresses != null && addresses.isNotEmpty) {
       // Find default address or take first
-      final addr = addresses.firstWhere((a) => a['is_default'] == true, orElse: () => addresses.first);
+      Map<String, dynamic>? addr;
+      try {
+        addr = addresses.firstWhere(
+          (a) => a['is_default'] == true,
+          orElse: () => addresses.first,
+        ) as Map<String, dynamic>?;
+      } catch (_) {
+        addr = addresses.first as Map<String, dynamic>?;
+      }
       
-      addrFlat = addr['flat_house_no'];
-      addrArea = addr['area_street'];
-      addrLandmark = addr['landmark'];
-      addrPincode = addr['pincode'];
-      addrCity = addr['town_city'];
-      addrState = addr['state'];
-      addrPhone = addr['phone_number'];
-      addrInstructions = addr['delivery_instructions'];
+      if (addr != null) {
+        if (kDebugMode) {
+            debugPrint('🏠 Selected address for sync: ${addr['flat_house_no']}, ${addr['town_city']}');
+        }
+        addrFlat = addr['flat_house_no']?.toString();
+        addrArea = addr['area_street']?.toString();
+        addrLandmark = addr['landmark']?.toString();
+        addrPincode = addr['pincode']?.toString();
+        addrCity = addr['town_city']?.toString();
+        addrState = addr['state']?.toString();
+        addrPhone = addr['phone_number']?.toString();
+        addrInstructions = addr['delivery_instructions']?.toString();
 
-      if (addrFlat != null) await prefs.setString(_kAddrFlat, addrFlat!);
-      if (addrArea != null) await prefs.setString(_kAddrArea, addrArea!);
-      if (addrLandmark != null) await prefs.setString(_kAddrLandmark, addrLandmark!);
-      if (addrPincode != null) await prefs.setString(_kAddrPincode, addrPincode!);
-      if (addrCity != null) await prefs.setString(_kAddrCity, addrCity!);
-      if (addrState != null) await prefs.setString(_kAddrState, addrState!);
-      if (addrPhone != null) await prefs.setString(_kAddrPhone, addrPhone!);
-      if (addrInstructions != null) await prefs.setString(_kAddrInstructions, addrInstructions!);
+        if (addrFlat != null) await prefs.setString(_kAddrFlat, addrFlat!);
+        if (addrArea != null) await prefs.setString(_kAddrArea, addrArea!);
+        if (addrLandmark != null) await prefs.setString(_kAddrLandmark, addrLandmark!);
+        if (addrPincode != null) await prefs.setString(_kAddrPincode, addrPincode!);
+        if (addrCity != null) await prefs.setString(_kAddrCity, addrCity!);
+        if (addrState != null) await prefs.setString(_kAddrState, addrState!);
+        if (addrPhone != null) await prefs.setString(_kAddrPhone, addrPhone!);
+        if (addrInstructions != null) await prefs.setString(_kAddrInstructions, addrInstructions!);
+      }
+    } else {
+      if (kDebugMode) {
+        debugPrint('⚠️ No addresses found in profile data');
+      }
     }
 
     // 3. Vehicle Info
