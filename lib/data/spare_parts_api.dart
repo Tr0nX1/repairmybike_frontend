@@ -88,8 +88,9 @@ class SparePartsApi {
   }
 
   Future<Map<String, dynamic>> addToCart({required int partId, int quantity = 1}) async {
+    final sid = await AppState.getCartSessionId();
     final payload = {
-      'session_id': DateTime.now().millisecondsSinceEpoch.toString(),
+      'session_id': sid,
       'spare_part_id': partId,
       'quantity': quantity,
     };

@@ -5,6 +5,7 @@ import 'dart:convert' as convert;
 import 'spare_parts_api.dart';
 import 'vehicles_api.dart';
 import 'saved_services_api.dart';
+import '../models/postal_address.dart';
 
 class AppState {
   // Keys for persistence
@@ -34,7 +35,7 @@ class AppState {
   static const _kVehicleTypeImageUrl = 'vehicleTypeImageUrl';
   static const _kSession = 'session_token';
   static const _kRefresh = 'refresh_token';
-  static const _kGuestId = 'guest_id';
+  static const _kLastPostalAddress = 'last_postal_address';
   static const kLastTabIndex = 'last_tab_index';
 
   // Auth state
@@ -68,6 +69,7 @@ class AppState {
   static String? vehicleTypeImageUrl;
 
   static String? lastCustomerPhone;
+  static PostalAddress? lastAddress;
   static Set<int> likedServiceIds = <int>{};
   static Set<int> likedPartIds = <int>{};
   static Map<String, dynamic>? pendingAction;
@@ -159,6 +161,13 @@ class AppState {
       await prefs.setString(_kGuestId, guestId!);
     }
     // lastCustomerPhone = prefs.getString(_kLastCustomerPhone);
+    final addrJson = prefs.getString(_kLastPostalAddress);
+    if (addrJson != null) {
+      try {
+        lastAddress = PostalAddress.fromJson(convert.jsonDecode(addrJson));
+      } catch (_) {}
+    }
+
     final likedS = prefs.getStringList(_kLikedServices);
     if (likedS != null) likedServiceIds = likedS.map(int.parse).toSet();
     final likedP = prefs.getStringList(_kLikedParts);
@@ -287,6 +296,78 @@ class AppState {
     }
   }
 
+  static Future<void> updateFromProfileMap(Map<String, dynamic> data) async {
+    final prefs = await SharedPreferences.getInstance();
+    
+    // 1. Basic Profile Info
+    fullName = "${data['first_name'] ?? ''} ${data['last_name'] ?? ''}".trim();
+    if (fullName!.isEmpty) fullName = data['username'];
+    email = data['email'];
+    avatarUrl = data['profile_picture'];
+    
+    await prefs.setString(_kFullName, fullName!);
+    if (email != null) await prefs.setString(_kEmail, email!);
+    if (avatarUrl != null) await prefs.setString(_kAvatarUrl, avatarUrl!);
+
+    // 2. Address Info (Sync default address)
+    final List? addresses = data['addresses'];
+    if (addresses != null && addresses.isNotEmpty) {
+      // Find default address or take first
+      final addr = addresses.firstWhere((a) => a['is_default'] == true, orElse: () => addresses.first);
+      
+      addrFlat = addr['flat_house_no'];
+      addrArea = addr['area_street'];
+      addrLandmark = addr['landmark'];
+      addrPincode = addr['pincode'];
+      addrCity = addr['town_city'];
+      addrState = addr['state'];
+      addrPhone = addr['phone_number'];
+      addrInstructions = addr['delivery_instructions'];
+
+      if (addrFlat != null) await prefs.setString(_kAddrFlat, addrFlat!);
+      if (addrArea != null) await prefs.setString(_kAddrArea, addrArea!);
+      if (addrLandmark != null) await prefs.setString(_kAddrLandmark, addrLandmark!);
+      if (addrPincode != null) await prefs.setString(_kAddrPincode, addrPincode!);
+      if (addrCity != null) await prefs.setString(_kAddrCity, addrCity!);
+      if (addrState != null) await prefs.setString(_kAddrState, addrState!);
+      if (addrPhone != null) await prefs.setString(_kAddrPhone, addrPhone!);
+      if (addrInstructions != null) await prefs.setString(_kAddrInstructions, addrInstructions!);
+    }
+
+    // 3. Vehicle Info
+    final Map<String, dynamic>? defVehicle = data['default_vehicle'];
+    if (defVehicle != null) {
+      vehicleName = defVehicle['name'];
+      vehicleModelId = defVehicle['id'];
+      
+      // Extended fields if present in serializer
+      final brand = defVehicle['brand_name'] ?? defVehicle['brand']?['name'];
+      if (brand != null) vehicleBrand = brand;
+      
+      final type = defVehicle['type_name'] ?? defVehicle['vehicle_type']?['name'];
+      if (type != null) vehicleType = type;
+
+      final img = defVehicle['image'];
+      if (img != null) vehicleImageUrl = img;
+
+      await prefs.setString(_kVehicleName, vehicleName!);
+      if (vehicleModelId != null) await prefs.setInt(_kVehicleModelId, vehicleModelId!);
+      if (vehicleBrand != null) await prefs.setString(_kVehicleBrand, vehicleBrand!);
+      if (vehicleType != null) await prefs.setString(_kVehicleType, vehicleType!);
+      if (vehicleImageUrl != null) await prefs.setString(_kVehicleImageUrl, vehicleImageUrl!);
+    }
+
+    // 4. Sync Favorites
+    await syncSavedServices();
+    await syncSavedParts();
+  }
+
+  static Future<void> updateLastAddress(PostalAddress address) async {
+    lastAddress = address;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(_kLastPostalAddress, convert.jsonEncode(address.toJson()));
+  }
+
   static Future<void> clearAllData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
@@ -315,7 +396,8 @@ class AppState {
     refreshToken = null;
     likedServiceIds.clear();
     likedPartIds.clear();
-    await prefs.remove(kLastTabIndex);
+    await prefs.remove(_kLastPostalAddress);
+    lastAddress = null;
   }
 
   static Future<void> setAuth({required String phone, required String session, String? refresh}) async {

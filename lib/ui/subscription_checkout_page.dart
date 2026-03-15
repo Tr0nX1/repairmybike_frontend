@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import '../models/subscription.dart';
-import '../data/subscription_api.dart';
 import '../data/app_state.dart';
+import '../models/postal_address.dart';
+import 'widgets/address_form_fields.dart';
+import '../data/subscription_api.dart';
 
 const accent = Color(0xFF00E5FF);
 const cardColor = Color(0xFF222222);
@@ -16,15 +18,21 @@ class SubscriptionCheckoutPage extends StatefulWidget {
 }
 
 class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
+  final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
+  final _flatCtrl = TextEditingController();
+  final _areaCtrl = TextEditingController();
+  final _landmarkCtrl = TextEditingController();
+  final _pincodeCtrl = TextEditingController();
+  final _cityCtrl = TextEditingController();
+  String? _selectedState;
   final _notesCtrl = TextEditingController();
   bool _autoRenew = true;
   bool _requestSchedule = false;
   String _location = 'shop';
   DateTime? _date;
   TimeOfDay? _time;
-  String _address = '';
   bool _submitting = false;
   String? _errorText;
 
@@ -34,6 +42,18 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
     final savedPhone = AppState.phoneNumber;
     if (savedPhone != null && savedPhone.isNotEmpty) {
       _phoneCtrl.text = savedPhone;
+    }
+    if (AppState.fullName != null) {
+      _nameCtrl.text = AppState.fullName!;
+    }
+    final addr = AppState.lastAddress;
+    if (addr != null) {
+      _flatCtrl.text = addr.flatHouseNo;
+      _areaCtrl.text = addr.areaStreet;
+      _landmarkCtrl.text = addr.landmark;
+      _pincodeCtrl.text = addr.pincode;
+      _cityCtrl.text = addr.townCity;
+      _selectedState = addr.state;
     }
   }
 
@@ -278,11 +298,17 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
             ),
             if (_location == 'home') ...[
               const SizedBox(height: 20),
-              _buildTextField(
-                label: 'Service Address',
-                icon: Icons.location_on_outlined,
-                accentColor: accentColor,
-                onChanged: (v) => _address = v,
+              AddressFormFields(
+                nameCtrl: _nameCtrl,
+                phoneCtrl: _phoneCtrl,
+                flatCtrl: _flatCtrl,
+                areaCtrl: _areaCtrl,
+                landmarkCtrl: _landmarkCtrl,
+                pincodeCtrl: _pincodeCtrl,
+                cityCtrl: _cityCtrl,
+                selectedState: _selectedState,
+                onStateChanged: (v) => setState(() => _selectedState = v),
+                compact: true,
               ),
             ],
           ],
@@ -431,6 +457,17 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
     }
     setState(() { _submitting = true; _errorText = null; });
     try {
+      final address = PostalAddress(
+        fullName: _nameCtrl.text.trim(),
+        phoneNumber: phone,
+        flatHouseNo: _flatCtrl.text.trim(),
+        areaStreet: _areaCtrl.text.trim(),
+        landmark: _landmarkCtrl.text.trim(),
+        pincode: _pincodeCtrl.text.trim(),
+        townCity: _cityCtrl.text.trim(),
+        state: _selectedState ?? '',
+      );
+
       final metadata = <String, dynamic>{};
       if (_requestSchedule && _date != null && _time != null) {
         final hh = _time!.hour.toString().padLeft(2, '0');
@@ -439,11 +476,16 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
           'service_location': _location,
           'appointment_date': _date!.toIso8601String().split('T').first,
           'appointment_time': '$hh:$mm:00',
-          if (_address.isNotEmpty) 'address': _address,
+          if (_location == 'home') 'address': address.toFullString(),
+          if (_location == 'home') 'address_details': address.toJson(),
           if (_notesCtrl.text.trim().isNotEmpty) 'notes': _notesCtrl.text.trim(),
         };
       } else if (_notesCtrl.text.trim().isNotEmpty) {
         metadata['notes'] = _notesCtrl.text.trim();
+      }
+
+      if (_location == 'home') {
+        await AppState.updateLastAddress(address);
       }
 
       final sub = await SubscriptionApi().createSubscription(

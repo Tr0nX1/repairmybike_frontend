@@ -107,6 +107,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   }
 
   Future<void> _sendOtp([String? overridePhone]) async {
+    if (_loading) return;
     final raw = (overridePhone ?? _phoneCtrl.text).trim();
     if (raw.isEmpty) {
       _showSnack('Please enter your phone number');
@@ -136,6 +137,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   }
 
   Future<void> _verifyOtp() async {
+    if (_loading) return;
     if (!_phoneLocked || (_lockedPhone == null || _lockedPhone!.isEmpty)) {
       _showSnack('Mobile number is not locked. Please request OTP first.');
       return;
@@ -358,7 +360,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       backgroundColor: bg,
       appBar: AppBar(
         backgroundColor: const Color(0xFF071A1D),
-        title: const Text('Welcome Back'),
+        title: const Text('RepairMyBike'),
         actions: const [],
       ),
       body: Center(

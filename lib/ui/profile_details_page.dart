@@ -96,20 +96,11 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
           isDefault: _isDefault,
           instructions: instr,
         );
+        
+        // Full refresh to ensure consistency
+        final freshProfile = await AuthApi().getProfile(sessionToken: token);
+        await AppState.updateFromProfileMap(freshProfile);
       }
-
-      await AppState.setProfile(
-        name: name,
-        f: flat,
-        a: area,
-        l: landmark,
-        p: pin,
-        c: city,
-        s: state,
-        i: instr,
-        ph: phone,
-        mail: email,
-      );
 
       if (mounted) {
         if (widget.popOnSave) {

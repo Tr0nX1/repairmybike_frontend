@@ -7,5 +7,7 @@
         <domain includeSubdomains="true">127.0.0.1</domain>
         <!-- Android emulator host mapping -->
         <domain includeSubdomains="true">10.0.2.2</domain>
+        <!-- Production Backend -->
+        <domain includeSubdomains="true">repairmybikebackend-production.up.railway.app</domain>
     </domain-config>
 </network-security-config>

@@ -1,11 +1,20 @@
-// Centralized backend base for APIs and media URLs (fixed to production)
-// No environment overrides to ensure consistent interaction with production API.
-const String backendBase = 'https://repairmybikebackend-production.up.railway.app/';
+import 'package:flutter/foundation.dart';
+import 'dart:io';
 
-String resolveBackendBase() => backendBase;
+// Centralized backend base for APIs and media URLs
+// In debug mode, we point to the local backend. In release, we use production.
+const String _prodBase = 'https://repairmybikebackend-production.up.railway.app/';
+const String _localBaseAndroid = 'http://10.0.2.2:8000/';
+const String _localBaseOther = 'http://localhost:8000/';
 
-// Convenience bases for common API groups (fixed to production base)
-// Note: backendBase includes trailing slash, so we don't start with one here.
+String resolveBackendBase() {
+  // Always use the production URL for APK testing as per user request
+  return _prodBase;
+}
+
+final String backendBase = resolveBackendBase();
+
+// Convenience bases for common API groups
 String get apiBaseSpareParts => '${backendBase}api/spare-parts';
 String get apiBaseVehicles => '${backendBase}api/vehicles';
 String get apiBaseServices => '${backendBase}api/services';

@@ -20,12 +20,16 @@ class OrderApi {
     required String customerName,
     required String phone,
     required String address,
+    String? shippingMethod,
+    Map<String, dynamic>? addressDetails,
   }) async {
     final payload = {
       'session_id': sessionId,
       'customer_name': customerName,
       'phone': phone,
       'address': address,
+      if (shippingMethod != null) 'shipping_method': shippingMethod,
+      if (addressDetails != null) 'address_details': addressDetails,
     };
     try {
       final resp = await _dio.post('$baseUrl/cart/checkout/', data: payload);
@@ -60,6 +64,8 @@ class OrderApi {
     required String customerName,
     required String phone,
     required String address,
+    String? shippingMethod,
+    Map<String, dynamic>? addressDetails,
   }) async {
     final payload = {
       'session_id': sessionId,
@@ -68,6 +74,8 @@ class OrderApi {
       'customer_name': customerName,
       'phone': phone,
       'address': address,
+      if (shippingMethod != null) 'shipping_method': shippingMethod,
+      if (addressDetails != null) 'address_details': addressDetails,
     };
     try {
       final resp = await _dio.post('$baseUrl/cart/buy_now/', data: payload);
