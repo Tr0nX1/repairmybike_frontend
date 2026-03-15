@@ -6,6 +6,7 @@ import '../providers/cart_provider.dart';
 import '../models/cart_item.dart';
 import '../data/app_state.dart';
 import '../models/postal_address.dart';
+import '../data/auth_api.dart';
 import 'widgets/address_form_fields.dart';
 import 'booking_list_page.dart';
 import 'main_shell.dart';
@@ -96,6 +97,37 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
 
       await AppState.updateLastAddress(address);
       await AppState.setLastCustomerPhone(_phoneCtrl.text.trim());
+
+      // If authenticated, also save to permanent user profile on the backend
+      // so address is visible in Profile tab and synced across platforms.
+      if (AppState.isAuthenticated && AppState.sessionToken != null) {
+        try {
+          await AuthApi().addAddress(
+            sessionToken: AppState.sessionToken!,
+            fullName: address.fullName,
+            phone: address.phoneNumber,
+            flat: address.flatHouseNo,
+            area: address.areaStreet,
+            landmark: address.landmark,
+            pincode: address.pincode,
+            city: address.townCity,
+            state: address.state,
+            isDefault: true,
+          );
+          // Re-fetch profile so AppState has the latest address from server
+          try {
+            final freshProfile = await AuthApi().getProfile(sessionToken: AppState.sessionToken!);
+            await AppState.updateFromProfileMap(freshProfile);
+          } catch (_) {}
+        } catch (e) {
+          // Log but do not block checkout on address-save failure
+          assert(() {
+            // ignore: avoid_print
+            print('⚠️ addAddress failed during checkout: $e');
+            return true;
+          }());
+        }
+      }
       
       await ref.read(cartProvider.notifier).checkoutCash(
             shippingAddress: address.toFullString(),

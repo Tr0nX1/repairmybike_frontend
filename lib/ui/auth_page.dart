@@ -159,36 +159,10 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       ref.invalidate(cartProvider);
       try {
         final profile = await _api.getProfile(sessionToken: session);
-        final first = (profile['first_name'] ?? '') as String;
-        final last = (profile['last_name'] ?? '') as String;
-        final mail = (profile['email'] ?? '') as String;
-        final full = [
-          first,
-          last,
-        ].where((e) => e.trim().isNotEmpty).join(' ').trim();
-        await AppState.setProfile(
-          name: full.isNotEmpty ? full : null,
-          mail: mail.isNotEmpty ? mail : null,
-        );
-        
-        // Handle addresses
-        final addrs = profile['addresses'] as List?;
-        if (addrs != null && addrs.isNotEmpty) {
-          final addr = addrs.firstWhere((a) => a['is_default'] == true, orElse: () => addrs.first);
-          await AppState.setProfile(
-            f: addr['flat_house_no'],
-            a: addr['area_street'],
-            l: addr['landmark'],
-            p: addr['pincode'],
-            c: addr['town_city'],
-            s: addr['state'],
-            i: addr['delivery_instructions'],
-            ph: addr['phone_number'],
-          );
-        }
+        await AppState.updateFromProfileMap(profile);
       } catch (_) {}
 
-      // Sync vehicle for existing users to avoid re-asking
+      // Sync vehicle for existing users to avoid re-asking (redundant if updateFromProfileMap handles it, but keeps specialized logic if needed)
       try {
         final vApi = VehiclesApi();
         final vehicles = await vApi.getUserVehicles(sessionToken: session);
