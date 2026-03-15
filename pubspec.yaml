@@ -105,8 +105,8 @@ flutter:
 flutter_launcher_icons:
   android: true
   ios: true
-  image_path: "assets/launcher icon/transparent repairmybike launcher.png"
-  adaptive_icon_foreground: "assets/launcher icon/transparent repairmybike launcher.png"
+  image_path: "assets/launcher icon/professional_launcher.png"
+  adaptive_icon_foreground: "assets/launcher icon/professional_launcher.png"
   adaptive_icon_background: "#000000"
   min_sdk_android: 21
   remove_alpha_ios: true

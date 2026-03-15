@@ -52,8 +52,11 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
         final orderApi = OrderApi();
         final orders = await orderApi.listOrders();
         
-        // Also refresh liked/saved services here
+        // Also refresh profile and liked/saved services here
         if (mounted) {
+           final authApi = AuthApi();
+           final profileData = await authApi.getProfile(sessionToken: AppState.sessionToken!);
+           await AppState.updateFromProfileMap(profileData);
            await ref.read(savedServicesProvider.notifier).sync();
         }
 

@@ -223,6 +223,8 @@ class _BookingFormPageState extends State<BookingFormPage> {
       return;
     }
 
+    setState(() => _submitting = true);
+    try {
       final address = PostalAddress(
         fullName: _nameCtrl.text.trim(),
         phoneNumber: effectivePhone,
@@ -589,7 +591,12 @@ class _BookingFormPageState extends State<BookingFormPage> {
     final isAuto = (ctrl == _nameCtrl && _autoName) ||
         (ctrl == _phoneCtrl && _autoPhone) ||
         (ctrl == _emailCtrl && _autoEmail) ||
-        (ctrl == _addressCtrl && _autoAddress);
+        ((ctrl == _flatCtrl ||
+                ctrl == _areaCtrl ||
+                ctrl == _landmarkCtrl ||
+                ctrl == _pincodeCtrl ||
+                ctrl == _cityCtrl) &&
+            _autoAddress);
     return TextField(
       controller: ctrl,
       keyboardType: keyboardType,

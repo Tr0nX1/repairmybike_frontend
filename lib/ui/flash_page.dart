@@ -52,59 +52,7 @@ class _FlashPageState extends State<FlashPage>
           sessionToken: AppState.sessionToken!,
         ).timeout(const Duration(seconds: 10));
 
-        final first = (profile['first_name'] ?? '') as String;
-        final last = (profile['last_name'] ?? '') as String;
-        final mail = (profile['email'] ?? '') as String;
-        final full = [
-          first,
-          last,
-        ].where((e) => e.trim().isNotEmpty).join(' ').trim();
-        await AppState.setProfile(
-          name: full.isNotEmpty ? full : null,
-          mail: mail.isNotEmpty ? mail : null,
-        );
-
-        // Handle addresses
-        final addrs = profile['addresses'] as List?;
-        if (addrs != null && addrs.isNotEmpty) {
-          final addr = addrs.firstWhere((a) => a['is_default'] == true, orElse: () => addrs.first);
-          await AppState.setProfile(
-            f: addr['flat_house_no'],
-            a: addr['area_street'],
-            l: addr['landmark'],
-            p: addr['pincode'],
-            c: addr['town_city'],
-            s: addr['state'],
-            i: addr['delivery_instructions'],
-            ph: addr['phone_number'],
-          );
-        }
-
-        // Sync vehicle
-        final vApi = VehiclesApi();
-        final vehicles = await vApi.getUserVehicles(
-          sessionToken: AppState.sessionToken!,
-        );
-        if (vehicles.isNotEmpty) {
-          final v = vehicles.first;
-          final details = v['vehicle_model_details'];
-          if (details != null) {
-            final typeName = details['vehicle_type_name'];
-            final brandName = details['brand_name'];
-            final modelName = details['name'];
-            final modelId = details['id'];
-
-            if (typeName != null) await AppState.setVehicleType(typeName);
-            if (brandName != null) await AppState.setVehicleBrand(brandName);
-            if (modelName != null) {
-              await AppState.setVehicle(
-                name: modelName,
-                modelId: modelId,
-                syncToBackend: false,
-              );
-            }
-          }
-        }
+        await AppState.updateFromProfileMap(profile);
       } catch (e) {
         // If an error occurs (e.g. 403 Forbidden), ApiClient has already cleared auth.
         // We log it and rely on the navigation logic below to see !isAuthenticated

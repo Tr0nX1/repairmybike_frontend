@@ -85,21 +85,21 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     try {
       final address = PostalAddress(
         fullName: _nameCtrl.text.trim(),
-        phoneNumber: phone,
-        flatHouseNo: flat,
-        areaStreet: area,
-        landmark: landmark,
-        pincode: pincode,
-        townCity: city,
-        state: state ?? '',
+        phoneNumber: _phoneCtrl.text.trim(),
+        flatHouseNo: _flatCtrl.text.trim(),
+        areaStreet: _areaCtrl.text.trim(),
+        landmark: _landmarkCtrl.text.trim(),
+        pincode: _pincodeCtrl.text.trim(),
+        townCity: _cityCtrl.text.trim(),
+        state: _selectedState ?? '',
       );
 
       await AppState.updateLastAddress(address);
-      await AppState.setLastCustomerPhone(phone);
+      await AppState.setLastCustomerPhone(_phoneCtrl.text.trim());
       
       await ref.read(cartProvider.notifier).checkoutCash(
             shippingAddress: address.toFullString(),
-            phone: phone,
+            phone: _phoneCtrl.text.trim(),
             shippingMethod: _shippingMethod,
             addressDetails: address.toJson(),
           );
