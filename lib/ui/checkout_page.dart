@@ -98,7 +98,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       await AppState.updateLastAddress(address);
       await AppState.setLastCustomerPhone(_phoneCtrl.text.trim());
 
-      // If authenticated, also save to permanent user profile
+      // If authenticated, also save to permanent user profile on the backend
+      // so address is visible in Profile tab and synced across platforms.
       if (AppState.isAuthenticated && AppState.sessionToken != null) {
         try {
           await AuthApi().addAddress(
@@ -113,7 +114,19 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
             state: address.state,
             isDefault: true,
           );
-        } catch (_) {}
+          // Re-fetch profile so AppState has the latest address from server
+          try {
+            final freshProfile = await AuthApi().getProfile(sessionToken: AppState.sessionToken!);
+            await AppState.updateFromProfileMap(freshProfile);
+          } catch (_) {}
+        } catch (e) {
+          // Log but do not block checkout on address-save failure
+          assert(() {
+            // ignore: avoid_print
+            print('⚠️ addAddress failed during checkout: $e');
+            return true;
+          }());
+        }
       }
       
       await ref.read(cartProvider.notifier).checkoutCash(
