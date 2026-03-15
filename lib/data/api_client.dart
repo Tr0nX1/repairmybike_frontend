@@ -12,11 +12,22 @@ class ApiClient {
   factory ApiClient() => _instance;
 
   ApiClient._internal() {
-    // Ensure baseUrl always ends with / for proper path concatenation
-    final normalizedBase = backendBase.endsWith('/') 
-        ? backendBase 
-        : '$backendBase/';
+    // Defensive cleanup of the backend URL to prevent common typos
+    var cleanedBase = backendBase.trim().replaceAll('..', '.');
     
+    // Ensure baseUrl always ends with / for proper path concatenation
+    final normalizedBase = cleanedBase.endsWith('/') 
+        ? cleanedBase 
+        : '$cleanedBase/';
+    
+    if (kDebugMode) {
+      debugPrint('🌐 Initializing ApiClient with Base URL: $normalizedBase');
+      // If still seeing double dots, log hex to see hidden chars
+      if (normalizedBase.contains('..')) {
+        debugPrint('⚠️ Detected persistent double dot! Hex: ${normalizedBase.codeUnits.map((e) => e.toRadixString(16)).join(" ")}');
+      }
+    }
+
     dio = Dio(
       BaseOptions(
         baseUrl: normalizedBase,

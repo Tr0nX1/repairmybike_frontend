@@ -48,21 +48,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       final bookings = await api.getBookings();
       
       // Also fetch spare parts orders
+      // Fetch spare parts orders separately
       try {
         final orderApi = OrderApi();
         final orders = await orderApi.listOrders();
-        
-        // Also refresh profile and liked/saved services here
-        if (mounted) {
-           final authApi = AuthApi();
-           final profileData = await authApi.getProfile(sessionToken: AppState.sessionToken!);
-           await AppState.updateFromProfileMap(profileData);
-           await ref.read(savedServicesProvider.notifier).sync();
-        }
-
         setState(() => _orderCount = orders.length);
       } catch (_) {
-        // Ignore
+        // Ignore order fetch failure
+      }
+
+      // Refresh profile and liked/saved services independently
+      if (mounted) {
+        try {
+          final authApi = AuthApi();
+          final profileData = await authApi.getProfile(sessionToken: AppState.sessionToken!);
+          await AppState.updateFromProfileMap(profileData);
+          await ref.read(savedServicesProvider.notifier).sync();
+          setState(() {}); // Refresh UI with updated profile
+        } catch (_) {
+          // Ignore profile refresh failure for now (e.g. if offline)
+        }
       }
       
       setState(() {
