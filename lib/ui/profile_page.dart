@@ -17,6 +17,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/saved_services_provider.dart';
 import 'customer_care_page.dart';
 import 'quick_service_history_page.dart';
+import 'policy_page.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -517,6 +518,61 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   label: 'Customer Care',
                   icon: Icons.support_agent,
                   onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerCarePage())),
+                ),
+
+                const SizedBox(height: 12),
+                _Section(title: 'Legal & Policies'),
+                _ActionTile(
+                  label: 'Terms & Conditions',
+                  icon: Icons.description_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PolicyPage(
+                        slug: 'terms-and-conditions',
+                        title: 'Terms & Conditions',
+                      ),
+                    ),
+                  ),
+                ),
+                _ActionTile(
+                  label: 'Privacy Policy',
+                  icon: Icons.privacy_tip_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PolicyPage(
+                        slug: 'privacy-policy',
+                        title: 'Privacy Policy',
+                      ),
+                    ),
+                  ),
+                ),
+                _ActionTile(
+                  label: 'Refund & Cancellation Policy',
+                  icon: Icons.money_off_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PolicyPage(
+                        slug: 'refund-and-cancellation-policy',
+                        title: 'Refund & Cancellation',
+                      ),
+                    ),
+                  ),
+                ),
+                _ActionTile(
+                  label: 'Shipping & Delivery Policy',
+                  icon: Icons.local_shipping_outlined,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const PolicyPage(
+                        slug: 'shipping-and-delivery-policy',
+                        title: 'Shipping & Delivery',
+                      ),
+                    ),
+                  ),
                 ),
 
                 const SizedBox(height: 24),

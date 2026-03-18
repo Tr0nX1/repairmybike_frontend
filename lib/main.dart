@@ -5,9 +5,22 @@ import 'ui/flash_page.dart';
 import 'utils/api_config.dart';
 import 'package:url_strategy/url_strategy.dart';
 
-void main() {
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
+import 'utils/fcm_service.dart';
+
+void main() async {
   setPathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize Firebase
+  await Firebase.initializeApp();
+  
+  // Setup FCM
+  final fcmService = FcmService();
+  await fcmService.initialize();
+  FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
+
   debugPrint('🔥 BACKEND BASE URL: $backendBase');
   runApp(const ProviderScope(child: MyApp()));
 }

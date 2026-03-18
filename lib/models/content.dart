@@ -70,3 +70,29 @@ class SupportOption {
     }
   }
 }
+
+class Policy {
+  final int id;
+  final String title;
+  final String slug;
+  final String content;
+  final DateTime updatedAt;
+
+  Policy({
+    required this.id,
+    required this.title,
+    required this.slug,
+    required this.content,
+    required this.updatedAt,
+  });
+
+  factory Policy.fromJson(Map<String, dynamic> json) {
+    return Policy(
+      id: json['id'],
+      title: json['title'],
+      slug: json['slug'],
+      content: json['content'],
+      updatedAt: DateTime.parse(json['updated_at']),
+    );
+  }
+}

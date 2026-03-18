@@ -23,4 +23,13 @@ class ContentApi {
       return [];
     }
   }
+
+  Future<Policy?> getPolicy(String slug) async {
+    try {
+      final response = await _client.get('api/content/policy/$slug/');
+      return Policy.fromJson(response.data);
+    } catch (_) {
+      return null;
+    }
+  }
 }

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'main_shell.dart';
 import '../data/auth_api.dart';
@@ -8,6 +9,8 @@ import '../data/app_state.dart';
 import 'vehicle_type_page.dart';
 import '../data/vehicles_api.dart';
 import '../providers/cart_provider.dart';
+import 'policy_page.dart';
+import '../utils/fcm_service.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
   final VoidCallback? onFinished;
@@ -269,6 +272,14 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   }
 
   void _finish() {
+    // Register FCM Token after successful login
+    final session = AppState.sessionToken;
+    if (session != null) {
+      AuthApi().getProfile(sessionToken: session).then((_) {
+         FcmService().registerTokenWithBackend(session);
+      }).catchError((_) {});
+    }
+
     // If parent wants a callback, honor it.
     if (widget.onFinished != null) {
       widget.onFinished!.call();
@@ -451,10 +462,52 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                   child: const Text('Continue as Guest'),
                 ),
                 const SizedBox(height: 8),
-                const Text(
-                  'By continuing, you agree to our Terms & Privacy Policy.',
+                RichText(
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white38),
+                  text: TextSpan(
+                    style: const TextStyle(color: Colors.white38, fontSize: 13),
+                    children: [
+                      const TextSpan(text: 'By continuing, you agree to our '),
+                      TextSpan(
+                        text: 'Terms',
+                        style: const TextStyle(
+                          color: accent,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const PolicyPage(
+                                  slug: 'terms-and-conditions',
+                                  title: 'Terms & Conditions',
+                                ),
+                              ),
+                            );
+                          },
+                      ),
+                      const TextSpan(text: ' & '),
+                      TextSpan(
+                        text: 'Privacy Policy',
+                        style: const TextStyle(
+                          color: accent,
+                          decoration: TextDecoration.underline,
+                        ),
+                        recognizer: TapGestureRecognizer()
+                          ..onTap = () {
+                            Navigator.of(context).push(
+                              MaterialPageRoute(
+                                builder: (_) => const PolicyPage(
+                                  slug: 'privacy-policy',
+                                  title: 'Privacy Policy',
+                                ),
+                              ),
+                            );
+                          },
+                      ),
+                      const TextSpan(text: '.'),
+                    ],
+                  ),
                 ),
               ] else ...[
                 const Icon(Icons.check_circle, color: accent, size: 48),
