@@ -193,7 +193,6 @@ class _CategoryCard extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 4),
-                textScaler: TextScaler.linear(scale),
             ],
           ),
         );

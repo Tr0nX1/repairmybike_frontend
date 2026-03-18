@@ -443,7 +443,7 @@ class _QuickActionsRow extends StatelessWidget {
           // Scroll intent could be added; for now, open Search as placeholder
           Navigator.of(
             context,
-          ).push(MaterialPageRoute(builder: (_) => SubscriptionPage()));
+          ).push(MaterialPageRoute(builder: (_) => const SubscriptionsPage()));
         },
       ),
     ];

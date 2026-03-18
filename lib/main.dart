@@ -8,6 +8,7 @@ import 'package:url_strategy/url_strategy.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'utils/fcm_service.dart';
+import 'ui/policy_page.dart';
 
 void main() async {
   setPathUrlStrategy();
@@ -133,6 +134,41 @@ class MyApp extends ConsumerWidget {
       darkTheme: darkTheme,
       themeMode: mode,
       home: const FlashPage(),
+      onGenerateRoute: (settings) {
+        if (settings.name == null) return null;
+        final uri = Uri.parse(settings.name!);
+        
+        // Handle Policy routes
+        if (uri.path == '/terms' || uri.path == '/privacy' || uri.path == '/refund' || uri.path == '/shipping') {
+          String slug = '';
+          String title = '';
+          
+          switch (uri.path) {
+            case '/terms':
+              slug = 'terms-and-conditions';
+              title = 'Terms & Conditions';
+              break;
+            case '/privacy':
+              slug = 'privacy-policy';
+              title = 'Privacy Policy';
+              break;
+            case '/refund':
+              slug = 'refund-and-cancellation-policy';
+              title = 'Refund & Cancellation';
+              break;
+            case '/shipping':
+              slug = 'shipping-and-delivery-policy';
+              title = 'Shipping & Delivery';
+              break;
+          }
+          
+          return MaterialPageRoute(
+            builder: (_) => PolicyPage(slug: slug, title: title),
+            settings: settings,
+          );
+        }
+        return null;
+      },
       debugShowCheckedModeBanner: false,
     );
   }

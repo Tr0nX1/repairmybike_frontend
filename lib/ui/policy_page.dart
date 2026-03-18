@@ -107,7 +107,7 @@ class _PolicyPageState extends State<PolicyPage> {
                       const Divider(height: 32),
                       MarkdownBody(
                         data: _policy!.content,
-                        styleConfig: MarkdownStyleConfig(
+                        styleSheet: MarkdownStyleSheet(
                           p: TextStyle(color: cs.onSurface, height: 1.5),
                           h1: TextStyle(color: cs.onSurface, fontWeight: FontWeight.bold),
                           h2: TextStyle(color: cs.onSurface, fontWeight: FontWeight.bold),
@@ -119,14 +119,4 @@ class _PolicyPageState extends State<PolicyPage> {
                 ),
     );
   }
-}
-
-// Simple internal helper since we might not have flutter_markdown yet or a custom config
-class MarkdownStyleConfig {
-  final TextStyle? p;
-  final TextStyle? h1;
-  final TextStyle? h2;
-  final TextStyle? h3;
-
-  MarkdownStyleConfig({this.p, this.h1, this.h2, this.h3});
 }
