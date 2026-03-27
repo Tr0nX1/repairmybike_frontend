@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:go_router/go_router.dart';
 import '../data/app_state.dart';
 import '../data/vehicles_api.dart';
 import '../utils/url_utils.dart';
-import 'vehicle_name_page.dart';
 import 'widgets/rm_app_bar.dart';
 
 class VehicleBrandPage extends StatefulWidget {
@@ -56,16 +56,13 @@ class _VehicleBrandPageState extends State<VehicleBrandPage> {
       brand: item.name, 
       brandImageUrl: imgUrl,
     );
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => VehicleNamePage(
-          phone: widget.phone,
-          vehicleBrandId: item.id,
-          vehicleBrandName: item.name,
-        ),
-      ),
-    );
+    context.push('/vehicle-name', extra: {
+      'phone': widget.phone,
+      'vehicleTypeId': widget.vehicleTypeId,
+      'vehicleTypeName': widget.vehicleTypeName,
+      'brandId': item.id,
+      'brandName': item.name,
+    });
   }
 
   @override

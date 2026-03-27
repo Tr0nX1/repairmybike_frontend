@@ -1,15 +1,13 @@
 import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'main_shell.dart';
 import '../data/auth_api.dart';
 import '../data/app_state.dart';
-import 'vehicle_type_page.dart';
 import '../data/vehicles_api.dart';
 import '../providers/cart_provider.dart';
-import 'policy_page.dart';
 import '../utils/fcm_service.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
@@ -165,7 +163,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         await AppState.updateFromProfileMap(profile);
       } catch (_) {}
 
-      // Sync vehicle for existing users to avoid re-asking (redundant if updateFromProfileMap handles it, but keeps specialized logic if needed)
+      // Sync vehicle for existing users
       try {
         final vApi = VehiclesApi();
         final vehicles = await vApi.getUserVehicles(sessionToken: session);
@@ -191,12 +189,10 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         }
       } catch (_) {}
 
-      // _showSnack('Signed in');
       setState(() {
         _otpStep = false;
         _otpCtrl.clear();
       });
-      // Finish flow: either notify parent tab or go to MainShell
       _finish();
     } catch (e) {
       _showSnack(_extractError(e, fallback: 'Verification failed'));
@@ -205,7 +201,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     }
   }
 
-
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
@@ -213,7 +208,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   String _extractError(Object e, {required String fallback}) {
     if (e is DioException) {
       final data = e.response?.data;
-      // Map by status code first (e.g., provider rate limits)
       final status = e.response?.statusCode ?? 0;
       if (status == 429) {
         return 'Too many attempts. Please wait a minute and try again.';
@@ -224,83 +218,32 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       if (data is Map && data['error'] is String) {
         return data['error'] as String;
       }
-      if (data is String && data.isNotEmpty) return data;
       return fallback;
     }
-    var msg = e.toString();
-    // Strip the common Exception prefix for cleaner display
-    if (msg.startsWith('Exception: ')) {
-      msg = msg.substring('Exception: '.length);
-    }
-    if (msg.isNotEmpty && !msg.contains('DioException')) {
-      // Provide a helpful hint for common provider messages
-      final lower = msg.toLowerCase();
-      if (lower.contains('illegal phone') || lower.contains('invalid phone')) {
-        return 'Illegal phone number. Please include country code (e.g., +91xxxxxxxxxx).';
-      }
-      // Rate limit / resend cooldown
-      if (lower.contains('rate') && lower.contains('limit') ||
-          lower.contains('too many requests') ||
-          lower.contains('429') ||
-          (lower.contains('resend') && lower.contains('otp')) ||
-          lower.contains('cooldown')) {
-        return 'Too many attempts. Please wait a minute and try again.';
-      }
-      // Provider/service unavailable
-      if (lower.contains('service unavailable') ||
-          lower.contains('provider unavailable') ||
-          lower.contains('temporarily unavailable') ||
-          lower.contains('503')) {
-        return 'OTP service is temporarily unavailable. Please try again later.';
-      }
-      // Network/timeout issues
-      if (lower.contains('socket') ||
-          lower.contains('network') ||
-          lower.contains('timeout')) {
-        return 'Network issue. Check your internet connection and try again.';
-      }
-      // OTP verification messages
-      if (lower.contains('invalid otp') ||
-          lower.contains('wrong otp') ||
-          lower.contains('otp code invalid') ||
-          lower.contains('expired')) {
-        return 'Invalid or expired OTP. Please request a new code.';
-      }
-      return msg;
-    }
-    return fallback;
+    return e.toString();
   }
 
   void _finish() {
-    // Register FCM Token after successful login
     final session = AppState.sessionToken;
     if (session != null) {
-      AuthApi().getProfile(sessionToken: session).then((_) {
+      _api.getProfile(sessionToken: session).then((_) {
          FcmService().registerTokenWithBackend(session);
       }).catchError((_) {});
     }
 
-    // If parent wants a callback, honor it.
     if (widget.onFinished != null) {
       widget.onFinished!.call();
       return;
     }
 
-    // If customer has no vehicle (and isn't staff), force selection flow
     if (!AppState.isStaff) {
        if (!AppState.hasVehicle) {
-         Navigator.of(context).pushReplacement(
-           MaterialPageRoute(
-             builder: (_) => VehicleTypePage(phone: AppState.phoneNumber),
-           ),
-         );
+         context.go('/vehicle-type?phone=${AppState.phoneNumber}');
          return;
        }
     }
 
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const MainShell()));
+    context.go('/home');
   }
 
   Future<void> _onChangeNumber() async {
@@ -346,7 +289,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF071A1D),
         title: const Text('RepairMyBike'),
-        actions: const [],
       ),
       body: Center(
         child: Container(
@@ -370,13 +312,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                     controller: _phoneCtrl,
                     locked: _phoneLocked,
                     onChangeNumber: _onChangeNumber,
-                  ),
-                  const SizedBox(height: 6),
-                  // Helpful hint for correct phone formatting per user's request
-                  const Text(
-                    'Example: +91 94134 57023 (normalized to +919413457023)',
-                    textAlign: TextAlign.left,
-                    style: TextStyle(color: Colors.white54, fontSize: 12),
                   ),
                   const SizedBox(height: 12),
                   ElevatedButton(
@@ -446,13 +381,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                       ? null
                       : () {
                           final phone = _phoneCtrl.text.trim();
-                          Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) => VehicleTypePage(
-                                phone: phone.isEmpty ? null : phone,
-                              ),
-                            ),
-                          );
+                          context.push('/vehicle-type?phone=${phone.isEmpty ? "" : phone}');
                         },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: accent),
@@ -476,14 +405,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const PolicyPage(
-                                  slug: 'terms-and-conditions',
-                                  title: 'Terms & Conditions',
-                                ),
-                              ),
-                            );
+                            context.push('/terms');
                           },
                       ),
                       const TextSpan(text: ' & '),
@@ -495,14 +417,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) => const PolicyPage(
-                                  slug: 'privacy-policy',
-                                  title: 'Privacy Policy',
-                                ),
-                              ),
-                            );
+                            context.push('/privacy');
                           },
                       ),
                       const TextSpan(text: '.'),
@@ -574,7 +489,7 @@ class _PhoneField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final border = const Color(0xFF2A2A2A);
+    const border = Color(0xFF2A2A2A);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -593,18 +508,18 @@ class _PhoneField extends StatelessWidget {
                 : null,
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: border),
+              borderSide: const BorderSide(color: border),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(color: border),
+              borderSide: const BorderSide(color: border),
             ),
           ),
         ),
         if (locked) ...[
           const SizedBox(height: 8),
           const Text(
-            'Mobile number locked for OTP verification. Changing number requires a new OTP.',
+            'Mobile number locked for OTP verification.',
             style: TextStyle(color: Colors.white54, fontSize: 12),
           ),
           Align(
@@ -706,4 +621,3 @@ class _StaffFields extends StatelessWidget {
     );
   }
 }
-

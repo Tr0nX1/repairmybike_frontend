@@ -1,15 +1,15 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/cart_provider.dart';
 import '../models/cart_item.dart';
 import '../data/app_state.dart';
 import '../models/postal_address.dart';
 import '../data/auth_api.dart';
 import 'widgets/address_form_fields.dart';
-import 'booking_list_page.dart';
-import 'main_shell.dart';
 
 class CheckoutPage extends ConsumerStatefulWidget {
   const CheckoutPage({super.key});
@@ -30,15 +30,6 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   String _shippingMethod = 'standard';
   bool _submitting = false;
   String? _error;
-
-  final List<String> _states = [
-    'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-    'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh', 'Jharkhand', 'Karnataka',
-    'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Manipur', 'Meghalaya', 'Mizoram',
-    'Nagaland', 'Odisha', 'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu',
-    'Telangana', 'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
-    'Delhi', 'Chandigarh', 'Other'
-  ];
 
   @override
   void initState() {
@@ -120,12 +111,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
             await AppState.updateFromProfileMap(freshProfile);
           } catch (_) {}
         } catch (e) {
-          // Log but do not block checkout on address-save failure
-          assert(() {
-            // ignore: avoid_print
-            print('⚠️ addAddress failed during checkout: $e');
-            return true;
-          }());
+          if (kDebugMode) {
+            debugPrint('⚠️ addAddress failed during checkout: $e');
+          }
         }
       }
       
@@ -139,13 +127,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(const SnackBar(content: Text('Order placed')));
-      Navigator.of(context).pushAndRemoveUntil(
-        MaterialPageRoute(builder: (_) => const MainShell()),
-        (route) => false,
-      );
-      Navigator.of(
-        context,
-      ).push(MaterialPageRoute(builder: (_) => const BookingListPage()));
+      
+      context.go('/home');
+      context.push('/bookings');
     } catch (e) {
       setState(() {
         _error = e.toString();
@@ -250,17 +234,21 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              RadioListTile<String>(
-                value: 'standard',
+              RadioGroup<String>(
                 groupValue: _shippingMethod,
                 onChanged: (v) => setState(() => _shippingMethod = v!),
-                title: const Text('Standard Delivery (3–5 days)'),
-              ),
-              RadioListTile<String>(
-                value: 'express',
-                groupValue: _shippingMethod,
-                onChanged: (v) => setState(() => _shippingMethod = v!),
-                title: const Text('Express Delivery (1–2 days)'),
+                child: Column(
+                  children: [
+                    RadioListTile<String>(
+                      value: 'standard',
+                      title: const Text('Standard Delivery (3–5 days)'),
+                    ),
+                    RadioListTile<String>(
+                      value: 'express',
+                      title: const Text('Express Delivery (1–2 days)'),
+                    ),
+                  ],
+                ),
               ),
               const SizedBox(height: 16),
               Text(

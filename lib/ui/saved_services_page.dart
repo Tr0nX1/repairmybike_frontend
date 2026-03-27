@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../data/app_state.dart';
 import '../data/saved_services_api.dart';
 import '../models/service.dart';
-import 'service_detail_page.dart';
 
 class SavedServicesPage extends StatefulWidget {
   const SavedServicesPage({super.key});
@@ -46,8 +46,6 @@ class _SavedServicesPageState extends State<SavedServicesPage> {
     });
     // Update global state
     await AppState.toggleLikeService(serviceId);
-    // If global state update fails, we might want to revert, but toggleLikeService handles API call too.
-    // If we want to be sure, we can re-fetch.
   }
 
   @override
@@ -97,12 +95,7 @@ class _SavedServicesPageState extends State<SavedServicesPage> {
                          try {
                            // Construct Service object from the data
                            final service = Service.fromJson(serviceData);
-                           Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ServiceDetailPage(service: service),
-                              ),
-                           );
+                           context.push('/service-detail', extra: service);
                          } catch (e) {
                            // If construction fails, show error
                            ScaffoldMessenger.of(context).showSnackBar(

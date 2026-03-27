@@ -357,9 +357,9 @@ class _MembershipDetailPageState extends State<MembershipDetailPage> {
                 final nav = Navigator.of(context);
                 if (!AppState.isAuthenticated) {
                   await AppState.setPendingAction({'type': 'subscribe'});
-                  if (!context.mounted) return;
+                  if (!mounted) return;
                   await showLoginRequiredDialog(context);
-                  if (!context.mounted) return;
+                  if (!mounted) return;
                   return;
                 }
                 nav.push(

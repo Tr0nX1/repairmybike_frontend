@@ -99,7 +99,7 @@ class AddressFormFields extends StatelessWidget {
 
   Widget _buildStateDropdown() {
     return DropdownButtonFormField<String>(
-      value: selectedState,
+      initialValue: selectedState,
       decoration: InputDecoration(
         labelText: 'State',
         prefixIcon: const Icon(Icons.public_outlined, size: 20),

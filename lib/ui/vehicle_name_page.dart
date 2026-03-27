@@ -1,22 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:go_router/go_router.dart';
 import '../data/app_state.dart';
 import '../data/vehicles_api.dart';
 import '../utils/url_utils.dart';
-import 'main_shell.dart';
 import 'widgets/rm_app_bar.dart';
 
 class VehicleNamePage extends StatefulWidget {
   const VehicleNamePage({
     super.key,
     this.phone,
-    required this.vehicleBrandId,
-    required this.vehicleBrandName,
+    this.vehicleTypeId,
+    this.vehicleTypeName,
+    required this.brandId,
+    required this.brandName,
   });
   final String? phone;
-  final int vehicleBrandId;
-  final String vehicleBrandName;
+  final int? vehicleTypeId;
+  final String? vehicleTypeName;
+  final int brandId;
+  final String brandName;
 
   @override
   State<VehicleNamePage> createState() => _VehicleNamePageState();
@@ -40,7 +44,7 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
       _error = null;
     });
     try {
-      final items = await _api.getVehicleModels(widget.vehicleBrandId);
+      final items = await _api.getVehicleModels(widget.brandId);
       setState(() => _models = items);
     } catch (e) {
       setState(() => _error = 'Failed to load models');
@@ -53,7 +57,7 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
-      appBar: RMAppBar(title: 'Select ${widget.vehicleBrandName} Model'),
+      appBar: RMAppBar(title: 'Select ${widget.brandName} Model'),
       body: Align(
         alignment: Alignment.topCenter,
         child: Container(
@@ -71,7 +75,7 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
               const SizedBox(height: 10),
               Center(
                 child: Text(
-                  'Choose your ${widget.vehicleBrandName} model',
+                  'Choose your ${widget.brandName} model',
                   style: const TextStyle(color: Colors.white70, fontSize: 16),
                 ),
               ),
@@ -112,7 +116,6 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
                       ),
               ),
               const SizedBox(height: 20),
-              // Custom model input option
               _buildCustomModelInput(context),
             ],
           ),
@@ -132,11 +135,7 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
             imageUrl: img,
         );
         if (!context.mounted) return;
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const MainShell()),
-          (route) => false,
-        );
+        context.go('/home');
       },
       child: Container(
         padding: const EdgeInsets.all(12),
@@ -232,11 +231,7 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
                     final name = customController.text.trim();
                     await AppState.setVehicle(name: name);
                     if (!context.mounted) return;
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MainShell()),
-                      (route) => false,
-                    );
+                    context.go('/home');
                   }
                 },
               ),

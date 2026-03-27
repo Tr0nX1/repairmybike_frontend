@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
-import 'main_shell.dart';
 
 class ProfileDetailsPage extends StatefulWidget {
   final bool popOnSave;
@@ -104,11 +104,9 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
 
       if (mounted) {
         if (widget.popOnSave) {
-          Navigator.of(context).pop();
+          context.pop();
         } else {
-          Navigator.of(context).pushReplacement(
-            MaterialPageRoute(builder: (_) => const MainShell()),
-          );
+          context.go('/home');
         }
       }
     } catch (e) {

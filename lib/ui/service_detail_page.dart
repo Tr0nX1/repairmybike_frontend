@@ -28,7 +28,6 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
 
   String? _selectedLocation; // 'home' or 'shop'
   late TextEditingController _feedbackCtrl;
-  int _myRating = 0; // 0-5
   bool _liked = false;
 
   @override

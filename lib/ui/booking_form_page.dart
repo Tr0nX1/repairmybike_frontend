@@ -286,9 +286,8 @@ class _BookingFormPageState extends State<BookingFormPage> {
         mail: _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
       );
 
-      if (context.mounted) {
-        Navigator.of(context).pop();
-      }
+      if (!mounted) return;
+      Navigator.of(context).pop();
     } catch (e) {
       _showSnack('Failed to create booking: $e');
     } finally {

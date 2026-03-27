@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/subscription_provider.dart';
 import '../models/subscription.dart';
-
-
-import 'membership_detail_page.dart';
 
 // Helper available to both home section and full page
 bool isPopularPlan(SubscriptionPlan plan, List<SubscriptionPlan> all) {
@@ -73,9 +71,10 @@ class SubscriptionSection extends ConsumerWidget {
                       tierName: e.key,
                       options: e.value,
                       onTap: () {
-                        Navigator.of(context).push(
-                          MaterialPageRoute(builder: (_) => MembershipDetailPage(tierName: e.key, options: e.value)),
-                        );
+                        context.push('/membership-detail', extra: {
+                          'tierName': e.key,
+                          'options': e.value,
+                        });
                       },
                     );
                   },
@@ -84,7 +83,6 @@ class SubscriptionSection extends ConsumerWidget {
             );
           },
         ),
-        // Removed "View Plans" button to keep focus on two memberships
       ],
     );
   }
@@ -101,7 +99,6 @@ class SubscriptionSection extends ConsumerWidget {
     );
   }
 }
-
 
 class SubscriptionsPage extends ConsumerWidget {
   const SubscriptionsPage({super.key});
@@ -183,7 +180,6 @@ Map<String, List<SubscriptionPlan>> _groupMemberships(List<SubscriptionPlan> fil
     grouped.putIfAbsent(key, () => []);
     grouped[key]!.add(p);
   }
-  // Ensure ordering: Basic then Premium if present
   final keys = grouped.keys.toList();
   keys.sort((a, b) => a.toLowerCase().contains('basic') ? -1 : a.toLowerCase().contains('premium') ? 1 : 0);
   final ordered = <String, List<SubscriptionPlan>>{};
@@ -198,7 +194,7 @@ String _currencySymbol(String currency) {
     case 'INR':
       return '₹';
     case 'USD':
-      return '\u000024';
+      return '\$';
     case 'EUR':
       return '€';
     default:
@@ -214,9 +210,9 @@ class _MembershipCard extends StatelessWidget {
 
   Color _getAccent(String name) {
     if (name.toLowerCase().contains('premium')) {
-      return const Color(0xFFFFD700); // Gold for premium
+      return const Color(0xFFFFD700);
     }
-    return const Color(0xFF00E5FF); // Cyan for basic
+    return const Color(0xFF00E5FF);
   }
 
   LinearGradient _getGradient(String name) {
@@ -242,11 +238,6 @@ class _MembershipCard extends StatelessWidget {
     final planSymbol = _currencySymbol(currency);
     final accentColor = _getAccent(tierName);
     
-    // Header shape concept:
-    // A ticket shape with inward arcs at the top corners or sides.
-    // User requested "rectangular with half circle corner kind of UI (_____)"
-    // Typically this means an inverted rounded corner at the top.
-
     return InkWell(
       onTap: onTap,
       child: ClipPath(
@@ -255,22 +246,14 @@ class _MembershipCard extends StatelessWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             gradient: _getGradient(tierName),
-            border: Border(
-               // Simulated border via container nesting or CustomPainter is complex. 
-               // For now, simple border on the unclipped sides via container decoration won't work perfectly with ClipPath.
-               // We will rely on the gradient and inner content for style.
-            ),
           ),
           child: Stack(
             children: [
-               // Border Painter to draw the outline on the clipped path
                Positioned.fill(
                  child: CustomPaint(
                     painter: _TicketBorderPainter(radius: 20, color: accentColor.withValues(alpha: 0.3), width: 1.5),
                  ),
                ),
-              
-              // Decorative Icon Pattern
               Positioned(
                 right: -10,
                 top: -10,
@@ -280,13 +263,11 @@ class _MembershipCard extends StatelessWidget {
                   color: accentColor.withValues(alpha: 0.08),
                 ),
               ),
-              
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Icon Header
                     Container(
                       padding: const EdgeInsets.all(8),
                       decoration: BoxDecoration(
@@ -303,7 +284,6 @@ class _MembershipCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
                     Text(
                       tierName.toUpperCase(),
                       maxLines: 2,
@@ -314,10 +294,7 @@ class _MembershipCard extends StatelessWidget {
                         letterSpacing: 0.5,
                       ),
                     ),
-                    
                     const Spacer(),
-                    
-                    // Dashed Line Divider
                     Row(
                       children: List.generate(
                         10, 
@@ -331,8 +308,6 @@ class _MembershipCard extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
-                    // Price Footer
                     Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -404,39 +379,22 @@ class _TicketHeaderClipper extends CustomClipper<Path> {
   Path getClip(Size size) {
     final path = Path();
     path.moveTo(0, radius);
-    
-    // Top Left Corner (Inverted arc? Or standard rounded?)
-    // User asked for "half circle corner kind of UI (_____)". 
-    // This usually means Top Left and Top Right have concave cutouts OR overly rounded convential corners.
-    // Let's implement Top Left/Right as large rounded corners (Standard) and Bottoms as standard, 
-    // BUT usually "ticket" implies a cutout. 
-    // Reviewing user request: "rectangular with half circle corner kind of UI (____________) (_________)"
-    // This likely refers to the "Tab" shape or "Inverted Rounded" where the top edge dips or the corners are concave.
-    // Let's go with Concave Cutout at Top Left and Top Right.
-    
-    // Start Top Left
     path.lineTo(0, size.height - radius);
-    path.quadraticBezierTo(0, size.height, radius, size.height); // Bottom Left Rounded
+    path.quadraticBezierTo(0, size.height, radius, size.height);
     path.lineTo(size.width - radius, size.height); 
-    path.quadraticBezierTo(size.width, size.height, size.width, size.height - radius); // Bottom Right Rounded
+    path.quadraticBezierTo(size.width, size.height, size.width, size.height - radius);
     path.lineTo(size.width, radius);
-    
-    // Top Right Cutout (Concave)
     path.arcToPoint(
       Offset(size.width - radius, 0),
       radius: Radius.circular(radius),
       clockwise: false,
     );
-    
     path.lineTo(radius, 0);
-    
-    // Top Left Cutout (Concave)
     path.arcToPoint(
       Offset(0, radius),
       radius: Radius.circular(radius),
       clockwise: false,
     );
-    
     return path;
   }
 
@@ -448,7 +406,6 @@ class _TicketBorderPainter extends CustomPainter {
   final double radius;
   final Color color;
   final double width;
-  
   _TicketBorderPainter({required this.radius, required this.color, this.width = 1.0});
   
   @override
@@ -457,20 +414,16 @@ class _TicketBorderPainter extends CustomPainter {
       ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = width;
-      
     final path = Path();
     path.moveTo(0, radius);
-    
     path.lineTo(0, size.height - radius);
     path.quadraticBezierTo(0, size.height, radius, size.height);
     path.lineTo(size.width - radius, size.height);
     path.quadraticBezierTo(size.width, size.height, size.width, size.height - radius);
     path.lineTo(size.width, radius);
-    
     path.arcToPoint(Offset(size.width - radius, 0), radius: Radius.circular(radius), clockwise: false);
     path.lineTo(radius, 0);
     path.arcToPoint(Offset(0, radius), radius: Radius.circular(radius), clockwise: false);
-    
     canvas.drawPath(path, paint);
   }
   
@@ -489,7 +442,6 @@ class _TwoColumnTitles extends StatelessWidget {
     for (var i = 0; i < titles.length; i++) {
       (i % 2 == 0 ? left : right).add(titles[i]);
     }
-
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(

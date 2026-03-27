@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "516637814709",
+    "project_id": "repairmybike-1fc07",
+    "storage_bucket": "repairmybike-1fc07.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:516637814709:android:4773917a5f9edd78eb33fc",
+        "android_client_info": {
+          "package_name": "com.repairmybike.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD2U8s48C-bCUWXyJNULQoe6X-_6m0w5-8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

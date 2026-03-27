@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'api_client.dart';
 import '../models/quick_service.dart';
 
@@ -6,9 +7,13 @@ class QuickServiceApi {
 
   Future<QuickServiceConfig?> getConfig() async {
     try {
-      print('DEBUG: QuickServiceApi.getConfig() calling api/quick-service/config/');
+      if (kDebugMode) {
+        debugPrint('DEBUG: QuickServiceApi.getConfig() calling api/quick-service/config/');
+      }
       final response = await _client.get('api/quick-service/config/');
-      print('DEBUG: QuickServiceApi.getConfig() response: ${response.data}');
+      if (kDebugMode) {
+        debugPrint('DEBUG: QuickServiceApi.getConfig() response: ${response.data}');
+      }
       
       final data = response.data;
       if (data is List) {
@@ -16,33 +21,45 @@ class QuickServiceApi {
           try {
             return QuickServiceConfig.fromJson(data.first as Map<String, dynamic>);
           } catch (e) {
-            print('DEBUG: QuickServiceConfig.fromJson error: $e');
+            if (kDebugMode) {
+              debugPrint('DEBUG: QuickServiceConfig.fromJson error: $e');
+            }
           }
         }
       } else if (data is Map) {
         try {
           return QuickServiceConfig.fromJson(data as Map<String, dynamic>);
         } catch (e) {
-          print('DEBUG: QuickServiceConfig.fromJson error: $e');
+          if (kDebugMode) {
+            debugPrint('DEBUG: QuickServiceConfig.fromJson error: $e');
+          }
         }
       }
       return null;
     } catch (e) {
-      print('DEBUG: QuickServiceApi.getConfig() global error: $e');
+      if (kDebugMode) {
+        debugPrint('DEBUG: QuickServiceApi.getConfig() global error: $e');
+      }
       return null;
     }
   }
 
   Future<QuickServiceRequest?> createRequest(String phoneNumber) async {
     try {
-      print('DEBUG: QuickServiceApi.createRequest() calling api/quick-service/requests/ for $phoneNumber');
+      if (kDebugMode) {
+        debugPrint('DEBUG: QuickServiceApi.createRequest() calling api/quick-service/requests/ for $phoneNumber');
+      }
       final response = await _client.post('api/quick-service/requests/', data: {
         'phone_number': phoneNumber,
       });
-      print('DEBUG: QuickServiceApi.createRequest() response: ${response.data}');
+      if (kDebugMode) {
+        debugPrint('DEBUG: QuickServiceApi.createRequest() response: ${response.data}');
+      }
       return QuickServiceRequest.fromJson(response.data);
     } catch (e) {
-      print('DEBUG: QuickServiceApi.createRequest() error: $e');
+      if (kDebugMode) {
+        debugPrint('DEBUG: QuickServiceApi.createRequest() error: $e');
+      }
       return null;
     }
   }

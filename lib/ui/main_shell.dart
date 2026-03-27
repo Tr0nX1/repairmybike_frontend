@@ -1,58 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:go_router/go_router.dart';
 import '../providers/cart_provider.dart';
-import '../data/app_state.dart';
-import 'home_page.dart';
-// import 'services_page.dart';
-import 'booking_list_page.dart';
-import 'search_page.dart';
-import 'cart_page.dart';
-import 'profile_page.dart';
 
 class MainShell extends ConsumerStatefulWidget {
-  const MainShell({super.key});
+  final StatefulNavigationShell navigationShell;
+  const MainShell({super.key, required this.navigationShell});
 
   @override
   ConsumerState<MainShell> createState() => _MainShellState();
 }
 
 class _MainShellState extends ConsumerState<MainShell> {
-  int _currentIndex = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    _restoreTabIndex();
-  }
-
-  Future<void> _restoreTabIndex() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final savedIndex = prefs.getInt(AppState.kLastTabIndex) ?? 0;
-      if (mounted && savedIndex >= 0 && savedIndex < 5) {
-        setState(() {
-          _currentIndex = savedIndex;
-        });
-      }
-    } catch (_) {
-    }
-  }
-
-  Future<void> _saveTabIndex(int index) async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setInt(AppState.kLastTabIndex, index);
-    } catch (_) {}
-  }
-
-  List<Widget> get _pages => [
-    const HomePage(),
-    const SearchPage(),
-    const CartPage(),
-    const BookingListPage(),
-    const ProfilePage(),
-  ];
+  // Navigation is now managed by GoRouter navigationShell
+  
+  // Future<void> _restoreTabIndex() ... removed as GoRouter handles this via URL
+  // Future<void> _saveTabIndex(int index) ... removed
 
   @override
   Widget build(BuildContext context) {
@@ -94,12 +57,14 @@ class _MainShellState extends ConsumerState<MainShell> {
 
     return Scaffold(
       backgroundColor: scheme.surface,
-      body: IndexedStack(index: _currentIndex, children: _pages),
+      body: widget.navigationShell,
       bottomNavigationBar: BottomNavigationBar(
-        currentIndex: _currentIndex,
+        currentIndex: widget.navigationShell.currentIndex,
         onTap: (i) {
-          setState(() => _currentIndex = i);
-          _saveTabIndex(i);
+          widget.navigationShell.goBranch(
+            i,
+            initialLocation: i == widget.navigationShell.currentIndex,
+          );
         },
         type: BottomNavigationBarType.fixed,
         backgroundColor: scheme.surface,

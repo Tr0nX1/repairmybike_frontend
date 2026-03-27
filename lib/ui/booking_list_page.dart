@@ -31,8 +31,6 @@ class _BookingListPageState extends State<BookingListPage> {
 
   Timer? _autoRefreshTimer;
   DateTime? _backoffUntil;
-  DateTime? _lastSync;
-  bool _loadedFromCache = false;
 
 
   String _monthName(int m) => const [
@@ -108,22 +106,13 @@ class _BookingListPageState extends State<BookingListPage> {
     // Load cached data immediately for offline support
     final cachedBookings = await AppState.getCachedBookings();
     final cachedOrders = await AppState.getCachedOrders();
-    final lastSyncBookings = await AppState.getLastSyncBookings();
-    final lastSyncOrders = await AppState.getLastSyncOrders();
     
+
     if (cachedBookings.isNotEmpty || cachedOrders.isNotEmpty) {
+      if (!mounted) return;
       setState(() {
         _bookings = cachedBookings;
         _sparePartsBookings = cachedOrders;
-        _loadedFromCache = true;
-        // Use the most recent sync time
-        if (lastSyncBookings != null && lastSyncOrders != null) {
-          _lastSync = lastSyncBookings.isAfter(lastSyncOrders) 
-              ? lastSyncBookings 
-              : lastSyncOrders;
-        } else {
-          _lastSync = lastSyncBookings ?? lastSyncOrders;
-        }
       });
     }
   }
@@ -154,7 +143,6 @@ class _BookingListPageState extends State<BookingListPage> {
         setState(() {
           _bookings = bookings;
           _sparePartsBookings = spareParts;
-          _lastSync = DateTime.now();
         });
       }
 
@@ -635,7 +623,7 @@ class _BookingListPageState extends State<BookingListPage> {
                     height: 40,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF01C9F5).withOpacity(0.1),
+                        backgroundColor: const Color(0xFF01C9F5).withValues(alpha: 0.1),
                         foregroundColor: const Color(0xFF01C9F5),
                         side: const BorderSide(color: Color(0xFF01C9F5)),
                         elevation: 0,

@@ -1,23 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter/services.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
 import 'auth_page.dart';
-import 'profile_details_page.dart';
 import 'vehicle_type_page.dart';
-import 'your_vehicle_page.dart';
-import 'booking_list_page.dart';
-import 'saved_services_page.dart';
-import 'my_subscriptions_page.dart';
 import '../data/booking_api.dart'; // Added for fetching bookings
 import '../data/order_api.dart'; // Added for fetching spare parts orders
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/saved_services_provider.dart';
-import 'customer_care_page.dart';
-import 'quick_service_history_page.dart';
-import 'policy_page.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -116,9 +109,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   void _edit() {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (_) => const ProfileDetailsPage(popOnSave: true)))
-        .then((_) => setState(() {}));
+    context.push('/profile-details').then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   void _signIn() {
@@ -220,7 +213,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       title: 'Bookings', 
                       value: '${_bookingCount + _orderCount}',  // Combined count
                       isLoading: _loading,
-                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookingListPage())),
+                      onTap: () => context.push('/bookings'),
                     ),
                     const SizedBox(width: 12),
                     _StatCard(
@@ -229,9 +222,9 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         isLoading: _loading,
                         onTap: () {
                           if (AppState.hasVehicle) {
-                             Navigator.push(context, MaterialPageRoute(builder: (_) => const YourVehiclePage()));
+                             context.push('/your-vehicle');
                           } else {
-                             Navigator.push(context, MaterialPageRoute(builder: (_) => const VehicleTypePage())); 
+                             context.push('/vehicle-type'); 
                           }
                         },
                     ),
@@ -240,7 +233,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         title: 'Saved', 
                         value: '${ref.watch(savedServicesProvider).length}',
                         // Synced with backend now
-                        onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const SavedServicesPage())),
+                        onTap: () => context.push('/saved-services'),
                     ),
                   ],
                 ),
@@ -249,7 +242,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 
                 // My Subscriptions Ticket
                 InkWell(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const MySubscriptionsPage())),
+                  onTap: () => context.push('/my-subscriptions'),
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     width: double.infinity,
@@ -299,7 +292,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
 
                 // Quick Service Ticket
                 InkWell(
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const QuickServiceHistoryPage())),
+                  onTap: () => context.push('/quick-service-history'),
                   borderRadius: BorderRadius.circular(16),
                   child: Container(
                     width: double.infinity,
@@ -357,7 +350,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                                 border: Border.all(color: border),
                             ),
                             child: ListTile(
-                                onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BookingListPage())),
+                                onTap: () => context.push('/bookings'),
                                 contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                                 title: Text('Booking #${b['id']}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                                 subtitle: Text('${b['booking_status'] ?? 'Pending'} • ₹${b['total_amount']}', style: const TextStyle(color: Colors.white70)),
@@ -420,11 +413,13 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       TextButton(
                         onPressed: () {
                           if (AppState.hasVehicle) {
-                             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const YourVehiclePage()))
-                                .then((_) => setState(() {}));
+                             context.push('/your-vehicle').then((_) {
+                                if (mounted) setState(() {});
+                             });
                           } else {
-                             Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VehicleTypePage()))
-                                .then((_) => setState(() {}));
+                             context.push('/vehicle-type').then((_) {
+                                if (mounted) setState(() {});
+                             });
                           }
                         },
                         child: Text(AppState.hasVehicle ? 'View' : 'Add'),
@@ -517,7 +512,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 _ActionTile(
                   label: 'Customer Care',
                   icon: Icons.support_agent,
-                  onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const CustomerCarePage())),
+                  onTap: () => context.push('/customer-care'),
                 ),
 
                 const SizedBox(height: 12),
@@ -525,54 +520,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 _ActionTile(
                   label: 'Terms & Conditions',
                   icon: Icons.description_outlined,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const PolicyPage(
-                        slug: 'terms-and-conditions',
-                        title: 'Terms & Conditions',
-                      ),
-                    ),
-                  ),
+                  onTap: () => context.push('/terms'),
                 ),
                 _ActionTile(
                   label: 'Privacy Policy',
                   icon: Icons.privacy_tip_outlined,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const PolicyPage(
-                        slug: 'privacy-policy',
-                        title: 'Privacy Policy',
-                      ),
-                    ),
-                  ),
+                  onTap: () => context.push('/privacy'),
                 ),
                 _ActionTile(
                   label: 'Refund & Cancellation Policy',
                   icon: Icons.money_off_outlined,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const PolicyPage(
-                        slug: 'refund-and-cancellation-policy',
-                        title: 'Refund & Cancellation',
-                      ),
-                    ),
-                  ),
+                  onTap: () => context.push('/refund'),
                 ),
                 _ActionTile(
                   label: 'Shipping & Delivery Policy',
                   icon: Icons.local_shipping_outlined,
-                  onTap: () => Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (_) => const PolicyPage(
-                        slug: 'shipping-and-delivery-policy',
-                        title: 'Shipping & Delivery',
-                      ),
-                    ),
-                  ),
+                  onTap: () => context.push('/shipping'),
                 ),
 
                 const SizedBox(height: 24),

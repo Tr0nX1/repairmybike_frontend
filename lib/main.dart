@@ -1,26 +1,33 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'ui/flash_page.dart';
-// Theme fixed to dark; remove dynamic theme provider
 import 'utils/api_config.dart';
 import 'package:url_strategy/url_strategy.dart';
 
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'utils/fcm_service.dart';
-import 'ui/policy_page.dart';
+
+import 'utils/router.dart';
 
 void main() async {
   setPathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Firebase
-  await Firebase.initializeApp();
-  
-  // Setup FCM
-  final fcmService = FcmService();
-  await fcmService.initialize();
-  FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
+  // Initialize Firebase (safely handle Web where options might be missing)
+  try {
+    if (!kIsWeb) {
+      await Firebase.initializeApp();
+      // Setup FCM
+      final fcmService = FcmService();
+      await fcmService.initialize();
+      FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
+    } else {
+      debugPrint('Firebase Web is not configured. Skipping FCM initialization.');
+    }
+  } catch (e) {
+    debugPrint('Firebase initialization failed (likely missing config): $e');
+  }
 
   debugPrint('🔥 BACKEND BASE URL: $backendBase');
   runApp(const ProviderScope(child: MyApp()));
@@ -33,6 +40,7 @@ class MyApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     const mode = ThemeMode.dark;
+    // ... Color definitions remain unchanged ...
     const Color brandPrimary = Color(0xFF01C9F5);
     const Color brandOnPrimary = Color(0xFF0B0F12);
     const Color brandSecondary = Color(0xFF005B8E);
@@ -128,47 +136,12 @@ class MyApp extends ConsumerWidget {
       ),
     );
 
-    return MaterialApp(
+    return MaterialApp.router(
       title: 'RepairMyBike',
       theme: lightTheme,
       darkTheme: darkTheme,
       themeMode: mode,
-      home: const FlashPage(),
-      onGenerateRoute: (settings) {
-        if (settings.name == null) return null;
-        final uri = Uri.parse(settings.name!);
-        
-        // Handle Policy routes
-        if (uri.path == '/terms' || uri.path == '/privacy' || uri.path == '/refund' || uri.path == '/shipping') {
-          String slug = '';
-          String title = '';
-          
-          switch (uri.path) {
-            case '/terms':
-              slug = 'terms-and-conditions';
-              title = 'Terms & Conditions';
-              break;
-            case '/privacy':
-              slug = 'privacy-policy';
-              title = 'Privacy Policy';
-              break;
-            case '/refund':
-              slug = 'refund-and-cancellation-policy';
-              title = 'Refund & Cancellation';
-              break;
-            case '/shipping':
-              slug = 'shipping-and-delivery-policy';
-              title = 'Shipping & Delivery';
-              break;
-          }
-          
-          return MaterialPageRoute(
-            builder: (_) => PolicyPage(slug: slug, title: title),
-            settings: settings,
-          );
-        }
-        return null;
-      },
+      routerConfig: router,
       debugShowCheckedModeBanner: false,
     );
   }

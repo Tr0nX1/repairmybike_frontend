@@ -5,12 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:dio/dio.dart';
 import 'api_config.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
-  await Firebase.initializeApp();
-  debugPrint("Handling a background message: ${message.messageId}");
+  try {
+    await Firebase.initializeApp();
+    debugPrint("Handling a background message: ${message.messageId}");
+  } catch (e) {
+    debugPrint("Failed to handle background message (Firebase uninitialized): $e");
+  }
 }
 
 class FcmService {
@@ -94,7 +97,7 @@ class FcmService {
 
       await dio.post('/api/notifications/device/', data: {
         'token': fcmToken,
-        'platform': Platform.isAndroid ? 'android' : (Platform.isIOS ? 'ios' : 'web'),
+        'platform': kIsWeb ? 'web' : (Platform.isAndroid ? 'android' : (Platform.isIOS ? 'ios' : 'unknown')),
       });
       debugPrint('FCM Token registered with backend');
     } catch (e) {

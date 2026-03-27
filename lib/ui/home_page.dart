@@ -1,24 +1,18 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import '../providers/category_provider.dart';
 import '../models/category.dart';
-// import 'categories_page.dart';
-import 'services_page.dart';
 import 'subscription_section.dart';
-import 'search_page.dart';
-// QR scanner removed
-import 'spare_parts_page.dart';
 import 'spare_parts_section.dart';
-import 'service_detail_page.dart';
 import '../data/app_state.dart';
 import '../providers/category_provider.dart' as providers;
 import '../providers/saved_services_provider.dart';
 import '../models/service.dart';
 import '../utils/url_utils.dart';
 import 'widgets/dynamic_hero_carousel.dart';
-import 'quick_service_detail_page.dart';
 // Theme toggle removed
 
 class HomePage extends ConsumerStatefulWidget {
@@ -110,6 +104,12 @@ class _HomePageState extends ConsumerState<HomePage> {
                       ),
                     ),
                     const Spacer(),
+                    IconButton(
+                      icon: const Icon(Icons.notifications_outlined),
+                      onPressed: () {
+                        context.push('/notifications');
+                      },
+                    ),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -275,14 +275,7 @@ class _CategoryCard extends StatelessWidget {
     return InkWell(
       borderRadius: BorderRadius.circular(18),
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => ServicesPage(
-              categoryId: category.id,
-              categoryName: category.name,
-            ),
-          ),
-        );
+        context.push('/services?id=${category.id}&name=${category.name}');
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
@@ -413,27 +406,21 @@ class _QuickActionsRow extends StatelessWidget {
         icon: Icons.search,
         label: 'Search Parts',
         onTap: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => SearchPage()));
+          context.push('/search');
         },
       ),
       (
         icon: Icons.flash_on,
         label: 'Quick Service',
         onTap: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const QuickServiceDetailsPage()));
+          context.push('/quick-service');
         },
       ),
       (
         icon: Icons.construction,
         label: 'View Parts',
         onTap: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => SparePartsPage()));
+          context.push('/spare-parts');
         },
       ),
       (
@@ -441,9 +428,7 @@ class _QuickActionsRow extends StatelessWidget {
         label: 'Subscriptions',
         onTap: () {
           // Scroll intent could be added; for now, open Search as placeholder
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const SubscriptionsPage()));
+          context.push('/subscriptions');
         },
       ),
     ];
@@ -535,11 +520,7 @@ class _LikedCard extends StatelessWidget {
     );
     return InkWell(
       onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(
-            builder: (_) => ServiceDetailPage(service: service),
-          ),
-        );
+        context.push('/service-detail', extra: service);
       },
       child: Container(
         width: 220,

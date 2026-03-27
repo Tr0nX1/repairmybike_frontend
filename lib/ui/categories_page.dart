@@ -131,7 +131,6 @@ class _CategoryCard extends StatelessWidget {
         final w = constraints.maxWidth;
         final iconSize = w < 88 ? 28.0 : 36.0;
         final nameSize = w < 88 ? 12.0 : 14.0;
-        final countSize = w < 88 ? 10.0 : 12.0;
         final gap = w < 88 ? 8.0 : 12.0;
         final isAndroid = Theme.of(context).platform == TargetPlatform.android;
         final scale = isAndroid ? 0.95 : 1.0;

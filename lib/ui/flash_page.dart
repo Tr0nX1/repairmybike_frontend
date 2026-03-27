@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
-import '../data/vehicles_api.dart';
-import 'main_shell.dart';
-import 'vehicle_type_page.dart';
-import 'auth_page.dart';
+import '../utils/fcm_service.dart';
+import 'package:go_router/go_router.dart';
 
 class FlashPage extends StatefulWidget {
   const FlashPage({super.key});
@@ -52,6 +50,9 @@ class _FlashPageState extends State<FlashPage>
           sessionToken: AppState.sessionToken!,
         ).timeout(const Duration(seconds: 10));
 
+        // Register FCM Token for the returning user
+        FcmService().registerTokenWithBackend(AppState.sessionToken);
+
         await AppState.updateFromProfileMap(profile);
       } catch (e) {
         // If an error occurs (e.g. 403 Forbidden), ApiClient has already cleared auth.
@@ -63,24 +64,17 @@ class _FlashPageState extends State<FlashPage>
     }
     if (mounted) _controller.forward();
     _timer = Timer(const Duration(milliseconds: 2500), () {
-      if (!mounted) return;
       if (AppState.isAuthenticated) {
         if (!AppState.isStaff) {
           if (!AppState.hasVehicle) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (_) => VehicleTypePage(phone: AppState.phoneNumber)),
-            );
+            context.go('/vehicle-type?phone=${AppState.phoneNumber}');
             return;
           }
         }
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const MainShell()),
-        );
+        context.go('/home');
       } else {
-        // Mobile App: Direct unauthenticated users to login/signup
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const AuthPage()),
-        );
+        // Direct unauthenticated users to high-end Landing Page
+        context.go('/');
       }
     });
   }

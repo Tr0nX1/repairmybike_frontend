@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:go_router/go_router.dart';
 import '../data/app_state.dart';
-import 'main_shell.dart';
-import 'vehicle_type_page.dart';
 
 class YourVehiclePage extends StatelessWidget {
   const YourVehiclePage({super.key});
@@ -179,11 +178,7 @@ class YourVehiclePage extends StatelessWidget {
                      height: 54,
                      child: ElevatedButton(
                        onPressed: () {
-                         // Navigate to change vehicle flow
-                         Navigator.push(
-                           context, 
-                           MaterialPageRoute(builder: (_) => const VehicleTypePage())
-                         );
+                         context.push('/vehicle-type');
                        },
                        style: ElevatedButton.styleFrom(
                          backgroundColor: colorScheme.primary,
@@ -203,12 +198,7 @@ class YourVehiclePage extends StatelessWidget {
                      height: 54,
                      child: OutlinedButton(
                        onPressed: () {
-                         // Just pop to home
-                         Navigator.pushAndRemoveUntil(
-                          context,
-                          MaterialPageRoute(builder: (_) => const MainShell()),
-                          (route) => false,
-                        );
+                         context.go('/home');
                        },
                        style: OutlinedButton.styleFrom(
                          side: BorderSide(color: colorScheme.outline.withValues(alpha: 0.3)),

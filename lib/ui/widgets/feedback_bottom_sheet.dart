@@ -25,7 +25,6 @@ class _FeedbackBottomSheetState extends State<FeedbackBottomSheet> {
   int _rating = 0;
   int _qualityRating = 0;
   int _behaviorRating = 0;
-  int _appRating = 0;
   final TextEditingController _commentCtrl = TextEditingController();
   final List<String> _selectedChips = [];
   bool _submitting = false;
@@ -118,8 +117,11 @@ class _FeedbackBottomSheetState extends State<FeedbackBottomSheet> {
                 return GestureDetector(
                   onTap: () {
                     setState(() {
-                      if (selected) _selectedChips.remove(chip);
-                      else _selectedChips.add(chip);
+                      if (selected) {
+                        _selectedChips.remove(chip);
+                      } else {
+                        _selectedChips.add(chip);
+                      }
                     });
                   },
                   child: Container(
