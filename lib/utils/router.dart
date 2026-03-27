@@ -233,31 +233,31 @@ final router = GoRouter(
 
     // Policy Routes
     GoRoute(
-      path: '/terms',
+      path: '/terms-and-conditions',
       builder: (context, state) => const PolicyPage(
         slug: 'terms-and-conditions',
         title: 'Terms & Conditions',
       ),
     ),
     GoRoute(
-      path: '/privacy',
+      path: '/privacy-policy',
       builder: (context, state) => const PolicyPage(
         slug: 'privacy-policy',
         title: 'Privacy Policy',
       ),
     ),
     GoRoute(
-      path: '/refund',
+      path: '/refund-and-cancellation-policy',
       builder: (context, state) => const PolicyPage(
         slug: 'refund-and-cancellation-policy',
-        title: 'Refund & Cancellation',
+        title: 'Refund & Cancellation Policy',
       ),
     ),
     GoRoute(
-      path: '/shipping',
+      path: '/shipping-and-delivery-policy',
       builder: (context, state) => const PolicyPage(
         slug: 'shipping-and-delivery-policy',
-        title: 'Shipping & Delivery',
+        title: 'Shipping & Delivery Policy',
       ),
     ),
     GoRoute(
