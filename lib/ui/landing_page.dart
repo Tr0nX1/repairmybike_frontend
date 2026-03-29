@@ -1014,7 +1014,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                       'Contact',
                       [
                         'repairmybike.in',
-                        'hello@repairmybike.in',
+                        'support@repairmybike.in',
                         '+91 8168121711'
                       ],
                       [],
