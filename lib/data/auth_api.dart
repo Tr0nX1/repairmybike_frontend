@@ -120,10 +120,15 @@ class AuthApi {
     } on DioException catch (e) {
       final data = e.response?.data;
       String msg = 'OTP verification failed';
-      if (data is Map && data['message'] is String) {
-        msg = data['message'] as String;
-      } else if (data is Map && data['error'] is String) {
-        msg = data['error'] as String;
+      if (data is Map) {
+        if (data['message'] is String && data['message'].isNotEmpty) {
+          msg = data['message'] as String;
+        } else if (data['details'] is String && data['details'].contains('errorDescription')) {
+           // Fallback to extract from details string if needed
+           msg = data['details'].toString();
+        } else if (data['error'] is String && data['error'].isNotEmpty) {
+          msg = data['error'] as String;
+        }
       } else if (data is String && data.isNotEmpty) {
         msg = data;
       }
