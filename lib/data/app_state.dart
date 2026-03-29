@@ -427,6 +427,34 @@ class AppState {
     await prefs.setString(_kSession, session);
     if (refresh != null) await prefs.setString(_kRefresh, refresh);
     await prefs.setBool(_kIsStaff, false);
+    
+    // Sync guest likes to server now that we have a token
+    await _pushLocalLikesToServer(session);
+  }
+
+  static Future<void> _pushLocalLikesToServer(String token) async {
+    // 1. Sync Services
+    if (likedServiceIds.isNotEmpty) {
+      final sApi = SavedServicesApi();
+      for (final id in likedServiceIds) {
+        try {
+          await sApi.saveService(id, token);
+        } catch (_) {}
+      }
+    }
+    // 2. Sync Parts
+    if (likedPartIds.isNotEmpty) {
+      final pApi = SparePartsApi();
+      for (final id in likedPartIds) {
+        try {
+          // SparePartsApi uses current AppState.sessionToken internally or requires it
+          await pApi.savePart(id);
+        } catch (_) {}
+      }
+    }
+    // 3. Final refresh from server to ensure perfect sync
+    await syncSavedServices();
+    await syncSavedParts();
   }
 
   static Future<void> setStaffAuth({required String username, required String session, String? refresh}) async {

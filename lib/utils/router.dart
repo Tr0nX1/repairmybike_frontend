@@ -59,6 +59,25 @@ final router = GoRouter(
     return null;
   },
   routes: [
+    // --- Aliases for shortened paths (Prevent 404s) ---
+    GoRoute(
+      path: '/terms',
+      redirect: (context, state) => '/terms-and-conditions',
+    ),
+    GoRoute(
+      path: '/privacy',
+      redirect: (context, state) => '/privacy-policy',
+    ),
+    GoRoute(
+      path: '/refund',
+      redirect: (context, state) => '/refund-and-cancellation-policy',
+    ),
+    GoRoute(
+      path: '/shipping',
+      redirect: (context, state) => '/shipping-and-delivery-policy',
+    ),
+    // ------------------------------------------------
+
     GoRoute(
       path: '/splash',
       builder: (context, state) => const FlashPage(),

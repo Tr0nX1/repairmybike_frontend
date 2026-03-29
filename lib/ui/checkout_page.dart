@@ -128,8 +128,8 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         context,
       ).showSnackBar(const SnackBar(content: Text('Order placed')));
       
-      context.go('/home');
-      context.push('/bookings');
+      // Clear stack and switch to bookings tab to prevent back-navigation to checkout
+      context.go('/bookings');
     } catch (e) {
       setState(() {
         _error = e.toString();

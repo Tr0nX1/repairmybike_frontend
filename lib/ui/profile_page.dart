@@ -5,8 +5,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
-import 'auth_page.dart';
-import 'vehicle_type_page.dart';
 import '../data/booking_api.dart'; // Added for fetching bookings
 import '../data/order_api.dart'; // Added for fetching spare parts orders
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -88,16 +86,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       await AppState.setLastCustomerPhone(null);
       if (!mounted) return;
       
-      // Close app after logout per requirement
-      // Using exit(0) to ensure a full shutdown as requested
-      // Note: On iOS this might look like a crash, but it fulfills the "shutdown and close" request.
-      try {
-        await SystemNavigator.pop();
-      } catch (_) {}
-      
-      // Fallback to exit(0) to ensure it closes
-      // ignore: avoid_print
-      print('Shutting down app...');
+      // Clean redirect to landing page
+      context.go('/');
     } catch (e) {
       if (!mounted) return;
       ScaffoldMessenger.of(
@@ -115,40 +105,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   }
 
   void _signIn() {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => AuthPage(
-          onFinished: () async {
-            // Re-check state after login to handle onboarding
-            await AppState.init(); // Refresh state
-            if (!mounted) return;
-            
-            Navigator.of(context).pop(); // Close auth page
-            
-            final hasVehicle = AppState.hasVehicle;
-
-            if (!hasVehicle) {
-               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const VehicleTypePage()));
-            } else {
-               setState(() {}); // Just refresh if everything is good
-            }
-          },
-        ),
-      ),
-    );
+    context.push('/auth').then((_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     final isAuth = AppState.isAuthenticated;
+    
+    // Logic for "Set your name" onboarding
+    final rawName = AppState.fullName ?? '';
+    final isGenericName = rawName.isEmpty || rawName.startsWith('user_') || rawName.toLowerCase() == 'user';
+    
     final name = isAuth
-        ? ((AppState.fullName?.isNotEmpty ?? false)
-              ? AppState.fullName!
-              : 'User')
+        ? (isGenericName ? 'Set your name' : rawName)
         : 'Guest User';
+    
     final email = (AppState.email?.isNotEmpty == true)
         ? AppState.email!
-        : 'Add email';
+        : (isAuth ? 'Complete profile to add email' : 'Add email');
     final colorScheme = Theme.of(context).colorScheme;
     final bg = colorScheme.surface;
     final card = colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
@@ -184,8 +160,8 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                           children: [
                             Text(
                               name,
-                              style: const TextStyle(
-                                color: Colors.white,
+                              style: TextStyle(
+                                color: isGenericName && isAuth ? accent : Colors.white,
                                 fontSize: 18,
                                 fontWeight: FontWeight.w700,
                               ),
@@ -205,6 +181,46 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 ),
 
                 const SizedBox(height: 16),
+
+                // Onboarding Completion Card
+                if (isAuth && (isGenericName || !AppState.hasAddress))
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: InkWell(
+                      onTap: _edit,
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: colorScheme.primaryContainer.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(color: colorScheme.primary.withValues(alpha: 0.3)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(Icons.assignment_ind, color: colorScheme.primary),
+                            const SizedBox(width: 12),
+                            const Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Complete your profile',
+                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    'Add your name and address to get started',
+                                    style: TextStyle(color: Colors.white70, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const Icon(Icons.arrow_forward, color: Colors.white54, size: 16),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
 
                 // Quick stats
                 Row(
@@ -520,22 +536,22 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 _ActionTile(
                   label: 'Terms & Conditions',
                   icon: Icons.description_outlined,
-                  onTap: () => context.push('/terms'),
+                  onTap: () => context.push('/terms-and-conditions'),
                 ),
                 _ActionTile(
                   label: 'Privacy Policy',
                   icon: Icons.privacy_tip_outlined,
-                  onTap: () => context.push('/privacy'),
+                  onTap: () => context.push('/privacy-policy'),
                 ),
                 _ActionTile(
                   label: 'Refund & Cancellation Policy',
                   icon: Icons.money_off_outlined,
-                  onTap: () => context.push('/refund'),
+                  onTap: () => context.push('/refund-and-cancellation-policy'),
                 ),
                 _ActionTile(
                   label: 'Shipping & Delivery Policy',
                   icon: Icons.local_shipping_outlined,
-                  onTap: () => context.push('/shipping'),
+                  onTap: () => context.push('/shipping-and-delivery-policy'),
                 ),
 
                 const SizedBox(height: 24),

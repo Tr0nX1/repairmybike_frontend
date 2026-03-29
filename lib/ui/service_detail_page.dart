@@ -28,13 +28,10 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
 
   String? _selectedLocation; // 'home' or 'shop'
   late TextEditingController _feedbackCtrl;
-  bool _liked = false;
-
   @override
   void initState() {
     super.initState();
     _feedbackCtrl = TextEditingController();
-    _liked = AppState.isServiceLiked(widget.service.id);
   }
 
   @override
@@ -263,25 +260,33 @@ class _ServiceDetailPageState extends State<ServiceDetailPage> {
                                 ),
                               ),
                               const SizedBox(width: 10),
-                              InkWell(
-                                onTap: () async {
-                                  await AppState.toggleLikeService(widget.service.id);
-                                  if (mounted) setState(() => _liked = AppState.isServiceLiked(widget.service.id));
-                                },
-                                child: Container(
-                                  width: 34,
-                                  height: 34,
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF1C1C1C),
-                                    borderRadius: BorderRadius.circular(18),
-                                    border: Border.all(color: border),
-                                  ),
-                                  child: Icon(
-                                    _liked ? Icons.favorite : Icons.favorite_border,
-                                    color: _liked ? const Color(0xFFFF6B6B) : Colors.white70,
-                                  ),
-                                ),
+                      Consumer(
+                        builder: (context, ref, _) {
+                          final isLiked = ref.watch(savedServicesProvider).contains(widget.service.id);
+                          return InkWell(
+                            onTap: () {
+                              if (!AppState.isAuthenticated) {
+                                showLoginRequiredDialog(context);
+                                return;
+                              }
+                              ref.read(savedServicesProvider.notifier).toggle(widget.service.id);
+                            },
+                            child: Container(
+                              width: 34,
+                              height: 34,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF1C1C1C),
+                                borderRadius: BorderRadius.circular(18),
+                                border: Border.all(color: border),
                               ),
+                              child: Icon(
+                                isLiked ? Icons.favorite : Icons.favorite_border,
+                                color: isLiked ? const Color(0xFFFF6B6B) : Colors.white70,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
                             ],
                           ),
                         ],
