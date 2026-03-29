@@ -40,13 +40,15 @@ class CartNotifier extends Notifier<Cart> {
 
     var key = prefs.getString(uniqueKey);
     if (key == null || key.isEmpty) {
-        // If we switched users, we might want a fresh key or reuse guest?
-        // For safety, generate new.
       key = _generateCartKey();
       await prefs.setString(uniqueKey, key);
     }
     return key;
   }
+
+  /// Public accessor so checkout flows can inject the correct session_id
+  /// into the spare-parts cart checkout API payload.
+  Future<String> getSessionId() => _ensureSessionId();
 
   String _getStoreKey() {
      if (AppState.isAuthenticated && AppState.phoneNumber != null) {

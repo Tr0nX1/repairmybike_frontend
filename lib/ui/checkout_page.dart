@@ -43,7 +43,15 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     _cityCtrl = TextEditingController();
     
     WidgetsBinding.instance.addPostFrameCallback((_) {
-       _syncWithProfile();
+      // ROOT CAUSE FIX 2: profileProvider.build() starts as null.
+      // It only has data if fetchProfile() was explicitly called elsewhere.
+      // If profile is null, trigger the fetch now so auto-fill works.
+      final currentProfile = ref.read(profileProvider).value;
+      if (currentProfile == null) {
+        ref.read(profileProvider.notifier).fetchProfile();
+      } else {
+        _syncWithProfile();
+      }
     });
   }
 
@@ -130,6 +138,11 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     if (!(_formKey.currentState?.validate() ?? false)) return;
     
     try {
+      // ROOT CAUSE FIX 1: session_id is REQUIRED by CheckoutSerializer on the
+      // backend. Without it, the backend returns a 400 validation error which
+      // the generic error handler reports as "Transaction failed".
+      final sessionId = await ref.read(cartProvider.notifier).getSessionId();
+
       final address = PostalAddress(
         fullName: _nameCtrl.text.trim(),
         phoneNumber: _phoneCtrl.text.trim(),
@@ -142,6 +155,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       );
 
       final payload = {
+        'session_id': sessionId,            // ← THE CRITICAL MISSING FIELD
         'customer_name': _nameCtrl.text.trim(),
         'phone': _phoneCtrl.text.trim(),
         'address': address.toFullString(),
