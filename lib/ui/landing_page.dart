@@ -43,21 +43,21 @@ class _LandingPageState extends ConsumerState<LandingPage>
   Color get brandPrimary => neonBlue;
   Color get brandTertiary => neonGreen;
   Color get brandBlack => neonDark;
-  Color get brandDark => neonDark.withOpacity(0.3);
+  Color get brandDark => neonDark.withValues(alpha: 0.3);
   Color get brandCard => const Color(0xFF161B1F);
   Color get brandWhite => Colors.white;
   Color get brandGray => const Color(0xFF90A4AE);
-  Color get brandBorder => brandPrimary.withOpacity(0.15);
+  Color get brandBorder => brandPrimary.withValues(alpha: 0.15);
 
   // Neon Shadows
   BoxShadow get neonBlueGlow => BoxShadow(
-        color: neonBlue.withOpacity(0.2),
+        color: neonBlue.withValues(alpha: 0.2),
         blurRadius: 20,
         spreadRadius: 2,
       );
 
   BoxShadow get neonGreenGlow => BoxShadow(
-        color: neonGreen.withOpacity(0.2),
+        color: neonGreen.withValues(alpha: 0.2),
         blurRadius: 20,
         spreadRadius: 2,
       );
@@ -138,12 +138,12 @@ class _LandingPageState extends ConsumerState<LandingPage>
           margin: EdgeInsets.symmetric(horizontal: isDesktop ? 40 : 20),
           padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
           decoration: BoxDecoration(
-            color: brandBlack.withOpacity(0.85),
+            color: brandBlack.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(100),
-            border: Border.all(color: brandPrimary.withOpacity(0.3), width: 1),
+            border: Border.all(color: brandPrimary.withValues(alpha: 0.3), width: 1),
             boxShadow: [
               BoxShadow(
-                color: brandPrimary.withOpacity(0.12),
+                color: brandPrimary.withValues(alpha: 0.12),
                 blurRadius: 30,
                 spreadRadius: 4,
               ),
@@ -250,7 +250,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                     foreground: Paint()
                       ..style = PaintingStyle.stroke
                       ..strokeWidth = isDesktop ? 2 : 1
-                      ..color = brandPrimary.withOpacity(0.5),
+                      ..color = brandPrimary.withValues(alpha: 0.5),
                     shadows: [
                       Shadow(color: brandPrimary, blurRadius: 15),
                     ],
@@ -329,7 +329,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
               decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   border: Border.all(color: neonGreen),
-                  color: neonGreen.withOpacity(0.05)),
+                  color: neonGreen.withValues(alpha: 0.05)),
               child: Icon(Icons.arrow_forward, size: 16, color: neonGreen),
             ),
             const SizedBox(width: 10),
@@ -380,7 +380,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                             const SizedBox(width: 40),
                             Text('●',
                                 style: TextStyle(
-                                    color: brandBlack.withOpacity(0.4))),
+                                    color: brandBlack.withValues(alpha: 0.4))),
                           ],
                         ),
                       ))
@@ -424,7 +424,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                   boxShadow: [
                     if (s.isFeatured)
                       BoxShadow(
-                        color: brandPrimary.withOpacity(0.05),
+                        color: brandPrimary.withValues(alpha: 0.05),
                         blurRadius: 30,
                         spreadRadius: 5,
                       ),
@@ -445,7 +445,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                             shadows: s.isFeatured
                                 ? [
                                     Shadow(
-                                        color: brandPrimary.withOpacity(0.5),
+                                        color: brandPrimary.withValues(alpha: 0.5),
                                         blurRadius: 10)
                                   ]
                                 : [])),
@@ -603,7 +603,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                                       ? []
                                       : [
                                           Shadow(
-                                              color: neonBlue.withOpacity(0.5),
+                                              color: neonBlue.withValues(alpha: 0.5),
                                               blurRadius: 10)
                                         ])),
                           const SizedBox(height: 32),
@@ -625,12 +625,12 @@ class _LandingPageState extends ConsumerState<LandingPage>
                                                     color: p.name
                                                             .contains('Premium')
                                                         ? neonDark
-                                                            .withOpacity(0.7)
+                                                            .withValues(alpha: 0.7)
                                                         : brandGray))),
                                       ],
                                     ),
                                   ))
-                              .toList(),
+                              ,
                           const SizedBox(height: 32),
                           SizedBox(
                             width: double.infinity,
@@ -799,7 +799,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                 Text('WHY',
                     style: GoogleFonts.bebasNeue(
                         fontSize: isDesktop ? 120 : 80,
-                        color: Colors.white.withOpacity(0.05))),
+                        color: Colors.white.withValues(alpha: 0.05))),
                 Align(
                   alignment: Alignment.bottomLeft,
                   child: Text(
@@ -860,7 +860,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
           Container(
             width: 48,
             height: 48,
-            color: brandPrimary.withOpacity(0.1),
+            color: brandPrimary.withValues(alpha: 0.1),
             child: Center(child: Text(icon, style: TextStyle(fontSize: 20))),
           ),
           const SizedBox(width: 24),
@@ -1055,13 +1055,13 @@ class _LandingPageState extends ConsumerState<LandingPage>
               color: brandGray,
               fontSize: 12,
               decoration: TextDecoration.underline,
-              decorationColor: brandGray.withOpacity(0.5))),
+              decorationColor: brandGray.withValues(alpha: 0.5))),
     );
   }
 
   Widget _footerCol(
       String title, List<String> links, List<String> routes, bool isDesktop) {
-    return Container(
+    return SizedBox(
       width: isDesktop ? 160 : 140,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

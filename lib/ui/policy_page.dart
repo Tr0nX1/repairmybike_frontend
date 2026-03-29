@@ -80,7 +80,7 @@ class _PolicyPageState extends State<PolicyPage> {
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
-            color: neonBlue.withOpacity(0.1),
+            color: neonBlue.withValues(alpha: 0.1),
             height: 1,
           ),
         ),
@@ -150,7 +150,7 @@ class _PolicyPageState extends State<PolicyPage> {
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
                   colors: [
-                    neonBlue.withOpacity(0.05),
+                    neonBlue.withValues(alpha: 0.05),
                     neonDark,
                   ],
                 ),
@@ -181,7 +181,7 @@ class _PolicyPageState extends State<PolicyPage> {
                       Text(
                         'Last Updated: ${_policy!.updatedAt.toLocal().toString().split(' ')[0]}',
                         style: GoogleFonts.barlow(
-                          color: neonBlue.withOpacity(0.6),
+                          color: neonBlue.withValues(alpha: 0.6),
                           fontSize: 12,
                           letterSpacing: 1,
                         ),
@@ -198,7 +198,7 @@ class _PolicyPageState extends State<PolicyPage> {
               child: MarkdownBody(
                 data: _policy!.content,
                 styleSheet: MarkdownStyleSheet(
-                  p: GoogleFonts.barlow(color: Colors.white.withOpacity(0.8), fontSize: 16, height: 1.7),
+                  p: GoogleFonts.barlow(color: Colors.white.withValues(alpha: 0.8), fontSize: 16, height: 1.7),
                   h1: GoogleFonts.bebasNeue(color: Colors.white, fontSize: 32, height: 2, letterSpacing: 1),
                   h2: GoogleFonts.bebasNeue(color: neonBlue, fontSize: 24, height: 2, letterSpacing: 1),
                   h3: GoogleFonts.bebasNeue(color: Colors.white, fontSize: 20, height: 2, letterSpacing: 1),
@@ -213,7 +213,7 @@ class _PolicyPageState extends State<PolicyPage> {
                   tableBody: GoogleFonts.barlow(color: Colors.white70, fontSize: 14),
                   tableBorder: TableBorder.all(color: Colors.white12, width: 1),
                   horizontalRuleDecoration: BoxDecoration(
-                    border: Border(top: BorderSide(color: neonBlue.withOpacity(0.1), width: 1)),
+                    border: Border(top: BorderSide(color: neonBlue.withValues(alpha: 0.1), width: 1)),
                   ),
                 ),
               ),

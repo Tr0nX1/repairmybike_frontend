@@ -10,9 +10,14 @@ import 'utils/fcm_service.dart';
 
 import 'utils/router.dart';
 
+import 'package:shared_preferences/shared_preferences.dart';
+import 'data/providers/shared_preferences_provider.dart';
+
 void main() async {
   setPathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
+
+  final sharedPreferences = await SharedPreferences.getInstance();
   
   // Initialize Firebase (safely handle Web where options might be missing)
   try {
@@ -30,7 +35,14 @@ void main() async {
   }
 
   debugPrint('🔥 BACKEND BASE URL: $backendBase');
-  runApp(const ProviderScope(child: MyApp()));
+  runApp(
+    ProviderScope(
+      overrides: [
+        sharedPreferencesProvider.overrideWithValue(sharedPreferences),
+      ],
+      child: const MyApp(),
+    ),
+  );
 }
 
 class MyApp extends ConsumerWidget {

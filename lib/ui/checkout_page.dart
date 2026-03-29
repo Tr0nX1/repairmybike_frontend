@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
@@ -6,9 +5,10 @@ import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/cart_provider.dart';
 import '../models/cart_item.dart';
-import '../data/app_state.dart';
 import '../models/postal_address.dart';
-import '../data/auth_api.dart';
+import '../data/repositories/auth_repository.dart';
+import '../data/repositories/profile_repository.dart';
+import '../data/providers/checkout_manager.dart';
 import 'widgets/address_form_fields.dart';
 
 class CheckoutPage extends ConsumerStatefulWidget {
@@ -28,23 +28,69 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   late TextEditingController _cityCtrl;
   String? _selectedState;
   String _shippingMethod = 'standard';
-  bool _submitting = false;
-  String? _error;
+
+  bool _initializedProfile = false;
 
   @override
   void initState() {
     super.initState();
-    final addr = AppState.lastAddress;
-    _nameCtrl = TextEditingController(text: addr?.fullName ?? AppState.fullName ?? '');
-    _phoneCtrl = TextEditingController(
-      text: addr?.phoneNumber ?? AppState.phoneNumber ?? AppState.lastCustomerPhone ?? '',
-    );
-    _flatCtrl = TextEditingController(text: addr?.flatHouseNo ?? AppState.addrFlat ?? '');
-    _areaCtrl = TextEditingController(text: addr?.areaStreet ?? AppState.addrArea ?? '');
-    _landmarkCtrl = TextEditingController(text: addr?.landmark ?? AppState.addrLandmark ?? '');
-    _pincodeCtrl = TextEditingController(text: addr?.pincode ?? AppState.addrPincode ?? '');
-    _cityCtrl = TextEditingController(text: addr?.townCity ?? AppState.addrCity ?? '');
-    _selectedState = addr?.state ?? AppState.addrState;
+    _nameCtrl = TextEditingController();
+    _phoneCtrl = TextEditingController();
+    _flatCtrl = TextEditingController();
+    _areaCtrl = TextEditingController();
+    _landmarkCtrl = TextEditingController();
+    _pincodeCtrl = TextEditingController();
+    _cityCtrl = TextEditingController();
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+       _syncWithProfile();
+    });
+  }
+
+  void _syncWithProfile() {
+    if (_initializedProfile) return;
+    
+    final authData = ref.read(authProvider);
+    final profileData = ref.read(profileProvider).value;
+
+    if (authData.phoneNumber != null) {
+      _phoneCtrl.text = authData.phoneNumber!;
+    }
+    if (profileData != null) {
+      _nameCtrl.text = profileData.fullName;
+      final defaultAddr = profileData.defaultAddress;
+      if (defaultAddr != null) {
+         _onAddressPicked(defaultAddr['id'] as int);
+      }
+    }
+    _initializedProfile = true;
+  }
+
+  void _onAddressPicked(int? addressId) {
+     ref.read(checkoutManagerProvider.notifier).selectAddress(addressId);
+     if (addressId != null) {
+        final profile = ref.read(profileProvider).value;
+        final addr = profile?.addresses.firstWhere((a) => a['id'] == addressId, orElse: () => {});
+        if (addr != null && addr.isNotEmpty) {
+           _nameCtrl.text = addr['full_name'] ?? profile?.fullName ?? '';
+           _phoneCtrl.text = addr['phone_number'] ?? ref.read(authProvider).phoneNumber ?? '';
+           _flatCtrl.text = addr['flat_house_no'] ?? '';
+           _areaCtrl.text = addr['area_street'] ?? '';
+           _landmarkCtrl.text = addr['landmark'] ?? '';
+           _cityCtrl.text = addr['town_city'] ?? '';
+           _pincodeCtrl.text = addr['pincode'] ?? '';
+           setState(() {
+              _selectedState = addr['state'];
+           });
+        }
+     } else {
+       _flatCtrl.clear();
+       _areaCtrl.clear();
+       _landmarkCtrl.clear();
+       _cityCtrl.clear();
+       _pincodeCtrl.clear();
+       setState(() { _selectedState = null; });
+     }
   }
 
   @override
@@ -60,20 +106,16 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   Future<void> _placeOrder() async {
-    if (!AppState.isAuthenticated) {
-      // Require login before placing orders
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please log in to place orders')),
-        );
-      }
+    final isAuth = ref.read(authProvider).isAuthenticated;
+    if (!isAuth) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Please log in to place orders')),
+      );
       return;
     }
+
     if (!_formKey.currentState!.validate()) return;
-    setState(() {
-      _submitting = true;
-      _error = null;
-    });
+    
     try {
       final address = PostalAddress(
         fullName: _nameCtrl.text.trim(),
@@ -86,59 +128,26 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
         state: _selectedState ?? '',
       );
 
-      await AppState.updateLastAddress(address);
-      await AppState.setLastCustomerPhone(_phoneCtrl.text.trim());
+      final payload = {
+        'customer_name': _nameCtrl.text.trim(),
+        'phone': _phoneCtrl.text.trim(),
+        'address': address.toFullString(),
+        'shipping_method': _shippingMethod,
+        'address_details': address.toJson(),
+      };
 
-      // If authenticated, also save to permanent user profile on the backend
-      // so address is visible in Profile tab and synced across platforms.
-      if (AppState.isAuthenticated && AppState.sessionToken != null) {
-        try {
-          await AuthApi().addAddress(
-            sessionToken: AppState.sessionToken!,
-            fullName: address.fullName,
-            phone: address.phoneNumber,
-            flat: address.flatHouseNo,
-            area: address.areaStreet,
-            landmark: address.landmark,
-            pincode: address.pincode,
-            city: address.townCity,
-            state: address.state,
-            isDefault: true,
-          );
-          // Re-fetch profile so AppState has the latest address from server
-          try {
-            final freshProfile = await AuthApi().getProfile(sessionToken: AppState.sessionToken!);
-            await AppState.updateFromProfileMap(freshProfile);
-          } catch (_) {}
-        } catch (e) {
-          if (kDebugMode) {
-            debugPrint('⚠️ addAddress failed during checkout: $e');
-          }
-        }
-      }
-      
-      await ref.read(cartProvider.notifier).checkoutCash(
-            shippingAddress: address.toFullString(),
-            phone: _phoneCtrl.text.trim(),
-            shippingMethod: _shippingMethod,
-            addressDetails: address.toJson(),
-          );
+      await ref.read(checkoutManagerProvider.notifier).submitPartsCheckout(cartData: payload);
+
+      // Successfully bought; purge the cart explicitly
+      ref.invalidate(cartProvider);
+
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text('Order placed')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Order placed successfully!')));
       
-      // Clear stack and switch to bookings tab to prevent back-navigation to checkout
       context.go('/bookings');
     } catch (e) {
-      setState(() {
-        _error = e.toString();
-      });
-    } finally {
       if (mounted) {
-        setState(() {
-          _submitting = false;
-        });
+         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Checkout failed: $e')));
       }
     }
   }
@@ -147,6 +156,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   Widget build(BuildContext context) {
     final cart = ref.watch(cartProvider);
     final cs = Theme.of(context).colorScheme;
+    
     return Scaffold(
       appBar: AppBar(title: const Text('Checkout')),
       body: LayoutBuilder(
@@ -181,7 +191,6 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                     form, 
                     const SizedBox(height: 16), 
                     summary,
-                    // Add extra padding at bottom to avoid FAB overlap etc if any
                     const SizedBox(height: 20),
                   ],
                 ),
@@ -193,6 +202,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
   }
 
   Widget _buildForm(ColorScheme cs) {
+    final checkoutState = ref.watch(checkoutManagerProvider);
+    final profileData = ref.watch(profileProvider).value;
+
     return Card(
       elevation: 0,
       shape: RoundedRectangleBorder(
@@ -225,6 +237,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                 cityCtrl: _cityCtrl,
                 selectedState: _selectedState,
                 onStateChanged: (v) => setState(() => _selectedState = v),
+                savedAddresses: profileData?.addresses,
+                selectedAddressId: checkoutState.selectedAddressId,
+                onAddressSelected: _onAddressPicked,
               ),
               const SizedBox(height: 16),
               Text(
@@ -234,21 +249,21 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              RadioGroup<String>(
-                groupValue: _shippingMethod,
-                onChanged: (v) => setState(() => _shippingMethod = v!),
-                child: Column(
-                  children: [
-                    RadioListTile<String>(
-                      value: 'standard',
-                      title: const Text('Standard Delivery (3–5 days)'),
-                    ),
-                    RadioListTile<String>(
-                      value: 'express',
-                      title: const Text('Express Delivery (1–2 days)'),
-                    ),
-                  ],
-                ),
+              RadioListTile<String>(
+                  value: 'standard',
+                  // ignore: deprecated_member_use
+                  groupValue: _shippingMethod,
+                  title: const Text('Standard Delivery (3–5 days)'),
+                  // ignore: deprecated_member_use
+                  onChanged: (v) => setState(() => _shippingMethod = v!),
+              ),
+              RadioListTile<String>(
+                  value: 'express',
+                  // ignore: deprecated_member_use
+                  groupValue: _shippingMethod,
+                  title: const Text('Express Delivery (1–2 days)'),
+                  // ignore: deprecated_member_use
+                  onChanged: (v) => setState(() => _shippingMethod = v!),
               ),
               const SizedBox(height: 16),
               Text(
@@ -258,35 +273,37 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
                   fontWeight: FontWeight.w600,
                 ),
               ),
-              ListTile(
-                leading: const Icon(Icons.payments),
-                title: const Text('Cash on Delivery'),
-                subtitle: const Text('Pay in cash upon delivery'),
+              const ListTile(
+                leading: Icon(Icons.payments),
+                title: Text('Cash on Delivery'),
+                subtitle: Text('Pay in cash upon delivery'),
               ),
               const SizedBox(height: 12),
               Row(
                 children: [
-                  const Icon(Icons.lock, color: Colors.green),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Secure checkout • Encrypted data • Trusted delivery',
-                      style: TextStyle(color: cs.onSurfaceVariant),
-                    ),
-                  ),
+                   const Icon(Icons.lock, color: Colors.green),
+                   const SizedBox(width: 8),
+                   Expanded(
+                     child: Text(
+                       'Secure checkout • Encrypted data • Idempotent checks active',
+                       style: TextStyle(color: cs.onSurfaceVariant),
+                     ),
+                   ),
                 ],
               ),
-              if (_error != null) ...[
+              if (checkoutState.error != null) ...[
                 const SizedBox(height: 8),
-                Text(_error!, style: TextStyle(color: cs.error)),
+                Text(checkoutState.error!, style: TextStyle(color: cs.error)),
               ],
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
                 height: 48,
                 child: ElevatedButton(
-                  onPressed: _submitting ? null : _placeOrder,
-                  child: const Text('Place Order'),
+                  onPressed: checkoutState.isSubmitting ? null : _placeOrder,
+                  child: checkoutState.isSubmitting 
+                     ? const SizedBox(width: 24, height: 24, child: CircularProgressIndicator()) 
+                     : const Text('Place Order'),
                 ),
               ),
             ],
@@ -342,19 +359,6 @@ class _OrderSummary extends StatelessWidget {
             _row('Shipping', '₹$shipping', cs),
             const Divider(),
             _row('Total', '₹$total', cs, bold: true),
-            const SizedBox(height: 12),
-            Row(
-              children: [
-                const Icon(Icons.verified, color: Colors.blue),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    'Satisfaction guaranteed',
-                    style: TextStyle(color: cs.onSurfaceVariant),
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
