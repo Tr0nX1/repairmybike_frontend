@@ -176,6 +176,25 @@ final secureApiClientProvider = Provider<Dio>((ref) {
              await ref.read(authProvider.notifier).logout();
           }
         }
+        
+        // 500 Internal Server Error Global Interception
+        if (e.response?.statusCode == 500) {
+          debugPrint('🔥 CRITICAL 500 SERVER ERROR on ${e.requestOptions.path}');
+          debugPrint('Data returned: ${e.response?.data}');
+        }
+
+        // 400 Bad Request Interception
+        if (e.response?.statusCode == 400) {
+          debugPrint('⚠️ BAD REQUEST 400 on ${e.requestOptions.path}');
+          debugPrint('Validation/Error payload: ${e.response?.data}');
+        }
+
+        // Network / Timeout Error Interception
+        if (e.type == DioExceptionType.connectionTimeout || 
+            e.type == DioExceptionType.receiveTimeout || 
+            e.type == DioExceptionType.connectionError) {
+          debugPrint('🔌 NETWORK ERROR: ${e.type.toString()} - ${e.message}');
+        }
 
         return handler.next(e);
       },

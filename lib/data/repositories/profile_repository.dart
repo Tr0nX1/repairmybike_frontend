@@ -49,7 +49,9 @@ class ProfileNotifier extends AsyncNotifier<UserProfile?> {
               : data['username'] ?? 'User',
           email: data['email'],
           avatarUrl: data['profile_picture'],
-          addresses: List<Map<String, dynamic>>.from(data['addresses'] ?? []),
+          addresses: (data['addresses'] as List<dynamic>?)
+                  ?.whereType<Map<String, dynamic>>()
+                  .toList() ?? [],
           defaultVehicle: data['default_vehicle'],
         );
         

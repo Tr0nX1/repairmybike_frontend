@@ -54,16 +54,29 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
     final profileData = ref.read(profileProvider).value;
 
     if (authData.phoneNumber != null) {
-      _phoneCtrl.text = authData.phoneNumber!;
+      _phoneCtrl.text = authData.phoneNumber ?? '';
     }
     if (profileData != null) {
       _nameCtrl.text = profileData.fullName;
       final defaultAddr = profileData.defaultAddress;
       if (defaultAddr != null) {
-         _onAddressPicked(defaultAddr['id'] as int);
+         final addrIdInfo = defaultAddr['id'];
+         int? parsedId;
+         if (addrIdInfo is int) {
+           parsedId = addrIdInfo;
+         } else if (addrIdInfo != null) {
+           parsedId = int.tryParse(addrIdInfo.toString());
+         }
+         if (parsedId != null) {
+           _onAddressPicked(parsedId);
+         }
       }
     }
-    _initializedProfile = true;
+    
+    // Only lock initialization if the heavy profile data is actually loaded and not null
+    if (profileData != null) {
+      _initializedProfile = true;
+    }
   }
 
   void _onAddressPicked(int? addressId) {
@@ -114,7 +127,7 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       return;
     }
 
-    if (!_formKey.currentState!.validate()) return;
+    if (!(_formKey.currentState?.validate() ?? false)) return;
     
     try {
       final address = PostalAddress(
@@ -154,6 +167,13 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Continuously listen if profile info resolves lately and we haven't synced yet
+    ref.listen(profileProvider, (previous, next) {
+      if (!_initializedProfile && next.value != null) {
+        _syncWithProfile();
+      }
+    });
+
     final cart = ref.watch(cartProvider);
     final cs = Theme.of(context).colorScheme;
     

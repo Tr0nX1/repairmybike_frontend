@@ -135,7 +135,13 @@ class AddressFormFields extends StatelessWidget {
           child: Text('Enter a new address manually'),
         ),
         ...savedAddresses!.map((addr) {
-          final id = addr['id'] as int;
+          final addrIdInfo = addr['id'];
+          int? id;
+          if (addrIdInfo is int) {
+            id = addrIdInfo;
+          } else if (addrIdInfo != null) {
+            id = int.tryParse(addrIdInfo.toString());
+          }
           final type = addr['address_type'] ?? 'Address';
           final flat = addr['flat_house_no'] ?? '';
           final text = '$type: $flat, ${addr['town_city']}';

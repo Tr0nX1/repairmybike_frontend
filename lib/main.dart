@@ -17,6 +17,47 @@ void main() async {
   setPathUrlStrategy();
   WidgetsFlutterBinding.ensureInitialized();
 
+  // 1. Global UI Error Boundary (Red Screen Replacement)
+  ErrorWidget.builder = (FlutterErrorDetails details) {
+    bool isDebug = false;
+    assert(() {
+      isDebug = true;
+      return true;
+    }());
+    
+    // Log the error globally
+    debugPrint('🚨 GLOBAL UI ERROR: ${details.exceptionAsString()}');
+    debugPrint(details.stack?.toString());
+
+    return Material(
+      color: const Color(0xFF0B0F12), // Brand primary dark background
+      child: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.warning_amber_rounded, color: Color(0xFFE83C3C), size: 64),
+              const SizedBox(height: 16),
+              const Text(
+                'Something went wrong',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                isDebug 
+                    ? details.exceptionAsString() 
+                    : 'We hit a technical snag. Our team has been notified. Please restart the app.',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 14, color: Colors.white70),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  };
+
   final sharedPreferences = await SharedPreferences.getInstance();
   
   // Initialize Firebase (safely handle Web where options might be missing)

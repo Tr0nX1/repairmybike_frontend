@@ -37,8 +37,14 @@ class CheckoutManager extends Notifier<CheckoutState> {
     // Attempt to automatically select the user's default address on init
     final profileData = ref.watch(profileProvider).value;
     final defaultId = profileData?.defaultAddress?['id'];
+    int? parsedId;
+    if (defaultId is int) {
+      parsedId = defaultId;
+    } else if (defaultId != null) {
+      parsedId = int.tryParse(defaultId.toString());
+    }
     
-    return CheckoutState(selectedAddressId: defaultId as int?);
+    return CheckoutState(selectedAddressId: parsedId);
   }
 
   /// Sets the active address ID. If null, the checkout flow will fallback to
