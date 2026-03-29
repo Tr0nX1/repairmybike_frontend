@@ -9,6 +9,7 @@ import 'spare_parts_page.dart';
 import 'spare_part_detail_page.dart';
 import '../utils/url_utils.dart';
 import '../providers/cart_provider.dart';
+import '../utils/app_error.dart';
 
 final sparePartsProvider = FutureProvider.autoDispose<List<SparePartListItem>>((ref) async {
   final api = SparePartsApi();
@@ -41,10 +42,9 @@ class SparePartsSection extends ConsumerWidget {
         const SizedBox(height: 12),
         asyncParts.when(
           loading: () => const _SparePartsGridSkeleton(),
-          error: (e, _) => Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
-            child: Text('Failed to load parts: ${e.toString()}', 
-              style: const TextStyle(color: Colors.redAccent)),
+          error: (e, _) => Center(
+            child: Text(AppError.sanitize(e, fallback: 'Failed to load spare parts'), 
+              style: const TextStyle(color: Colors.redAccent, fontSize: 13, fontWeight: FontWeight.w600)),
           ),
           data: (parts) {
             if (parts.isEmpty) {

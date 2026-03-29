@@ -6,6 +6,7 @@ import '../providers/category_provider.dart';
 import '../models/category.dart';
 import 'services_page.dart';
 import '../utils/url_utils.dart';
+import '../utils/app_error.dart';
 
 class CategoriesPage extends ConsumerStatefulWidget {
   const CategoriesPage({super.key});
@@ -62,7 +63,7 @@ class _CategoriesPageState extends ConsumerState<CategoriesPage> {
                   loading: () => const Center(child: CircularProgressIndicator()),
                   error: (err, _) => Center(
                     child: Text(
-                      'Failed to load: ${err.toString()}',
+                      AppError.sanitize(err, fallback: 'Failed to load categories'),
                       style: const TextStyle(color: Colors.redAccent),
                     ),
                   ),

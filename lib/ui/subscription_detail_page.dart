@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../models/subscription.dart';
 import '../data/subscription_api.dart';
 import '../data/app_state.dart';
+import '../utils/app_error.dart';
 
 const accent = Color(0xFF00E5FF);
 const cardColor = Color(0xFF222222);
@@ -359,7 +360,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
       _showSuccessSheet(sub);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _errorText = e.toString().contains('Exception: ') ? e.toString().split('Exception: ')[1] : e.toString());
+      setState(() => _errorText = AppError.sanitize(e, fallback: 'Subscription failed'));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }
@@ -384,7 +385,7 @@ class _SubscriptionDetailPageState extends State<SubscriptionDetailPage> {
       setState(() => _existing = items);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _errorText = 'Failed to fetch: ${e.toString()}');
+      setState(() => _errorText = AppError.sanitize(e, fallback: 'Failed to fetch subscriptions'));
     } finally {
       if (mounted) setState(() => _loadingExisting = false);
     }

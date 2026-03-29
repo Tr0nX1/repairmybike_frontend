@@ -4,6 +4,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/cart_provider.dart';
+import '../../utils/app_error.dart';
 import '../models/cart_item.dart';
 import '../models/postal_address.dart';
 import '../data/repositories/auth_repository.dart';
@@ -174,7 +175,9 @@ class _CheckoutPageState extends ConsumerState<CheckoutPage> {
       context.go('/bookings');
     } catch (e) {
       if (mounted) {
-         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Checkout failed: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppError.sanitize(e, fallback: 'Checkout failed'))),
+        );
       }
     }
   }

@@ -8,6 +8,7 @@ import '../data/booking_api.dart'; // Added for fetching bookings
 import '../data/order_api.dart'; // Added for fetching spare parts orders
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/saved_services_provider.dart';
+import '../utils/app_error.dart';
 
 class ProfilePage extends ConsumerStatefulWidget {
   const ProfilePage({super.key});
@@ -91,7 +92,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       if (!mounted) return;
       ScaffoldMessenger.of(
         context,
-      ).showSnackBar(SnackBar(content: Text('Logout failed: $e')));
+      ).showSnackBar(SnackBar(content: Text(AppError.sanitize(e, fallback: 'Logout failed'))));
     } finally {
       if (mounted) setState(() => _loggingOut = false);
     }

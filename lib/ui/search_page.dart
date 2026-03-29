@@ -9,6 +9,7 @@ import '../models/service.dart';
 import 'service_detail_page.dart';
 import 'spare_part_detail_page.dart';
 import '../utils/url_utils.dart';
+import '../utils/app_error.dart';
 
 class SearchPage extends ConsumerStatefulWidget {
   final String? initialQuery;
@@ -98,7 +99,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   _SectionHeader(title: 'Spare Parts'),
                   partsAsync.when(
                     loading: () => const _Loading(),
-                    error: (e, _) => _ErrorText('Failed to load parts: ${e.toString()}'),
+                    error: (e, _) => _ErrorText(AppError.sanitize(e, fallback: 'Failed to load parts')),
                     data: (parts) {
                       final list = parts;
                       if (query.isEmpty || list.isEmpty) {
@@ -113,7 +114,7 @@ class _SearchPageState extends ConsumerState<SearchPage> {
                   _SectionHeader(title: 'Services'),
                   servicesAsync.when(
                     loading: () => const _Loading(),
-                    error: (e, _) => _ErrorText('Failed to load services: ${e.toString()}'),
+                    error: (e, _) => _ErrorText(AppError.sanitize(e, fallback: 'Failed to load services')),
                     data: (services) {
                       final q = query.toLowerCase();
                       final filtered = q.isEmpty

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../utils/app_error.dart';
 import '../models/service.dart';
 import '../data/vehicles_api.dart';
 import '../models/postal_address.dart';
@@ -225,7 +226,7 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
       if (!mounted) return;
       Navigator.of(context).pop();
     } catch (e) {
-      _showSnack(e.toString());
+      _showSnack(AppError.sanitize(e, fallback: 'Failed to place booking'));
     }
   }
 

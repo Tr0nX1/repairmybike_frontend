@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter/gestures.dart';
@@ -9,6 +8,7 @@ import '../data/app_state.dart';
 import '../data/vehicles_api.dart';
 import '../providers/cart_provider.dart';
 import '../utils/fcm_service.dart';
+import '../utils/app_error.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
   final VoidCallback? onFinished;
@@ -101,7 +101,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       _showSnack('Signed in as staff');
       _finish();
     } catch (e) {
-      _showSnack(_extractError(e, fallback: 'Staff login failed'));
+      _showSnack(AppError.sanitize(e, fallback: 'Staff login failed'));
     } finally {
       setState(() => _loading = false);
     }
@@ -131,7 +131,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       _startCountdown(0);
       _showSnack('OTP sent');
     } catch (e) {
-      _showSnack(_extractError(e, fallback: 'Failed to send OTP'));
+      _showSnack(AppError.sanitize(e, fallback: 'Failed to send OTP'));
     } finally {
       setState(() => _loading = false);
     }
@@ -195,7 +195,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       });
       _finish();
     } catch (e) {
-      _showSnack(_extractError(e, fallback: 'Verification failed'));
+      _showSnack(AppError.sanitize(e, fallback: 'Verification failed'));
     } finally {
       setState(() => _loading = false);
     }
@@ -205,23 +205,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  String _extractError(Object e, {required String fallback}) {
-    if (e is DioException) {
-      final data = e.response?.data;
-      final status = e.response?.statusCode ?? 0;
-      if (status == 429) {
-        return 'Too many attempts. Please wait a minute and try again.';
-      }
-      if (data is Map && data['message'] is String) {
-        return data['message'] as String;
-      }
-      if (data is Map && data['error'] is String) {
-        return data['error'] as String;
-      }
-      return fallback;
-    }
-    return e.toString();
-  }
 
   void _finish() {
     final session = AppState.sessionToken;

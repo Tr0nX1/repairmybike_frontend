@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
+import '../utils/app_error.dart';
 
 class ProfileDetailsPage extends StatefulWidget {
   final bool popOnSave;
@@ -110,7 +111,7 @@ class _ProfileDetailsPageState extends State<ProfileDetailsPage> {
         }
       }
     } catch (e) {
-      _show('Failed to save data: $e');
+      _show(AppError.sanitize(e, fallback: 'Failed to save data'));
     } finally {
       if (mounted) setState(() => _saving = false);
     }

@@ -4,6 +4,7 @@ import '../data/app_state.dart';
 import '../models/postal_address.dart';
 import 'widgets/address_form_fields.dart';
 import '../data/subscription_api.dart';
+import '../utils/app_error.dart';
 
 const accent = Color(0xFF00E5FF);
 const cardColor = Color(0xFF222222);
@@ -507,7 +508,7 @@ class _SubscriptionCheckoutPageState extends State<SubscriptionCheckoutPage> {
       _showSuccessDialog(phone);
     } catch (e) {
       if (!mounted) return;
-      setState(() => _errorText = 'Failed: ${e.toString()}');
+      setState(() => _errorText = AppError.sanitize(e, fallback: 'Subscription activation failed'));
     } finally {
       if (mounted) setState(() => _submitting = false);
     }

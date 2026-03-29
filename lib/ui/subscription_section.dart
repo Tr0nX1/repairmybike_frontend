@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../providers/subscription_provider.dart';
 import '../models/subscription.dart';
+import '../utils/app_error.dart';
 
 // Helper available to both home section and full page
 bool isPopularPlan(SubscriptionPlan plan, List<SubscriptionPlan> all) {
@@ -115,7 +116,7 @@ class SubscriptionsPage extends ConsumerWidget {
         padding: const EdgeInsets.all(16),
         child: asyncPlans.when(
           loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => Center(child: Text('Failed to load: ${e.toString()}', style: const TextStyle(color: Colors.redAccent))),
+          error: (e, _) => Center(child: Text(AppError.sanitize(e, fallback: 'Failed to load subscriptions'), style: const TextStyle(color: Colors.redAccent))),
           data: (plans) {
             final titles = plans.map((p) => _shortTitle(p)).toList();
             return _TwoColumnTitles(titles: titles);

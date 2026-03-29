@@ -12,6 +12,7 @@ import '../providers/category_provider.dart' as providers;
 import '../providers/saved_services_provider.dart';
 import '../models/service.dart';
 import '../utils/url_utils.dart';
+import '../utils/app_error.dart';
 import 'widgets/dynamic_hero_carousel.dart';
 // Theme toggle removed
 
@@ -139,7 +140,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                       border: Border.all(color: border),
                     ),
                     child: Text(
-                      'Failed to load: ${err.toString()}',
+                      AppError.sanitize(err, fallback: 'Failed to load categories'),
                       style: const TextStyle(color: Colors.redAccent),
                     ),
                   ),

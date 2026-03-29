@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../models/subscription.dart';
 import '../providers/subscription_provider.dart';
+import '../utils/app_error.dart';
 
 class MySubscriptionsPage extends ConsumerWidget {
   const MySubscriptionsPage({super.key});
@@ -24,8 +25,8 @@ class MySubscriptionsPage extends ConsumerWidget {
         child: asyncSubs.when(
           loading: () => const Center(child: CircularProgressIndicator()),
           error: (err, stack) {
-            final msg = err.toString();
-            final isAuthError = msg.contains('403') || msg.contains('401') || msg.contains('Authentication credentials were not provided');
+            final msg = AppError.sanitize(err, fallback: 'Failed to load subscriptions');
+            final isAuthError = err.toString().contains('403') || err.toString().contains('401') || err.toString().contains('Authentication credentials were not provided');
             
             return Center(
               child: Padding(

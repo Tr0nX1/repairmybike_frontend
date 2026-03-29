@@ -3,6 +3,7 @@ import '../network/secure_api_client.dart';
 import 'idempotency_provider.dart';
 import '../repositories/profile_repository.dart';
 import 'package:dio/dio.dart';
+import '../../utils/app_error.dart';
 
 class CheckoutState {
   final bool isSubmitting;
@@ -71,29 +72,6 @@ class CheckoutManager extends Notifier<CheckoutState> {
     return payload;
   }
 
-  String _extractErrorMessage(dynamic errorData) {
-    if (errorData is Map) {
-      // Our standard API error format
-      if (errorData['message'] is String) return errorData['message'];
-      if (errorData['error'] is String && errorData['error'] != true) {
-        return errorData['error'];
-      }
-      // DRF field-level validation errors: {"field": ["message"]}
-      final firstEntry = errorData.entries
-          .where((e) => e.value is List && (e.value as List).isNotEmpty)
-          .firstOrNull;
-      if (firstEntry != null) {
-        final fieldName = firstEntry.key;
-        final msg = (firstEntry.value as List).first?.toString() ?? '';
-        return 'Validation error on "$fieldName": $msg';
-      }
-      // DRF detail string
-      if (errorData['detail'] is String) return errorData['detail'];
-    }
-    if (errorData is String && errorData.isNotEmpty) return errorData;
-    return 'Transaction failed. Please try again.';
-  }
-
   /// Orchestrates a Service Booking transaction.
   Future<Map<String, dynamic>> submitServiceBooking({
     required Map<String, dynamic> bookingData,
@@ -111,7 +89,7 @@ class CheckoutManager extends Notifier<CheckoutState> {
       state = state.copyWith(isSubmitting: false);
       return res.data;
     } on DioException catch (e) {
-      final msg = _extractErrorMessage(e.response?.data);
+      final msg = AppError.sanitize(e);
       state = state.copyWith(isSubmitting: false, error: msg);
       throw Exception(msg);
     } catch (e) {
@@ -137,7 +115,7 @@ class CheckoutManager extends Notifier<CheckoutState> {
       state = state.copyWith(isSubmitting: false);
       return res.data;
     } on DioException catch (e) {
-      final msg = _extractErrorMessage(e.response?.data);
+      final msg = AppError.sanitize(e);
       state = state.copyWith(isSubmitting: false, error: msg);
       throw Exception(msg);
     } catch (e) {

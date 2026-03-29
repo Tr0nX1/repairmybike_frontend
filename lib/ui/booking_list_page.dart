@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'dart:async';
 import '../data/booking_api.dart';
 import '../data/order_api.dart';
-
 import '../data/app_state.dart';
+import '../utils/app_error.dart';
 import 'widgets/feedback_bottom_sheet.dart';
 
 class BookingListPage extends StatefulWidget {
@@ -152,11 +152,11 @@ class _BookingListPageState extends State<BookingListPage> {
 
       _startAutoRefresh();
     } catch (e) {
-      final msg = e.toString();
-      if (msg.contains('429')) {
+      final sanitized = AppError.sanitize(e, fallback: 'Failed to fetch bookings');
+      if (e.toString().contains('429')) {
         _backoffUntil = DateTime.now().add(const Duration(minutes: 2));
       }
-      _showSnack('Failed to fetch bookings: $msg');
+      _showSnack(sanitized);
     } finally {
       if (mounted) setState(() => _loading = false);
     }
@@ -788,7 +788,7 @@ class _BookingListPageState extends State<BookingListPage> {
                       _showSnack('Schedule updated');
                       _search();
                     } catch (e) {
-                      _showSnack('Failed to update: $e');
+                      _showSnack(AppError.sanitize(e, fallback: 'Failed to update schedule'));
                     }
                   },
                   child: const Text('Save'),
