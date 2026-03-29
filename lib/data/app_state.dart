@@ -7,6 +7,7 @@ import 'spare_parts_api.dart';
 import 'vehicles_api.dart';
 import 'saved_services_api.dart';
 import '../models/postal_address.dart';
+import '../utils/phone_utils.dart';
 
 class AppState {
   // Keys for persistence
@@ -45,6 +46,7 @@ class AppState {
   static String? sessionToken;
   static String? refreshToken;
   static String? guestId;
+  static String get deviceId => guestId ?? '';
   static bool isStaff = false;
   static String? staffUsername;
 
@@ -98,15 +100,7 @@ class AppState {
     return parts.join(', ');
   }
 
-  static String normalizePhone(String p) {
-    var s = p.trim().replaceAll(RegExp('\\D'), '');
-    if (s.isEmpty) return '';
-    if (s.length == 10) return '+91$s';
-    if (s.length == 12 && s.startsWith('91')) return '+$s';
-    if (s.startsWith('0') && s.length == 11) return '+91${s.substring(1)}';
-    if (p.trim().startsWith('+')) return p.trim();
-    return '+$s';
-  }
+  static String normalizePhone(String p) => normalizePhoneNumber(p);
 
   static int? _jwtExpEpoch(String? jwt) {
     try {

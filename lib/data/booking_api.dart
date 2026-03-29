@@ -29,8 +29,10 @@ class BookingApi {
     String? address,
     Map<String, dynamic>? addressDetails,
     required String appointmentDate, // YYYY-MM-DD
-    required String appointmentTime, // HH:MM:SS
+    String? appointmentTime, // HH:MM:SS
     String? notes,
+    String? couponCode,
+    bool useLoyaltyPoints = false,
   }) async {
     final payload = {
       'customer_name': customerName,
@@ -47,6 +49,8 @@ class BookingApi {
       // Cash only for now
       'payment_method': 'cash',
       if (notes != null && notes.isNotEmpty) 'notes': notes,
+      if (couponCode != null && couponCode.isNotEmpty) 'coupon_code': couponCode,
+      if (useLoyaltyPoints) 'use_loyalty_points': true,
     };
 
     try {

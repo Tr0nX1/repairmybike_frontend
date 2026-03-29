@@ -1,4 +1,6 @@
 import 'api_client.dart';
+import 'app_state.dart';
+import '../utils/phone_utils.dart';
 
 
 class AuthApi {
@@ -7,15 +9,7 @@ class AuthApi {
   AuthApi() : _dio = ApiClient().dio;
 
 
-  String _normalizePhone(String phone) {
-    final raw = phone.trim();
-    // Strip all non-digits and rebuild E.164 with leading '+'
-    final digits = raw.replaceAll(RegExp(r'\D'), '');
-    if (digits.isEmpty) return raw;
-    // Assume India by default for 10-digit inputs
-    if (digits.length == 10) return '+91$digits';
-    return '+$digits';
-  }
+  String _normalizePhone(String phone) => normalizePhoneNumber(phone);
 
   /// Staff login using username and password. Returns auth map.
   /// Expects backend endpoint `/api/auth/staff/login/password/`.
@@ -26,7 +20,11 @@ class AuthApi {
     try {
       final res = await _dio.post(
         'api/auth/staff/login/password/',
-        data: {'identifier': username, 'password': password},
+        data: {
+          'identifier': username, 
+          'password': password,
+          'device_id': AppState.deviceId,
+        },
       );
       final data = res.data;
       if (data is Map<String, dynamic>) {
@@ -56,7 +54,11 @@ class AuthApi {
       try {
         await _dio.post(
           'api/auth/otp/request/',
-          data: {'identifier': normalized, 'method': 'phone'},
+          data: {
+            'identifier': normalized, 
+            'method': 'phone',
+            'device_id': AppState.deviceId,
+          },
         );
         return;
       } on DioException catch (e) {
@@ -99,7 +101,12 @@ class AuthApi {
       final normalized = _normalizePhone(phone);
       final res = await _dio.post(
         'api/auth/otp/verify/',
-        data: {'identifier': normalized, 'otp_code': code, 'method': 'phone'},
+        data: {
+          'identifier': normalized, 
+          'otp_code': code, 
+          'method': 'phone',
+          'device_id': AppState.deviceId,
+        },
       );
       final data = res.data;
       if (data is Map<String, dynamic>) {
