@@ -136,7 +136,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
         child: Container(
           constraints: const BoxConstraints(maxWidth: 900),
           margin: EdgeInsets.symmetric(horizontal: isDesktop ? 40 : 20),
-          padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+          padding: EdgeInsets.symmetric(horizontal: isDesktop ? 32 : 16, vertical: 12),
           decoration: BoxDecoration(
             color: brandBlack.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(100),
@@ -154,15 +154,15 @@ class _LandingPageState extends ConsumerState<LandingPage>
             children: [
               Image.asset(
                 'assets/launcher icon/transparent repairmybike launcher.png',
-                width: 48,
-                height: 48,
+                width: isDesktop ? 48 : 36,
+                height: isDesktop ? 48 : 36,
                 fit: BoxFit.contain,
               ),
               const SizedBox(width: 14),
               RichText(
                 text: TextSpan(
                   style: GoogleFonts.bebasNeue(
-                      fontSize: 22, letterSpacing: 2, color: brandWhite),
+                      fontSize: isDesktop ? 22 : 18, letterSpacing: 2, color: brandWhite),
                   children: [
                     const TextSpan(text: 'REPAIR'),
                     const TextSpan(
@@ -178,7 +178,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                 _navItem('Workflow', () => _scrollTo(_howItWorksKey)),
                 _navItem('About', () => _scrollTo(_whyUsKey)),
               ],
-              const SizedBox(width: 40),
+              SizedBox(width: isDesktop ? 40 : 16),
               _buildLoginBtn(context),
             ],
           ),
@@ -276,12 +276,14 @@ class _LandingPageState extends ConsumerState<LandingPage>
             ),
           ),
           const SizedBox(height: 48),
-          Row(
+          Flex(
+            direction: isDesktop ? Axis.horizontal : Axis.vertical,
             mainAxisAlignment:
                 isDesktop ? MainAxisAlignment.start : MainAxisAlignment.center,
+            crossAxisAlignment: isDesktop ? CrossAxisAlignment.center : CrossAxisAlignment.center,
             children: [
-              _buildPrimaryAction(context),
-              const SizedBox(width: 24),
+              _buildPrimaryAction(context, isDesktop),
+              SizedBox(width: isDesktop ? 24 : 0, height: isDesktop ? 0 : 20),
               _buildSecondaryAction(() => _scrollTo(_howItWorksKey), true),
             ],
           ),
@@ -290,7 +292,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
     );
   }
 
-  Widget _buildPrimaryAction(BuildContext context) {
+  Widget _buildPrimaryAction(BuildContext context, bool isDesktop) {
     return Container(
       decoration: BoxDecoration(
         boxShadow: [neonBlueGlow],
@@ -300,7 +302,10 @@ class _LandingPageState extends ConsumerState<LandingPage>
         style: ElevatedButton.styleFrom(
           backgroundColor: neonBlue,
           foregroundColor: neonDark,
-          padding: const EdgeInsets.symmetric(horizontal: 44, vertical: 24),
+          padding: EdgeInsets.symmetric(
+            horizontal: isDesktop ? 44 : 32, 
+            vertical: isDesktop ? 18 : 14
+          ),
           shape: const RoundedRectangleBorder(),
           textStyle: GoogleFonts.barlowCondensed(
             fontWeight: FontWeight.w700,
@@ -397,7 +402,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
     if (services.isEmpty) return const SizedBox.shrink();
     return Container(
       key: key,
-      padding: EdgeInsets.symmetric(horizontal: pad, vertical: 120),
+      padding: EdgeInsets.symmetric(horizontal: pad, vertical: isDesktop ? 120 : 60),
       child: Column(
         children: [
           _sectionHeader(
@@ -476,7 +481,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
       double pad, bool isDesktop, List<SparePartListItem> parts) {
     if (parts.isEmpty) return const SizedBox.shrink();
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: pad, vertical: 120),
+      padding: EdgeInsets.symmetric(horizontal: pad, vertical: isDesktop ? 120 : 60),
       color: brandDark,
       child: Column(
         children: [
@@ -554,7 +559,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
     if (plans.isEmpty) return const SizedBox.shrink();
     return Container(
       key: key,
-      padding: EdgeInsets.symmetric(horizontal: pad, vertical: 120),
+      padding: EdgeInsets.symmetric(horizontal: pad, vertical: isDesktop ? 120 : 60),
       child: Column(
         children: [
           _sectionHeader(
@@ -644,7 +649,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                                     ? brandWhite
                                     : neonDark,
                                 padding:
-                                    const EdgeInsets.symmetric(vertical: 20),
+                                    EdgeInsets.symmetric(vertical: isDesktop ? 18 : 14),
                                 shape: const RoundedRectangleBorder(),
                               ),
                               child: const Text('GET STARTED'),
@@ -725,7 +730,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
     return Container(
       key: key,
       color: brandDark,
-      padding: EdgeInsets.symmetric(horizontal: pad, vertical: 120),
+      padding: EdgeInsets.symmetric(horizontal: pad, vertical: isDesktop ? 120 : 60),
       child: Column(
         children: [
           _sectionHeader(
@@ -921,7 +926,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                   color: brandPrimary,
                   letterSpacing: 4)),
           const SizedBox(height: 40),
-          _buildPrimaryAction(context),
+          _buildPrimaryAction(context, isDesktop),
         ],
       ),
     );

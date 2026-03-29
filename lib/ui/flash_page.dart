@@ -101,7 +101,7 @@ class _FlashPageState extends State<FlashPage>
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: Image.asset(
-                        'assets/images/logo/repairmybike_newlogo.jpeg',
+                        'assets/launcher icon/transparent repairmybike launcher.png',
                         fit: BoxFit.cover,
                         filterQuality: FilterQuality.high,
                       ),
