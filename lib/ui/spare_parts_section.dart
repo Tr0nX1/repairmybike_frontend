@@ -10,6 +10,7 @@ import 'spare_part_detail_page.dart';
 import '../utils/url_utils.dart';
 import '../providers/cart_provider.dart';
 import '../utils/app_error.dart';
+import 'widgets/part_image_placeholder.dart';
 
 final sparePartsProvider = FutureProvider.autoDispose<List<SparePartListItem>>((ref) async {
   final api = SparePartsApi();
@@ -137,8 +138,6 @@ class _PartCard extends ConsumerWidget {
       },
       child: LayoutBuilder(
         builder: (context, constraints) {
-          final w = constraints.maxWidth;
-          
           return Opacity(
             opacity: part.inStock ? 1.0 : 0.65,
             child: Container(
@@ -177,17 +176,9 @@ class _PartCard extends ConsumerWidget {
                                     highlightColor: Colors.grey[700]!,
                                     child: Container(color: Colors.white),
                                   ),
-                                  errorWidget: (context, url, error) => Container(
-                                    color: Colors.black38,
-                                    child: Center(child: Icon(Icons.build, size: w * 0.25, color: Colors.white10)),
-                                  ),
+                                  errorWidget: (context, url, error) => const PartImagePlaceholder(),
                                 )
-                              : Container(
-                                  color: Colors.black38,
-                                  child: Center(
-                                    child: Icon(Icons.build, size: w * 0.25, color: Colors.white10),
-                                  ),
-                                ),
+                              : const PartImagePlaceholder(),
                         ),
                         // Premium Discount Badge
                         if (hasDiscount)

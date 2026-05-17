@@ -5,14 +5,12 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/auth_api.dart';
 import '../data/app_state.dart';
-import '../data/vehicles_api.dart';
 import '../providers/cart_provider.dart';
 import '../utils/fcm_service.dart';
 import '../utils/app_error.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../providers/vehicles_provider.dart';
-import '../providers/staff_provider.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
   final VoidCallback? onFinished;
@@ -129,7 +127,14 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       _startCountdown(30); // BUG 5 FIX
       _showSnack('OTP sent');
     } catch (e) {
-      _showSnack(AppError.sanitize(e, fallback: 'Failed to send OTP'));
+      final msg = AppError.sanitize(e, fallback: 'Failed to send OTP');
+      if (msg.toLowerCase().contains('too many') || 
+          msg.toLowerCase().contains('rate limit') || 
+          msg.toLowerCase().contains('attempts')) {
+        _showSnack('Please try again');
+      } else {
+        _showSnack(msg);
+      }
     } finally {
       setState(() => _loading = false);
     }
@@ -172,7 +177,14 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       });
       _finish();
     } catch (e) {
-      _showSnack(AppError.sanitize(e, fallback: 'Verification failed'));
+      final msg = AppError.sanitize(e, fallback: 'Verification failed');
+      if (msg.toLowerCase().contains('too many') || 
+          msg.toLowerCase().contains('rate limit') || 
+          msg.toLowerCase().contains('attempts')) {
+        _showSnack('Please try again');
+      } else {
+        _showSnack(msg);
+      }
     } finally {
       setState(() => _loading = false);
     }

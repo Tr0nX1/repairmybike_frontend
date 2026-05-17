@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shimmer/shimmer.dart';
+import 'widgets/part_image_placeholder.dart';
 import '../providers/landing_provider.dart';
 import '../models/service.dart';
 import '../models/spare_part.dart';
@@ -510,9 +511,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                         color: brandCard,
                         child: p.thumbnail != null
                             ? Image.network(p.thumbnail!, fit: BoxFit.cover)
-                            : Center(
-                                child: Icon(Icons.settings,
-                                    color: brandGray, size: 40)),
+                            : const PartImagePlaceholder(),
                       ),
                     ),
                     Padding(

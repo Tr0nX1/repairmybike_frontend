@@ -8,6 +8,7 @@ import '../models/spare_part_brand.dart';
 import '../providers/spare_parts_provider.dart';
 import 'spare_part_detail_page.dart';
 import '../utils/url_utils.dart';
+import 'widgets/part_image_placeholder.dart';
 
 class SparePartsPage extends ConsumerStatefulWidget {
   const SparePartsPage({super.key});
@@ -197,19 +198,10 @@ class _SparePartCard extends StatelessWidget {
                           highlightColor: Colors.grey[100]!,
                           child: Container(color: Colors.white),
                         ),
-                        errorWidget: (context, url, error) => Container(
-                          color: theme.colorScheme.surfaceContainerHighest,
-                          child: const Icon(Icons.error_outline),
-                        ),
+                        errorWidget: (context, url, error) => const PartImagePlaceholder(),
                       ),
                     )
-                  : Container(
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.surfaceContainerHighest,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: const Center(child: Icon(Icons.handyman, size: 36)),
-                    ),
+                  : const PartImagePlaceholder(),
             ),
             const SizedBox(height: 8),
             Text(item.name, style: theme.textTheme.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),

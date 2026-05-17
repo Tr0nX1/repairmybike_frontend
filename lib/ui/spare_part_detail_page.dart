@@ -13,6 +13,7 @@ import 'widgets/customer_details_sheet.dart';
 import 'widgets/login_required_dialog.dart';
 import 'cart_page.dart';
 import 'widgets/reviews_list.dart';
+import 'widgets/part_image_placeholder.dart';
 
 class SparePartDetailPage extends StatelessWidget {
   final SparePartListItem item;
@@ -371,10 +372,7 @@ class _GalleryState extends State<_Gallery> {
                                 highlightColor: Colors.grey[100]!,
                                 child: Container(color: Colors.white),
                               ),
-                              errorWidget: (context, url, error) => Container(
-                                color: cs.surfaceContainerHighest,
-                                child: const Center(child: Icon(Icons.image_not_supported)),
-                              ),
+                              errorWidget: (context, url, error) => const PartImagePlaceholder(),
                             ),
                           );
                         },
@@ -417,10 +415,7 @@ class _GalleryState extends State<_Gallery> {
                     ),
                   ],
                 )
-              : Container(
-                  color: cs.surfaceContainerHighest,
-                  child: const Center(child: Icon(Icons.handyman, size: 42)),
-          ),
+              : const PartImagePlaceholder(iconSize: 42),
         ),
       ),
       const SizedBox(height: 12),
@@ -455,7 +450,7 @@ class _GalleryState extends State<_Gallery> {
                         highlightColor: Colors.grey[100]!,
                         child: Container(color: Colors.white),
                       ),
-                      errorWidget: (context, url, error) => const Center(child: Icon(Icons.image_not_supported)),
+                      errorWidget: (context, url, error) => const PartImagePlaceholder(iconSize: 24),
                     ),
                   ),
                 ),
@@ -479,7 +474,7 @@ class _GalleryState extends State<_Gallery> {
                 imageUrl: url,
                 fit: BoxFit.contain,
                 placeholder: (context, url) => const CircularProgressIndicator(),
-                errorWidget: (context, url, error) => const Icon(Icons.image_not_supported, color: Colors.white),
+                errorWidget: (context, url, error) => const PartImagePlaceholder(bgColor: Colors.transparent),
               ),
             ),
           ),

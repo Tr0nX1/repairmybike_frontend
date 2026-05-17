@@ -11,6 +11,7 @@ import '../data/repositories/auth_repository.dart';
 import '../data/repositories/profile_repository.dart';
 import '../data/providers/checkout_manager.dart';
 import 'widgets/address_form_fields.dart';
+import 'widgets/part_image_placeholder.dart';
 
 class CheckoutPage extends ConsumerStatefulWidget {
   const CheckoutPage({super.key});
@@ -454,13 +455,9 @@ class _OrderItemTile extends StatelessWidget {
                         highlightColor: Colors.grey[700]!,
                         child: Container(color: Colors.white),
                       ),
-                      errorWidget: (context, url, error) => const Icon(
-                        Icons.build,
-                        size: 24,
-                        color: Colors.white24,
-                      ),
+                      errorWidget: (context, url, error) => const PartImagePlaceholder(iconSize: 24),
                     )
-                  : const Icon(Icons.image, size: 28),
+                  : const PartImagePlaceholder(iconSize: 28),
             ),
           ),
           const SizedBox(width: 12),
