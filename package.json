@@ -4,5 +4,7 @@
     "scripts": {
         "build": "flutter build web --release"
     },
-    "devDependencies": {}
+    "dependencies": {
+        "vercel": "^54.1.0"
+    }
 }
