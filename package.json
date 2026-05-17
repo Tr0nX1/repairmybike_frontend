@@ -3,8 +3,5 @@
     "version": "1.0.0",
     "scripts": {
         "build": "flutter build web --release"
-    },
-    "dependencies": {
-        "vercel": "^54.1.0"
     }
 }
