@@ -49,7 +49,12 @@ class _VehicleTypePageState extends State<VehicleTypePage> {
   void _select(VehicleTypeItem item) {
     final typeName = item.name.trim().isEmpty ? 'vehicle' : item.name.trim();
     final imgUrl = buildImageUrl(item.image);
-    AppState.setVehicle(name: AppState.vehicleName ?? '', type: typeName, typeImageUrl: imgUrl);
+    AppState.setVehicle(
+      name: AppState.vehicleName ?? '', 
+      type: typeName, 
+      typeImageUrl: imgUrl,
+      syncToBackend: false, // BUG 4 FIX
+    );
     context.push('/vehicle-brand', extra: {
       'phone': widget.phone,
       'vehicleTypeId': item.id,

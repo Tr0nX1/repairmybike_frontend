@@ -204,4 +204,51 @@ class BookingApi {
     }
     throw Exception('Unexpected response shape for update status');
   }
+
+  /// Get full details of a single booking.
+  Future<Map<String, dynamic>> getBookingDetail(int id) async {
+    try {
+      final res = await _dio.get('api/bookings/bookings/$id/');
+      final body = res.data;
+      if (body is Map<String, dynamic>) {
+        final error = body['error'] == true;
+        if (error) throw Exception(body['message'] ?? 'Not found');
+        final data = body['data'];
+        if (data is Map<String, dynamic>) return data;
+      }
+      return body; // Fallback
+    } on DioException catch (e) {
+      throw Exception('Failed to load booking: ${e.response?.statusCode}');
+    }
+  }
+
+  /// Customer-only: Approve parts added by mechanic.
+  Future<void> approveParts(int bookingId, List<int> partIds) async {
+    try {
+      final res = await _dio.post(
+        'api/bookings/bookings/$bookingId/approve-parts/',
+        data: {'part_ids': partIds},
+      );
+      if (res.data?['error'] == true) {
+        throw Exception(res.data?['message'] ?? 'Failed to approve parts');
+      }
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? 'Approval error');
+    }
+  }
+
+  /// Customer-only: Reject parts added by mechanic.
+  Future<void> rejectParts(int bookingId, List<int> partIds) async {
+    try {
+      final res = await _dio.post(
+        'api/bookings/bookings/$bookingId/reject-parts/',
+        data: {'part_ids': partIds},
+      );
+      if (res.data?['error'] == true) {
+        throw Exception(res.data?['message'] ?? 'Failed to reject parts');
+      }
+    } on DioException catch (e) {
+      throw Exception(e.response?.data?['message'] ?? 'Rejection error');
+    }
+  }
 }

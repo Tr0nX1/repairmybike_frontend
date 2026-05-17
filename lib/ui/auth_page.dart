@@ -9,6 +9,10 @@ import '../data/vehicles_api.dart';
 import '../providers/cart_provider.dart';
 import '../utils/fcm_service.dart';
 import '../utils/app_error.dart';
+import '../data/repositories/auth_repository.dart';
+import '../data/repositories/profile_repository.dart';
+import '../providers/vehicles_provider.dart';
+import '../providers/staff_provider.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
   final VoidCallback? onFinished;
@@ -76,27 +80,21 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       final res = await _api.loginStaff(username: username, password: password);
       final session = (res['session_token'] ?? '') as String;
       final refresh = (res['refresh_token'] ?? '') as String?;
+      
+      // BUG 1 FIX: Update both AppState and authProvider
       await AppState.setStaffAuth(
         username: username,
         session: session,
         refresh: refresh,
       );
+      await ref.read(authProvider.notifier).setStaffAuth(
+        username: username, 
+        session: session, 
+        refresh: refresh
+      );
 
-      // Fetch profile for staff too
-      try {
-        final profile = await _api.getProfile(sessionToken: session);
-        final first = (profile['first_name'] ?? '') as String;
-        final last = (profile['last_name'] ?? '') as String;
-        final mail = (profile['email'] ?? '') as String;
-        final full = [
-          first,
-          last,
-        ].where((e) => e.trim().isNotEmpty).join(' ').trim();
-        await AppState.setProfile(
-          name: full.isNotEmpty ? full : null,
-          mail: mail.isNotEmpty ? mail : null,
-        );
-      } catch (_) {}
+      // POST-LOGIN DATA LOADING
+      await _loadPostLoginData();
 
       _showSnack('Signed in as staff');
       _finish();
@@ -128,7 +126,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         _phoneLocked = true;
         _lockedPhone = phone;
       });
-      _startCountdown(0);
+      _startCountdown(30); // BUG 5 FIX
       _showSnack('OTP sent');
     } catch (e) {
       _showSnack(AppError.sanitize(e, fallback: 'Failed to send OTP'));
@@ -154,40 +152,19 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       final res = await _api.verifyOtpPhone(phone: phone, code: code);
       final session = (res['session_token'] ?? '') as String;
       final refresh = (res['refresh_token'] ?? '') as String;
+      
+      // BUG 1 FIX: Update both AppState and authProvider
       await AppState.setAuth(phone: phone, session: session, refresh: refresh);
+      await ref.read(authProvider.notifier).setCustomerAuth(
+        phone: phone, 
+        session: session, 
+        refresh: refresh
+      );
+      
       await AppState.setLastCustomerPhone(phone);
-      // Invalidate cart to load user-specific data
-      ref.invalidate(cartProvider);
-      try {
-        final profile = await _api.getProfile(sessionToken: session);
-        await AppState.updateFromProfileMap(profile);
-      } catch (_) {}
-
-      // Sync vehicle for existing users
-      try {
-        final vApi = VehiclesApi();
-        final vehicles = await vApi.getUserVehicles(sessionToken: session);
-        if (vehicles.isNotEmpty) {
-          final v = vehicles.first;
-          final details = v['vehicle_model_details'];
-          if (details != null) {
-            final typeName = details['vehicle_type_name'];
-            final brandName = details['brand_name'];
-            final modelName = details['name'];
-            final modelId = details['id'];
-
-            if (typeName != null) await AppState.setVehicleType(typeName);
-            if (brandName != null) await AppState.setVehicleBrand(brandName);
-            if (modelName != null) {
-              await AppState.setVehicle(
-                name: modelName,
-                modelId: modelId,
-                syncToBackend: false,
-              );
-            }
-          }
-        }
-      } catch (_) {}
+      
+      // POST-LOGIN DATA LOADING
+      await _loadPostLoginData();
 
       setState(() {
         _otpStep = false;
@@ -198,6 +175,22 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       _showSnack(AppError.sanitize(e, fallback: 'Verification failed'));
     } finally {
       setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _loadPostLoginData() async {
+    try {
+      // Refresh cart
+      ref.invalidate(cartProvider);
+      
+      // Load essential data in parallel
+      await Future.wait([
+        ref.read(profileProvider.notifier).fetchProfile(),
+        // We'll invalidate providers that should reload on home
+        Future.microtask(() => ref.invalidate(userVehiclesProvider)),
+      ]);
+    } catch (e) {
+      debugPrint('Post-login fetch error: $e');
     }
   }
 
@@ -219,11 +212,14 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       return;
     }
 
-    if (!AppState.isStaff) {
-       if (!AppState.hasVehicle) {
-         context.go('/vehicle-type?phone=${AppState.phoneNumber}');
-         return;
-       }
+    if (AppState.isStaff) {
+      context.go('/staff');
+      return;
+    }
+
+    if (!AppState.hasVehicle) {
+      context.go('/vehicle-type?phone=${AppState.phoneNumber}');
+      return;
     }
 
     context.go('/home');
@@ -286,6 +282,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              if (_loading)
+                const LinearProgressIndicator(color: accent, backgroundColor: Colors.transparent),
               const SizedBox(height: 8),
               if (!authenticated) ...[
                 _modeSwitcher(),

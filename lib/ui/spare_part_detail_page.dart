@@ -324,18 +324,28 @@ class _Gallery extends StatefulWidget {
 
 class _GalleryState extends State<_Gallery> {
   int index = 0;
+  final PageController _pageController = PageController();
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  String? resolve(String src) {
+    final b = buildImageUrl(src);
+    if (b != null) return b;
+    if (src.isEmpty) return null;
+    final s = src.trim();
+    if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:')) return s;
+    return '${resolveBackendBase()}/${s.startsWith('/') ? s.substring(1) : s}';
+  }
+
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     final hasImages = widget.images.isNotEmpty;
-    String? resolve(String src) {
-      final b = buildImageUrl(src);
-      if (b != null) return b;
-      if (src.isEmpty) return null;
-      final s = src.trim();
-      if (s.startsWith('http://') || s.startsWith('https://') || s.startsWith('data:')) return s;
-      return '${resolveBackendBase()}/${s.startsWith('/') ? s.substring(1) : s}';
-    }
+
     return Column(children: [
       AspectRatio(
         aspectRatio: 4 / 3,
@@ -345,14 +355,16 @@ class _GalleryState extends State<_Gallery> {
               ? Stack(
                   children: [
                     Positioned.fill(
-                      child: GestureDetector(
-                        onTap: () => _openFullscreen(resolve(widget.images[index]) ?? ''),
-                        child: AnimatedSwitcher(
-                          duration: const Duration(milliseconds: 250),
-                          child: InteractiveViewer(
-                            key: ValueKey(index),
+                      child: PageView.builder(
+                        controller: _pageController,
+                        itemCount: widget.images.length,
+                        onPageChanged: (i) => setState(() => index = i),
+                        itemBuilder: (context, i) {
+                          final url = resolve(widget.images[i]) ?? '';
+                          return GestureDetector(
+                            onTap: () => _openFullscreen(url),
                             child: CachedNetworkImage(
-                              imageUrl: resolve(widget.images[index]) ?? '',
+                              imageUrl: url,
                               fit: BoxFit.cover,
                               placeholder: (context, url) => Shimmer.fromColors(
                                 baseColor: Colors.grey[300]!,
@@ -364,10 +376,31 @@ class _GalleryState extends State<_Gallery> {
                                 child: const Center(child: Icon(Icons.image_not_supported)),
                               ),
                             ),
+                          );
+                        },
+                      ),
+                    ),
+                    if (widget.images.length > 1)
+                      Positioned(
+                        bottom: 12,
+                        left: 0,
+                        right: 0,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: List.generate(
+                            widget.images.length,
+                            (i) => Container(
+                              width: 8,
+                              height: 8,
+                              margin: const EdgeInsets.symmetric(horizontal: 4),
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: index == i ? cs.primary : Colors.white54,
+                              ),
+                            ),
                           ),
                         ),
                       ),
-                    ),
                     Positioned(
                       right: 8,
                       bottom: 8,
@@ -378,7 +411,7 @@ class _GalleryState extends State<_Gallery> {
                         ),
                         child: const Padding(
                           padding: EdgeInsets.all(6),
-                          child: Icon(Icons.zoom_in, color: Colors.white),
+                          child: Icon(Icons.zoom_in, color: Colors.white, size: 20),
                         ),
                       ),
                     ),
@@ -390,49 +423,46 @@ class _GalleryState extends State<_Gallery> {
           ),
         ),
       ),
-      const SizedBox(height: 8),
-      SizedBox(
-        height: 60,
-        child: ListView.separated(
-          scrollDirection: Axis.horizontal,
-          itemCount: widget.images.isNotEmpty ? widget.images.length : 1,
-          separatorBuilder: (_, __) => const SizedBox(width: 8),
-          itemBuilder: (_, i) {
-            final thumbUrl = hasImages ? (resolve(widget.images[i]) ?? '') : '';
-            final selected = i == index;
-            return InkWell(
-              onTap: () => setState(() => index = i),
-              borderRadius: BorderRadius.circular(8),
-              child: AnimatedScale(
-                duration: const Duration(milliseconds: 150),
-                scale: selected ? 1.05 : 1.0,
+      const SizedBox(height: 12),
+      if (hasImages)
+        SizedBox(
+          height: 60,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            itemCount: widget.images.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 8),
+            itemBuilder: (_, i) {
+              final thumbUrl = resolve(widget.images[i]) ?? '';
+              final selected = i == index;
+              return InkWell(
+                onTap: () {
+                  _pageController.animateToPage(i, duration: const Duration(milliseconds: 300), curve: Curves.easeInOut);
+                },
+                borderRadius: BorderRadius.circular(8),
                 child: Container(
                   width: 80,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: selected ? cs.primary : cs.outline),
+                    border: Border.all(color: selected ? cs.primary : cs.outline, width: 2),
                   ),
-                  child: hasImages
-                        ? ClipRRect(
-                            borderRadius: BorderRadius.circular(8),
-                            child: CachedNetworkImage(
-                              imageUrl: thumbUrl,
-                              fit: BoxFit.cover,
-                              placeholder: (context, url) => Shimmer.fromColors(
-                                baseColor: Colors.grey[300]!,
-                                highlightColor: Colors.grey[100]!,
-                                child: Container(color: Colors.white),
-                              ),
-                              errorWidget: (context, url, error) => const Center(child: Icon(Icons.image_not_supported)),
-                            ),
-                          )
-                        : const Center(child: Icon(Icons.image_not_supported)),
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(6),
+                    child: CachedNetworkImage(
+                      imageUrl: thumbUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (context, url) => Shimmer.fromColors(
+                        baseColor: Colors.grey[300]!,
+                        highlightColor: Colors.grey[100]!,
+                        child: Container(color: Colors.white),
+                      ),
+                      errorWidget: (context, url, error) => const Center(child: Icon(Icons.image_not_supported)),
+                    ),
+                  ),
                 ),
-              ),
-            );
-          },
+              );
+            },
+          ),
         ),
-      ),
     ]);
   }
 

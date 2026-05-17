@@ -1,26 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import '../data/notifications_api.dart';
 import 'package:intl/intl.dart';
+import '../providers/notifications_provider.dart';
+import '../models/notification.dart';
 
-class NotificationsPage extends StatefulWidget {
+class NotificationsPage extends ConsumerWidget {
   const NotificationsPage({super.key});
 
   @override
-  State<NotificationsPage> createState() => _NotificationsPageState();
-}
+  Widget build(BuildContext context, WidgetRef ref) {
+    final asyncNotifications = ref.watch(notificationsProvider);
 
-class _NotificationsPageState extends State<NotificationsPage> {
-  late Future<List<Map<String, dynamic>>> _notificationsFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    _notificationsFuture = NotificationsApi().getNotificationHistory();
-  }
-
-  @override
-  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF8F9FA),
       appBar: AppBar(
@@ -28,26 +19,25 @@ class _NotificationsPageState extends State<NotificationsPage> {
         elevation: 0,
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
+        actions: [
+          TextButton(
+            onPressed: () {
+              ref.read(markAllNotificationsReadProvider.future);
+            },
+            child: const Text('Mark all read'),
+          ),
+        ],
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _notificationsFuture,
-        builder: (context, snapshot) {
-          if (snapshot.connectionState == ConnectionState.waiting) {
-            return const Center(child: CircularProgressIndicator());
-          }
-
-          if (snapshot.hasError || snapshot.data == null) {
-            return const Center(child: Text('Failed to load notifications'));
-          }
-
-          final notifications = snapshot.data!;
-
+      body: asyncNotifications.when(
+        loading: () => const Center(child: CircularProgressIndicator()),
+        error: (err, _) => const Center(child: Text('Failed to load notifications')),
+        data: (notifications) {
           if (notifications.isEmpty) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                   Icon(Icons.notifications_none, size: 80, color: Colors.grey[300]),
+                  Icon(Icons.notifications_none, size: 80, color: Colors.grey[300]),
                   const SizedBox(height: 16),
                   Text(
                     'No notifications yet',
@@ -59,26 +49,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
           }
 
           return RefreshIndicator(
-            onRefresh: () async {
-              setState(() {
-                _notificationsFuture = NotificationsApi().getNotificationHistory();
-              });
-            },
+            onRefresh: () async => ref.invalidate(notificationsProvider),
             child: ListView.separated(
               padding: const EdgeInsets.all(16),
               itemCount: notifications.length,
               separatorBuilder: (context, index) => const SizedBox(height: 12),
               itemBuilder: (context, index) {
-                final note = notifications[index];
-                final sentAt = DateTime.parse(note['sent_at']);
-                final timeStr = DateFormat('dd MMM, hh:mm a').format(sentAt.toLocal());
-
-                return _NotificationCard(
-                  title: note['title'] ?? 'Notification',
-                  body: note['body'] ?? '',
-                  time: timeStr,
-                  data: note['data'] ?? {},
-                );
+                return _NotificationCard(notification: notifications[index]);
               },
             ),
           );
@@ -88,42 +65,39 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 }
 
-class _NotificationCard extends StatelessWidget {
-  final String title;
-  final String body;
-  final String time;
-  final Map<String, dynamic> data;
-
-  const _NotificationCard({
-    required this.title,
-    required this.body,
-    required this.time,
-    required this.data,
-  });
+class _NotificationCard extends ConsumerWidget {
+  final NotificationItem notification;
+  const _NotificationCard({required this.notification});
 
   @override
-  Widget build(BuildContext context) {
-    final bool isBooking = data['type'] == 'booking';
-    final bool isOrder = data['type'] == 'order';
-    final bool isPayment = data['type'] == 'payment';
+  Widget build(BuildContext context, WidgetRef ref) {
+    final timeStr = DateFormat('dd MMM, hh:mm a').format(notification.createdAt.toLocal());
 
     IconData icon = Icons.notifications;
     Color iconColor = Colors.blue;
 
-    if (isBooking) {
-      icon = Icons.calendar_today;
-      iconColor = Colors.orange;
-    } else if (isOrder) {
-      icon = Icons.shopping_bag;
-      iconColor = Colors.green;
-    } else if (isPayment) {
-      icon = Icons.receipt_long;
-      iconColor = Colors.indigo;
+    switch (notification.notificationType) {
+      case 'booking_update':
+        icon = Icons.calendar_today;
+        iconColor = Colors.orange;
+        break;
+      case 'promotion':
+        icon = Icons.local_offer;
+        iconColor = Colors.green;
+        break;
+      case 'payment':
+        icon = Icons.receipt_long;
+        iconColor = Colors.indigo;
+        break;
+      case 'system':
+        icon = Icons.notifications;
+        iconColor = Colors.blue;
+        break;
     }
 
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: notification.isRead ? Colors.white : const Color(0xFFE3F2FD),
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
@@ -138,9 +112,15 @@ class _NotificationCard extends StatelessWidget {
         child: InkWell(
           borderRadius: BorderRadius.circular(12),
           onTap: () {
-            // Future: Navigate based on data['type']
-            if (isBooking && data['booking_id'] != null) {
-               context.push('/bookings');
+            if (!notification.isRead) {
+              ref.read(markNotificationReadProvider(notification.id));
+            }
+            
+            // Navigation logic based on type
+            if (notification.notificationType == 'booking_update' || notification.notificationType == 'payment') {
+              context.push('/bookings');
+            } else if (notification.notificationType == 'promotion') {
+              context.push('/home');
             }
           },
           child: Padding(
@@ -148,13 +128,30 @@ class _NotificationCard extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: iconColor.withValues(alpha: 0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(icon, color: iconColor, size: 24),
+                Stack(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: iconColor.withValues(alpha: 0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(icon, color: iconColor, size: 24),
+                    ),
+                    if (!notification.isRead)
+                      Positioned(
+                        right: 0,
+                        top: 0,
+                        child: Container(
+                          width: 10,
+                          height: 10,
+                          decoration: const BoxDecoration(
+                            color: Colors.blue,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
                 const SizedBox(width: 16),
                 Expanded(
@@ -166,15 +163,15 @@ class _NotificationCard extends StatelessWidget {
                         children: [
                           Expanded(
                             child: Text(
-                              title,
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
+                              notification.title,
+                              style: TextStyle(
+                                fontWeight: notification.isRead ? FontWeight.normal : FontWeight.bold,
                                 fontSize: 16,
                               ),
                             ),
                           ),
                           Text(
-                            time,
+                            timeStr,
                             style: TextStyle(
                               color: Colors.grey[500],
                               fontSize: 12,
@@ -184,7 +181,9 @@ class _NotificationCard extends StatelessWidget {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        body,
+                        notification.message,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                         style: TextStyle(
                           color: Colors.grey[700],
                           fontSize: 14,

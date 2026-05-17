@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import '../utils/app_error.dart';
 import '../models/service.dart';
 import '../data/vehicles_api.dart';
@@ -11,7 +12,7 @@ import '../data/providers/checkout_manager.dart';
 
 class BookingFormPage extends ConsumerStatefulWidget {
   final Service service;
-  final String? initialLocation; // 'home' or 'shop'
+  final String? initialLocation;
   const BookingFormPage({super.key, required this.service, this.initialLocation});
 
   @override
@@ -24,6 +25,7 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
   static const Color border = Color(0xFF2A2A2A);
   static const Color accent = Color(0xFF01C9F5);
 
+  final _formKey = GlobalKey<FormState>();
   final _nameCtrl = TextEditingController();
   final _phoneCtrl = TextEditingController();
   final _emailCtrl = TextEditingController();
@@ -36,7 +38,6 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
   final _notesCtrl = TextEditingController();
 
   final _vehiclesApi = VehiclesApi();
-
   List<VehicleTypeItem> _vehicleTypes = [];
   VehicleTypeItem? _selectedType;
   List<VehicleBrandItem> _vehicleBrands = [];
@@ -47,7 +48,6 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
   String _serviceLocation = 'home';
   DateTime? _selectedDate;
   TimeOfDay? _selectedTime;
-  
   bool _initializedProfile = false;
 
   @override
@@ -57,30 +57,23 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
     if (widget.initialLocation == 'home' || widget.initialLocation == 'shop') {
       _serviceLocation = widget.initialLocation!;
     }
-    
-    // Defer riverpod reads to post-frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
-       _syncWithProfile();
+      final currentProfile = ref.read(profileProvider).value;
+      if (currentProfile == null) {
+        ref.read(profileProvider.notifier).fetchProfile();
+      } else {
+        _fillFormFromProfile(currentProfile);
+      }
     });
   }
 
-  void _syncWithProfile() {
-    if (_initializedProfile) return;
-    
-    final authData = ref.read(authProvider);
-    final profileData = ref.read(profileProvider).value;
-
-    if (authData.phoneNumber != null) {
-      _phoneCtrl.text = authData.phoneNumber!;
-    }
-    if (profileData != null) {
-      _nameCtrl.text = profileData.fullName;
-      if (profileData.email != null) _emailCtrl.text = profileData.email!;
-      
-      final defaultAddr = profileData.defaultAddress;
-      if (defaultAddr != null) {
-         _onAddressPicked(defaultAddr['id'] as int);
-      }
+  void _fillFormFromProfile(UserProfile profile) {
+    if (_nameCtrl.text.isEmpty) _nameCtrl.text = profile.fullName;
+    final authPhone = ref.read(authProvider).phoneNumber;
+    if (_phoneCtrl.text.isEmpty && authPhone != null) _phoneCtrl.text = authPhone;
+    if (_emailCtrl.text.isEmpty && profile.email != null) _emailCtrl.text = profile.email!;
+    if (_flatCtrl.text.isEmpty && profile.defaultAddress != null) {
+      _onAddressPicked(profile.defaultAddress!['id'] as int?);
     }
     _initializedProfile = true;
   }
@@ -98,18 +91,11 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
            _landmarkCtrl.text = addr['landmark'] ?? '';
            _cityCtrl.text = addr['town_city'] ?? '';
            _pincodeCtrl.text = addr['pincode'] ?? '';
-           setState(() {
-              _selectedState = addr['state'];
-           });
+           setState(() => _selectedState = addr['state']);
         }
      } else {
-       // Clear form if choosing "Manual"
-       _flatCtrl.clear();
-       _areaCtrl.clear();
-       _landmarkCtrl.clear();
-       _cityCtrl.clear();
-       _pincodeCtrl.clear();
-       setState(() { _selectedState = null; });
+       _flatCtrl.clear(); _areaCtrl.clear(); _landmarkCtrl.clear(); _cityCtrl.clear(); _pincodeCtrl.clear();
+       setState(() => _selectedState = null);
      }
   }
 
@@ -117,27 +103,21 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
     try {
       final items = await _vehiclesApi.getVehicleTypes();
       if (mounted) setState(() => _vehicleTypes = items);
-    } catch (e) {
-      _showSnack('Failed to load vehicle types: $e');
-    }
+    } catch (e) { _showSnack('Error loading vehicle types'); }
   }
 
-  Future<void> _loadVehicleBrands(int typeId) async {
+  Future<void> _loadVehicleBrands(int id) async {
     try {
-      final items = await _vehiclesApi.getVehicleBrands(typeId);
+      final items = await _vehiclesApi.getVehicleBrands(id);
       if (mounted) setState(() => _vehicleBrands = items);
-    } catch (e) {
-      _showSnack('Failed to load vehicle brands: $e');
-    }
+    } catch (e) { _showSnack('Error loading brands'); }
   }
 
-  Future<void> _loadVehicleModels(int brandId) async {
+  Future<void> _loadVehicleModels(int id) async {
     try {
-      final items = await _vehiclesApi.getVehicleModels(brandId);
+      final items = await _vehiclesApi.getVehicleModels(id);
       if (mounted) setState(() => _vehicleModels = items);
-    } catch (e) {
-      _showSnack('Failed to load vehicle models: $e');
-    }
+    } catch (e) { _showSnack('Error loading models'); }
   }
 
   void _showSnack(String msg) {
@@ -145,408 +125,153 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
   }
 
-  Future<void> _pickDate() async {
-    final now = DateTime.now();
-    final res = await showDatePicker(
-      context: context,
-      firstDate: now,
-      lastDate: now.add(const Duration(days: 60)),
-      initialDate: _selectedDate ?? now,
+  InputDecoration _inputDecoration(String hint) {
+    return InputDecoration(
+      hintText: hint, hintStyle: const TextStyle(color: Colors.white54),
+      filled: true, fillColor: const Color(0xFF141414),
+      enabledBorder: OutlineInputBorder(borderSide: const BorderSide(color: border), borderRadius: BorderRadius.circular(12)),
+      focusedBorder: OutlineInputBorder(borderSide: const BorderSide(color: accent), borderRadius: BorderRadius.circular(12)),
+      errorBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.redAccent), borderRadius: BorderRadius.circular(12)),
+      focusedErrorBorder: OutlineInputBorder(borderSide: const BorderSide(color: Colors.redAccent, width: 2), borderRadius: BorderRadius.circular(12)),
     );
-    if (res != null) setState(() => _selectedDate = res);
   }
 
-  Future<void> _pickTime() async {
-    final res = await showTimePicker(
-      context: context,
-      initialTime: _selectedTime ?? const TimeOfDay(hour: 10, minute: 0),
-    );
-    if (res != null) setState(() => _selectedTime = res);
+  Widget _textFormField(TextEditingController ctrl, String hint, {TextInputType? keyboardType, String? Function(String?)? validator}) {
+    return TextFormField(controller: ctrl, keyboardType: keyboardType, validator: validator, style: const TextStyle(color: Colors.white), decoration: _inputDecoration(hint));
   }
-
-  String _formatDate(DateTime d) =>
-      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-
-  String _formatTime(TimeOfDay t) =>
-      '${t.hour.toString().padLeft(2, '0')}:${t.minute.toString().padLeft(2, '0')}:00';
 
   Future<void> _submit() async {
-    if (_nameCtrl.text.trim().isEmpty) return _showSnack('Please enter your name');
-    final effectivePhone = _phoneCtrl.text.trim();
-    if (effectivePhone.isEmpty) return _showSnack('Please enter your phone number');
-    if (_selectedModel == null) return _showSnack('Please select your vehicle model');
-    if (_selectedDate == null) return _showSnack('Please select appointment date');
-    if (_selectedTime == null) return _showSnack('Please select appointment time');
+    if (!_formKey.currentState!.validate()) return;
+    if (_selectedModel == null) return _showSnack('Select vehicle model');
+    if (_selectedDate == null || _selectedTime == null) return _showSnack('Select schedule');
 
     final address = PostalAddress(
-      fullName: _nameCtrl.text.trim(),
-      phoneNumber: effectivePhone,
-      flatHouseNo: _flatCtrl.text.trim(),
-      areaStreet: _areaCtrl.text.trim(),
-      landmark: _landmarkCtrl.text.trim(),
-      pincode: _pincodeCtrl.text.trim(),
-      townCity: _cityCtrl.text.trim(),
-      state: _selectedState ?? '',
+      fullName: _nameCtrl.text.trim(), phoneNumber: _phoneCtrl.text.trim(),
+      flatHouseNo: _flatCtrl.text.trim(), areaStreet: _areaCtrl.text.trim(),
+      landmark: _landmarkCtrl.text.trim(), pincode: _pincodeCtrl.text.trim(),
+      townCity: _cityCtrl.text.trim(), state: _selectedState ?? '',
     );
 
     final payload = {
-      'customer_name': _nameCtrl.text.trim(),
-      'customer_phone': effectivePhone,
+      'customer_name': _nameCtrl.text.trim(), 'customer_phone': _phoneCtrl.text.trim(),
       'customer_email': _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
-      'vehicle_model_id': _selectedModel!.id,
-      'service_ids': [widget.service.id],
+      'vehicle_model_id': _selectedModel!.id, 'service_ids': [widget.service.id],
       'service_location': _serviceLocation,
       'address': _serviceLocation == 'home' ? address.toFullString() : null,
       'address_details': _serviceLocation == 'home' ? address.toJson() : null,
-      'appointment_date': _formatDate(_selectedDate!),
-      'appointment_time': _formatTime(_selectedTime!),
+      'appointment_date': '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
+      'appointment_time': '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}:00',
       'notes': _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
     };
 
     try {
-      final result = await ref.read(checkoutManagerProvider.notifier).submitServiceBooking(bookingData: payload);
-
-      if (!mounted) return;
-      await showDialog(
-        context: context,
-        builder: (ctx) => AlertDialog(
-          title: const Text('Booking Confirmed'),
-          content: Text('Your booking #${result['id']} is created.\n'
-              'Total: ₹${result['total_amount']}\n'
-              'Status: ${result['booking_status']}\n'
-              'Payment: ${result['payment_status']}'),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('OK'),
-            )
-          ],
-        ),
-      );
-      if (!mounted) return;
-      Navigator.of(context).pop();
-    } catch (e) {
-      _showSnack(AppError.sanitize(e, fallback: 'Failed to place booking'));
-    }
+      final res = await ref.read(checkoutManagerProvider.notifier).submitServiceBooking(bookingData: payload);
+      if (mounted) context.go('/booking-confirmation', extra: res);
+    } catch (e) { if (mounted) _showSnack(AppError.sanitize(e)); }
   }
 
   @override
   Widget build(BuildContext context) {
+    ref.listen<AsyncValue<UserProfile?>>(profileProvider, (prev, next) {
+      if (!_initializedProfile && next.value != null) _fillFormFromProfile(next.value!);
+    });
+
     final checkoutState = ref.watch(checkoutManagerProvider);
     final profileData = ref.watch(profileProvider).value;
-    final isAuth = ref.watch(authProvider).isAuthenticated;
 
     return Scaffold(
       backgroundColor: bg,
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF071A1D),
-        title: const Text('Book Service'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _headerCard(),
-            const SizedBox(height: 16),
-            _inputCard(
-              title: 'Customer Info',
-              child: Column(
-                children: [
-                  _textField(_nameCtrl, 'Full Name'),
-                  const SizedBox(height: 12),
-                  // Lock phone if authenticated
-                  if (isAuth)
-                     _lockedField(_phoneCtrl.text.isEmpty ? 'Logged In User' : _phoneCtrl.text, Icons.phone)
-                  else
-                     _textField(_phoneCtrl, 'Phone Number', keyboardType: TextInputType.phone),
-                  const SizedBox(height: 12),
-                  _textField(_emailCtrl, 'Email (optional)', keyboardType: TextInputType.emailAddress),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _inputCard(
-              title: 'Vehicle Configuration',
-              child: Column(
-                children: [
-                  DropdownButtonFormField<VehicleTypeItem>(
-                    dropdownColor: card,
-                    initialValue: _selectedType,
-                    items: _vehicleTypes.map((t) => DropdownMenuItem(value: t, child: Text(t.name, style: const TextStyle(color: Colors.white)))).toList(),
-                    decoration: _inputDecoration('Select vehicle type'),
-                    onChanged: (val) async {
-                      setState(() {
-                        _selectedType = val;
-                        _selectedBrand = null;
-                        _selectedModel = null;
-                        _vehicleBrands = [];
-                        _vehicleModels = [];
-                      });
-                      if (val != null) await _loadVehicleBrands(val.id);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<VehicleBrandItem>(
-                    dropdownColor: card,
-                    initialValue: _selectedBrand,
-                    items: _vehicleBrands.map((b) => DropdownMenuItem(value: b, child: Text(b.name, style: const TextStyle(color: Colors.white)))).toList(),
-                    decoration: _inputDecoration(_selectedType == null ? 'Select type first' : 'Select vehicle brand'),
-                    onChanged: (val) async {
-                      setState(() {
-                        _selectedBrand = val;
-                        _selectedModel = null;
-                        _vehicleModels = [];
-                      });
-                      if (val != null) await _loadVehicleModels(val.id);
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  DropdownButtonFormField<VehicleModelItem>(
-                    dropdownColor: card,
-                    initialValue: _selectedModel,
-                    items: _vehicleModels.map((m) => DropdownMenuItem(value: m, child: Text(m.name, style: const TextStyle(color: Colors.white)))).toList(),
-                    decoration: _inputDecoration(_selectedBrand == null ? 'Select brand first' : 'Select vehicle model'),
-                    onChanged: (val) => setState(() => _selectedModel = val),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _inputCard(
-              title: 'Service Location',
-              child: Row(
-                children: [
-                  _locationChip('home', 'Home'),
-                  const SizedBox(width: 12),
-                  _locationChip('shop', 'Workshop'),
-                ],
-              ),
-            ),
-            if (_serviceLocation == 'home') ...[
+      appBar: AppBar(backgroundColor: const Color(0xFF071A1D), title: const Text('Book Service')),
+      body: Form(
+        key: _formKey,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              _inputCard(title: 'Customer Info', child: Column(children: [
+                _textFormField(_nameCtrl, 'Full Name', validator: (v) => (v == null || v.isEmpty) ? 'Required' : null),
+                const SizedBox(height: 12),
+                _textFormField(_phoneCtrl, 'Phone', keyboardType: TextInputType.phone, validator: (v) => (v == null || v.isEmpty) ? 'Required' : null),
+              ])),
               const SizedBox(height: 16),
-              _inputCard(
-                title: 'Service Address',
-                child: AddressFormFields(
-                  nameCtrl: _nameCtrl, // Links to master customer name
-                  phoneCtrl: _phoneCtrl, 
-                  flatCtrl: _flatCtrl,
-                  areaCtrl: _areaCtrl,
-                  landmarkCtrl: _landmarkCtrl,
-                  pincodeCtrl: _pincodeCtrl,
-                  cityCtrl: _cityCtrl,
-                  selectedState: _selectedState,
-                  onStateChanged: (v) => setState(() => _selectedState = v),
-                  compact: true,
-                  savedAddresses: profileData?.addresses,
-                  selectedAddressId: checkoutState.selectedAddressId,
-                  onAddressSelected: _onAddressPicked,
+              _inputCard(title: 'Vehicle', child: Column(children: [
+                DropdownButtonFormField<VehicleTypeItem>(
+                  dropdownColor: card, decoration: _inputDecoration('Type'),
+                  items: _vehicleTypes.map((t) => DropdownMenuItem(value: t, child: Text(t.name, style: const TextStyle(color: Colors.white)))).toList(),
+                  onChanged: (v) { setState(() { _selectedType = v; _selectedBrand = null; _selectedModel = null; }); if (v != null) _loadVehicleBrands(v.id); },
                 ),
-              ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<VehicleBrandItem>(
+                  dropdownColor: card, decoration: _inputDecoration('Brand'),
+                  items: _vehicleBrands.map((b) => DropdownMenuItem(value: b, child: Text(b.name, style: const TextStyle(color: Colors.white)))).toList(),
+                  onChanged: (v) { setState(() { _selectedBrand = v; _selectedModel = null; }); if (v != null) _loadVehicleModels(v.id); },
+                ),
+                const SizedBox(height: 12),
+                DropdownButtonFormField<VehicleModelItem>(
+                  dropdownColor: card, decoration: _inputDecoration('Model'),
+                  items: _vehicleModels.map((m) => DropdownMenuItem(value: m, child: Text(m.name, style: const TextStyle(color: Colors.white)))).toList(),
+                  onChanged: (v) => setState(() => _selectedModel = v),
+                ),
+              ])),
+              const SizedBox(height: 16),
+              _inputCard(title: 'Location', child: Row(children: [
+                _chip('home', 'Home'), const SizedBox(width: 12), _chip('shop', 'Workshop'),
+              ])),
+              if (_serviceLocation == 'home') ...[
+                const SizedBox(height: 16),
+                _inputCard(title: 'Address', child: AddressFormFields(
+                  nameCtrl: _nameCtrl, phoneCtrl: _phoneCtrl, flatCtrl: _flatCtrl, areaCtrl: _areaCtrl,
+                  landmarkCtrl: _landmarkCtrl, pincodeCtrl: _pincodeCtrl, cityCtrl: _cityCtrl,
+                  selectedState: _selectedState, onStateChanged: (v) => setState(() => _selectedState = v),
+                  savedAddresses: profileData?.addresses, selectedAddressId: checkoutState.selectedAddressId,
+                  onAddressSelected: _onAddressPicked, compact: true,
+                )),
+              ],
+              const SizedBox(height: 16),
+              _inputCard(title: 'Schedule', child: Row(children: [
+                Expanded(child: _pickBtn(_selectedDate == null ? 'Date' : 'Date selected', Icons.calendar_today, () async {
+                   final d = await showDatePicker(context: context, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 30)), initialDate: DateTime.now());
+                   if (d != null) setState(() => _selectedDate = d);
+                })),
+                const SizedBox(width: 12),
+                Expanded(child: _pickBtn(_selectedTime == null ? 'Time' : 'Time selected', Icons.access_time, () async {
+                   final t = await showTimePicker(context: context, initialTime: TimeOfDay.now());
+                   if (t != null) setState(() => _selectedTime = t);
+                })),
+              ])),
+              const SizedBox(height: 100),
             ],
-            const SizedBox(height: 16),
-            _inputCard(
-              title: 'Schedule',
-              child: Row(
-                children: [
-                  Expanded(
-                    child: _pickerButton(
-                      label: _selectedDate == null ? 'Select date' : _formatDate(_selectedDate!),
-                      icon: Icons.calendar_today,
-                      onTap: _pickDate,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _pickerButton(
-                      label: _selectedTime == null
-                          ? 'Select time'
-                          : '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}',
-                      icon: Icons.access_time,
-                      onTap: _pickTime,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            _inputCard(
-              title: 'Notes (optional)',
-              child: _textField(_notesCtrl, 'Anything we should know?'),
-            ),
-          ],
-        ),
-      ),
-      bottomNavigationBar: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-          child: SizedBox(
-            height: 52,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: accent,
-                foregroundColor: Colors.black,
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-              ),
-              onPressed: checkoutState.isSubmitting ? null : _submit,
-              child: checkoutState.isSubmitting
-                  ? const CircularProgressIndicator(color: Colors.black)
-                  : const Text('Confirm Booking', style: TextStyle(fontWeight: FontWeight.w700)),
-            ),
           ),
         ),
       ),
-    );
-  }
-
-  Widget _headerCard() {
-    return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: border),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Row(
-        children: [
-          const Icon(Icons.build_circle, color: accent, size: 28),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(widget.service.name,
-                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    const Text('Starting at ', style: TextStyle(color: Colors.white70)),
-                    if (widget.service.originalPrice != null && widget.service.originalPrice! > widget.service.price)
-                      Text(
-                        '₹${widget.service.originalPrice}.00 ',
-                        style: const TextStyle(
-                          color: Colors.white54,
-                          decoration: TextDecoration.lineThrough,
-                          fontSize: 13,
-                        ),
-                      ),
-                    Text('₹${widget.service.price}.00', style: const TextStyle(color: Colors.white70, fontWeight: FontWeight.bold)),
-                  ],
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
+      bottomNavigationBar: SafeArea(child: Padding(padding: const EdgeInsets.all(16), child: ElevatedButton(
+        style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 50)),
+        onPressed: checkoutState.isSubmitting ? null : _submit,
+        child: checkoutState.isSubmitting ? const CircularProgressIndicator() : const Text('Confirm Booking'),
+      ))),
     );
   }
 
   Widget _inputCard({required String title, required Widget child}) {
     return Container(
-      width: double.infinity,
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: border),
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700)),
-          const SizedBox(height: 10),
-          child,
-        ],
-      ),
+      width: double.infinity, padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: card, borderRadius: BorderRadius.circular(16), border: Border.all(color: border)),
+      child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+        Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        const SizedBox(height: 12), child,
+      ]),
     );
   }
 
-  InputDecoration _inputDecoration(String hint) {
-    return const InputDecoration().copyWith(
-      hintText: hint,
-      hintStyle: const TextStyle(color: Colors.white54),
-      filled: true,
-      fillColor: const Color(0xFF141414),
-      enabledBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: border),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      focusedBorder: OutlineInputBorder(
-        borderSide: const BorderSide(color: accent),
-        borderRadius: BorderRadius.circular(12),
-      ),
-    );
-  }
-
-  Widget _textField(TextEditingController ctrl, String hint, {TextInputType? keyboardType}) {
-    return TextField(
-      controller: ctrl,
-      keyboardType: keyboardType,
-      style: const TextStyle(color: Colors.white),
-      decoration: _inputDecoration(hint),
-    );
-  }
-  
-  Widget _lockedField(String value, IconData icon) {
-     return Align(
-        alignment: Alignment.centerLeft,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          decoration: BoxDecoration(
-            color: const Color(0xFF141414),
-            border: Border.all(color: border),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          child: Row(
-            children: [
-              Icon(icon, color: Colors.green, size: 18),
-              const SizedBox(width: 8),
-              Text(value, style: const TextStyle(color: Colors.white70)),
-            ],
-          ),
-        ),
-      );
-  }
-
-  Widget _pickerButton({required String label, required IconData icon, required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        height: 48,
-        decoration: BoxDecoration(
-          color: const Color(0xFF141414),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: border),
-        ),
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        child: Row(
-          children: [
-            Icon(icon, color: Colors.white70, size: 18),
-            const SizedBox(width: 8),
-            Expanded(child: Text(label, style: const TextStyle(color: Colors.white70))),
-            const Icon(Icons.chevron_right, color: Colors.white54),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _locationChip(String value, String label) {
-    final selected = _serviceLocation == value;
+  Widget _chip(String val, String label) {
+    final sel = _serviceLocation == val;
     return GestureDetector(
-      onTap: () => setState(() => _serviceLocation = value),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(
-          color: selected ? accent : card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: border),
-        ),
-        child: Text(label,
-            style: TextStyle(color: selected ? Colors.black : Colors.white, fontWeight: FontWeight.w600)),
-      ),
+      onTap: () => setState(() => _serviceLocation = val),
+      child: Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10), decoration: BoxDecoration(color: sel ? accent : card, borderRadius: BorderRadius.circular(12), border: Border.all(color: border)), child: Text(label, style: TextStyle(color: sel ? Colors.black : Colors.white))),
     );
+  }
+
+  Widget _pickBtn(String label, IconData icon, VoidCallback onTap) {
+    return InkWell(onTap: onTap, child: Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xFF141414), borderRadius: BorderRadius.circular(12), border: Border.all(color: border)), child: Row(children: [Icon(icon, size: 16, color: Colors.white54), const SizedBox(width: 8), Text(label, style: const TextStyle(color: Colors.white70))])));
   }
 }

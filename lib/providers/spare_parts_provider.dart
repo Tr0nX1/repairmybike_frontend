@@ -6,13 +6,15 @@ import '../models/spare_part_brand.dart';
 
 final sparePartsApiProvider = Provider<SparePartsApi>((ref) => SparePartsApi());
 
-final sparePartCategoriesProvider = FutureProvider.autoDispose<List<SparePartCategory>>((ref) async {
+final sparePartCategoriesProvider = FutureProvider<List<SparePartCategory>>((ref) async {
   final api = ref.read(sparePartsApiProvider);
+  ref.keepAlive();
   return api.getCategories();
 });
 
-final sparePartBrandsProvider = FutureProvider.autoDispose<List<SparePartBrand>>((ref) async {
+final sparePartBrandsProvider = FutureProvider<List<SparePartBrand>>((ref) async {
   final api = ref.read(sparePartsApiProvider);
+  ref.keepAlive();
   return api.getBrands();
 });
 
@@ -42,14 +44,24 @@ class PartsFilter {
       search.hashCode;
 }
 
-final sparePartsByFilterProvider = FutureProvider.autoDispose.family<List<SparePartListItem>, PartsFilter>((ref, filter) async {
+final sparePartsByFilterProvider = FutureProvider.family<List<SparePartListItem>, PartsFilter>((ref, filter) async {
   final api = ref.read(sparePartsApiProvider);
-  return api.getParts(
+  
+  // Debounce search
+  if (filter.search != null && filter.search!.length > 2) {
+    await Future.delayed(const Duration(milliseconds: 300));
+    // Since we don't have ref.isDisposed, we just proceed. family will cache by filter.
+  }
+
+  final results = await api.getParts(
     categoryId: filter.categoryId,
     brandId: filter.brandId,
     inStock: filter.inStock,
     search: filter.search,
   );
+  
+  ref.keepAlive();
+  return results;
 });
 
 final addToCartProvider = FutureProvider.autoDispose.family<Map<String, dynamic>, ({int partId, int quantity})>((ref, args) async {

@@ -150,4 +150,14 @@ class SparePartsApi {
       return false;
     }
   }
+
+  /// Admin/Staff: Update part details (e.g., stock_qty, sale_price)
+  Future<Map<String, dynamic>> updatePart(int partId, Map<String, dynamic> data) async {
+    try {
+      final response = await _dio.patch('$baseUrl/parts/$partId/', data: data);
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
 }

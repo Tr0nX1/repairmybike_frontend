@@ -193,6 +193,32 @@ class AuthApi {
     if (data is Map<String, dynamic>) return data;
     throw Exception('Unexpected response shape for update profile');
   }
+
+  /// Upload a profile photo.
+  Future<Map<String, dynamic>> uploadProfilePhoto({
+    required String filePath,
+  }) async {
+    final formData = FormData.fromMap({
+      'profile_picture': await MultipartFile.fromFile(filePath),
+    });
+
+    try {
+      final res = await _dio.post(
+        '/api/auth/profile/upload-photo/',
+        data: formData,
+        options: Options(
+          headers: {'Content-Type': 'multipart/form-data'},
+        ),
+      );
+      if (res.data?['error'] == true) {
+        throw Exception(res.data?['message'] ?? 'Upload failed');
+      }
+      return res.data;
+    } on DioException catch (e) {
+      throw Exception('Photo upload failed: ${e.response?.statusCode}');
+    }
+  }
+
   Future<Map<String, dynamic>> addAddress({
     required String sessionToken,
     required String fullName,

@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:image_picker/image_picker.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
-import '../data/booking_api.dart'; // Added for fetching bookings
-import '../data/order_api.dart'; // Added for fetching spare parts orders
+import '../data/booking_api.dart';
+import '../data/order_api.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../providers/saved_services_provider.dart';
 import '../utils/app_error.dart';
@@ -18,11 +19,9 @@ class ProfilePage extends ConsumerStatefulWidget {
 }
 
 class _ProfilePageState extends ConsumerState<ProfilePage> {
-  // No longer using hardcoded colors; pulling from Theme.of(context) inside build
-
   bool _loggingOut = false;
-  int _bookingCount = 0;  // Service bookings count
-  int _orderCount = 0;  // Spare parts orders count
+  int _bookingCount = 0;
+  int _orderCount = 0;
   List<Map<String, dynamic>> _recentBookings = [];
   bool _loading = false;
 
@@ -39,37 +38,27 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       final api = BookingApi();
       final bookings = await api.getBookings();
       
-      // Also fetch spare parts orders
-      // Fetch spare parts orders separately
       try {
         final orderApi = OrderApi();
         final orders = await orderApi.listOrders();
         setState(() => _orderCount = orders.length);
-      } catch (_) {
-        // Ignore order fetch failure
-      }
+      } catch (_) {}
 
-      // Refresh profile and liked/saved services independently
       if (mounted) {
         try {
           final authApi = AuthApi();
           final profileData = await authApi.getProfile(sessionToken: AppState.sessionToken!);
           await AppState.updateFromProfileMap(profileData);
           await ref.read(savedServicesProvider.notifier).sync();
-          setState(() {}); // Refresh UI with updated profile
-        } catch (_) {
-          // Ignore profile refresh failure for now (e.g. if offline)
-        }
+          setState(() {});
+        } catch (_) {}
       }
       
       setState(() {
          _bookingCount = bookings.length;
-         // Take top 3 for recent
          _recentBookings = bookings.take(3).toList();
       });
-    } catch (_) {
-      // ignore
-    } finally {
+    } catch (_) {} finally {
         if (mounted) setState(() => _loading = false);
     }
   }
@@ -78,21 +67,15 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     setState(() => _loggingOut = true);
     try {
       final api = AuthApi();
-      await api.logout(
-        refreshToken: AppState.refreshToken,
-        sessionToken: AppState.sessionToken,
-      );
+      await api.logout(refreshToken: AppState.refreshToken, sessionToken: AppState.sessionToken);
       await AppState.clearAuth();
       await AppState.setLastCustomerPhone(null);
       if (!mounted) return;
-      
-      // Clean redirect to landing page
       context.go('/');
     } catch (e) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text(AppError.sanitize(e, fallback: 'Logout failed'))));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppError.sanitize(e, fallback: 'Logout failed'))));
+      }
     } finally {
       if (mounted) setState(() => _loggingOut = false);
     }
@@ -113,26 +96,17 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   @override
   Widget build(BuildContext context) {
     final isAuth = AppState.isAuthenticated;
-    
-    // Logic for "Set your name" onboarding
     final rawName = AppState.fullName ?? '';
     final isGenericName = rawName.isEmpty || rawName.startsWith('user_') || rawName.toLowerCase() == 'user';
-    
-    final name = isAuth
-        ? (isGenericName ? 'Set your name' : rawName)
-        : 'Guest User';
-    
-    final email = (AppState.email?.isNotEmpty == true)
-        ? AppState.email!
-        : (isAuth ? 'Complete profile to add email' : 'Add email');
+    final name = isAuth ? (isGenericName ? 'Set your name' : rawName) : 'Guest User';
+    final email = (AppState.email?.isNotEmpty == true) ? AppState.email! : (isAuth ? 'Complete profile to add email' : 'Add email');
     final colorScheme = Theme.of(context).colorScheme;
-    final bg = colorScheme.surface;
+    final accent = colorScheme.primary;
     final card = colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
     final border = colorScheme.outline.withValues(alpha: 0.2);
-    final accent = colorScheme.primary;
 
     return Scaffold(
-      backgroundColor: bg,
+      backgroundColor: colorScheme.surface,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
@@ -140,7 +114,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
                 Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
@@ -150,39 +123,50 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   ),
                   child: Row(
                     children: [
-                      // Avatar
-                      _Avatar(size: 64),
+                      const _Avatar(size: 64),
                       const SizedBox(width: 12),
-                      // Name & email
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              name,
-                              style: TextStyle(
-                                color: isGenericName && isAuth ? accent : Colors.white,
-                                fontSize: 18,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
+                            Text(name, style: TextStyle(color: isGenericName && isAuth ? accent : Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
                             const SizedBox(height: 4),
-                            Text(
-                              email,
-                              style: const TextStyle(color: Colors.white60),
-                            ),
+                            Text(email, style: const TextStyle(color: Colors.white60)),
                           ],
                         ),
                       ),
-                      // Edit button
                       TextButton(onPressed: _edit, child: const Text('Edit')),
                     ],
                   ),
                 ),
-
                 const SizedBox(height: 16),
-
-                // Onboarding Completion Card
+                if (AppState.loyaltyPoints != null && AppState.loyaltyPoints! > 0)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF1C1C1C),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: const Color(0xFFFACC15).withValues(alpha: 0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.stars, color: Color(0xFFFACC15), size: 32),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text('Loyalty Points', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                                Text('${AppState.loyaltyPoints} PTS', style: const TextStyle(color: Color(0xFFFACC15), fontSize: 20, fontWeight: FontWeight.w900)),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 if (isAuth && (isGenericName || !AppState.hasAddress))
                   Padding(
                     padding: const EdgeInsets.only(bottom: 16),
@@ -198,20 +182,14 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                         ),
                         child: Row(
                           children: [
-                            Icon(Icons.assignment_ind, color: colorScheme.primary),
+                            Icon(Icons.assignment_ind, color: accent),
                             const SizedBox(width: 12),
                             const Expanded(
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  Text(
-                                    'Complete your profile',
-                                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-                                  ),
-                                  Text(
-                                    'Add your name and address to get started',
-                                    style: TextStyle(color: Colors.white70, fontSize: 12),
-                                  ),
+                                  Text('Complete your profile', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                                  Text('Add your name and address to get started', style: TextStyle(color: Colors.white70, fontSize: 12)),
                                 ],
                               ),
                             ),
@@ -221,363 +199,35 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                       ),
                     ),
                   ),
-
-                // Quick stats
                 Row(
                   children: [
-                    _StatCard(
-                      title: 'Bookings', 
-                      value: '${_bookingCount + _orderCount}',  // Combined count
-                      isLoading: _loading,
-                      onTap: () => context.push('/bookings'),
-                    ),
+                    _StatCard(title: 'Bookings', value: '${_bookingCount + _orderCount}', isLoading: _loading, onTap: () => context.push('/bookings')),
                     const SizedBox(width: 12),
-                    _StatCard(
-                        title: 'Vehicles', 
-                        value: (AppState.vehicleName?.isNotEmpty ?? false) ? '1' : '0',
-                        isLoading: _loading,
-                        onTap: () {
-                          if (AppState.hasVehicle) {
-                             context.push('/your-vehicle');
-                          } else {
-                             context.push('/vehicle-type'); 
-                          }
-                        },
-                    ),
+                    _StatCard(title: 'Vehicles', value: (AppState.vehicleName?.isNotEmpty ?? false) ? '1' : '0', isLoading: _loading, onTap: () => context.push(AppState.hasVehicle ? '/your-vehicle' : '/vehicle-type')),
                     const SizedBox(width: 12),
-                    _StatCard(
-                        title: 'Saved', 
-                        value: '${ref.watch(savedServicesProvider).length}',
-                        // Synced with backend now
-                        onTap: () => context.push('/saved-services'),
-                    ),
+                    _StatCard(title: 'Saved', value: '${ref.watch(savedServicesProvider).length}', onTap: () => context.push('/saved-services')),
                   ],
                 ),
-
                 const SizedBox(height: 16),
-                
-                // My Subscriptions Ticket
-                InkWell(
-                  onTap: () => context.push('/my-subscriptions'),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                         colors: [accent.withValues(alpha: 0.2), accent.withValues(alpha: 0.05)],
-                         begin: Alignment.topLeft,
-                         end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: accent.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        Icon(Icons.card_membership, color: accent, size: 28),
-                        const SizedBox(width: 16),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'My Subscriptions',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Manage your active plans',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        Icon(Icons.arrow_forward_ios, color: accent, size: 16),
-                      ],
-                    ),
-                  ),
-                ),
-                
-                const SizedBox(height: 12),
-
-                // Quick Service Ticket
-                InkWell(
-                  onTap: () => context.push('/quick-service-history'),
-                  borderRadius: BorderRadius.circular(16),
-                  child: Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                         colors: [Colors.orange.withValues(alpha: 0.2), Colors.orange.withValues(alpha: 0.05)],
-                         begin: Alignment.topLeft,
-                         end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.orange.withValues(alpha: 0.3)),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.flash_on, color: Colors.orange, size: 28),
-                        const SizedBox(width: 16),
-                        const Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Quick Service History',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              Text(
-                                'Track your calls and mechanic status',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Icon(Icons.arrow_forward_ios, color: Colors.orange, size: 16),
-                      ],
-                    ),
-                  ),
-                ),
-                
-                if (_recentBookings.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    _Section(title: 'Recent Bookings'),
-                    ..._recentBookings.map((b) {
-                        return Container(
-                            margin: const EdgeInsets.only(bottom: 8),
-                            decoration: BoxDecoration(
-                                color: card,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(color: border),
-                            ),
-                            child: ListTile(
-                                onTap: () => context.push('/bookings'),
-                                contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                                title: Text('Booking #${b['id']}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                                subtitle: Text('${b['booking_status'] ?? 'Pending'} • ₹${b['total_amount']}', style: const TextStyle(color: Colors.white70)),
-                                trailing: const Icon(Icons.chevron_right, color: Colors.white54),
-                            ),
-                        );
-                    }),
-                ],
-
+                _ActionTile(label: 'My Subscriptions', icon: Icons.card_membership, onTap: () => context.push('/my-subscriptions')),
+                _ActionTile(label: 'Quick Service History', icon: Icons.flash_on, onTap: () => context.push('/quick-service-history')),
                 const SizedBox(height: 16),
-
-                // Your Vehicle card
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: card,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: border),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.directions_bike,
-                        color: Colors.white70,
-                        size: 32,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Your Vehicle',
-                              style: TextStyle(
-                                color: Colors.white70,
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              [
-                                    AppState.vehicleBrand ?? '—',
-                                    AppState.vehicleName ?? '—',
-                                  ].where((e) => e != '—').join(' • ').isEmpty
-                                  ? 'Choose your vehicle'
-                                  : [
-                                      AppState.vehicleBrand ?? '—',
-                                      AppState.vehicleName ?? '—',
-                                    ].where((e) => e != '—').join(' • '),
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                                fontWeight: FontWeight.w700,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      TextButton(
-                        onPressed: () {
-                          if (AppState.hasVehicle) {
-                             context.push('/your-vehicle').then((_) {
-                                if (mounted) setState(() {});
-                             });
-                          } else {
-                             context.push('/vehicle-type').then((_) {
-                                if (mounted) setState(() {});
-                             });
-                          }
-                        },
-                        child: Text(AppState.hasVehicle ? 'View' : 'Add'),
-                      ),
-                    ],
-                  ),
-                ),
-
+                _Section(title: 'Account Settings'),
+                _ActionTile(label: 'Manage Addresses', icon: Icons.location_on_outlined, onTap: () => context.push('/addresses')),
+                _ActionTile(label: 'Edit Profile', icon: Icons.person_outline, onTap: _edit),
+                _ActionTile(label: 'Customer Care', icon: Icons.support_agent, onTap: () => context.push('/customer-care')),
                 const SizedBox(height: 16),
-
-                // Primary actions
-                Row(
-                  children: [
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: isAuth ? _edit : _signIn,
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: accent,
-                          foregroundColor: Colors.black,
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: Text(isAuth ? 'Update Details' : 'Sign In'),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: OutlinedButton(
-                        onPressed: _edit,
-                        style: OutlinedButton.styleFrom(
-                          foregroundColor: accent,
-                          side: BorderSide(color: accent),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                        ),
-                        child: const Text('Edit Profile'),
-                      ),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 20),
-
-                // Details list
-                _Section(title: 'Vehicle'),
-                _Tile(
-                  label: 'Type',
-                  value: AppState.vehicleType ?? '—',
-                  icon: Icons.motorcycle,
-                ),
-                _Tile(
-                  label: 'Brand',
-                  value: AppState.vehicleBrand ?? '—',
-                  icon: Icons.factory,
-                ),
-                _Tile(
-                  label: 'Model',
-                  value: AppState.vehicleName ?? '—',
-                  icon: Icons.directions_bike,
-                ),
-
-                const SizedBox(height: 12),
-                _Section(title: 'Contact'),
-                _Tile(
-                  label: 'Name',
-                  value: AppState.fullName ?? '—',
-                  icon: Icons.person_outline,
-                ),
-                _Tile(
-                  label: 'Address',
-                  value: AppState.hasAddress ? AppState.fullAddress : '—',
-                  icon: Icons.location_on_outlined,
-                ),
-                _Tile(
-                  label: 'Email',
-                  value: AppState.email?.isEmpty == true
-                      ? '—'
-                      : (AppState.email ?? '—'),
-                  icon: Icons.email_outlined,
-                ),
-                _Tile(
-                  label: 'Phone (OTP)',
-                  value: AppState.phoneNumber ?? '—',
-                  icon: Icons.phone_outlined,
-                ),
-                _ActionTile(
-                  label: 'Customer Care',
-                  icon: Icons.support_agent,
-                  onTap: () => context.push('/customer-care'),
-                ),
-
-                const SizedBox(height: 12),
-                _Section(title: 'Legal & Policies'),
-                _ActionTile(
-                  label: 'Terms & Conditions',
-                  icon: Icons.description_outlined,
-                  onTap: () => context.push('/terms-and-conditions'),
-                ),
-                _ActionTile(
-                  label: 'Privacy Policy',
-                  icon: Icons.privacy_tip_outlined,
-                  onTap: () => context.push('/privacy-policy'),
-                ),
-                _ActionTile(
-                  label: 'Refund & Cancellation Policy',
-                  icon: Icons.money_off_outlined,
-                  onTap: () => context.push('/refund-and-cancellation-policy'),
-                ),
-                _ActionTile(
-                  label: 'Shipping & Delivery Policy',
-                  icon: Icons.local_shipping_outlined,
-                  onTap: () => context.push('/shipping-and-delivery-policy'),
-                ),
-
+                _Section(title: 'Legal'),
+                _ActionTile(label: 'Terms & Conditions', icon: Icons.description_outlined, onTap: () => context.push('/terms-and-conditions')),
+                _ActionTile(label: 'Privacy Policy', icon: Icons.privacy_tip_outlined, onTap: () => context.push('/privacy-policy')),
                 const SizedBox(height: 24),
                 if (AppState.isAuthenticated)
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       onPressed: _loggingOut ? null : _logout,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accent,
-                        foregroundColor: Colors.black,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                      child: _loggingOut
-                          ? const SizedBox(
-                              width: 20,
-                              height: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: Colors.black,
-                              ),
-                            )
-                          : const Text('Logout'),
+                      style: ElevatedButton.styleFrom(backgroundColor: accent, foregroundColor: Colors.black, padding: const EdgeInsets.symmetric(vertical: 14), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
+                      child: _loggingOut ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black)) : const Text('Logout'),
                     ),
                   ),
               ],
@@ -587,8 +237,6 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       ),
     );
   }
-
-  // Legacy row helper removed; using structured tiles above.
 }
 
 class _StatCard extends StatelessWidget {
@@ -599,40 +247,18 @@ class _StatCard extends StatelessWidget {
   const _StatCard({required this.title, required this.value, this.onTap, this.isLoading = false});
   @override
   Widget build(BuildContext context) {
-    const Color card = Color(0xFF1C1C1C);
-    const Color border = Color(0xFF2A2A2A);
     return Expanded(
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
-          decoration: BoxDecoration(
-            color: card,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: border),
-          ),
+          decoration: BoxDecoration(color: const Color(0xFF1C1C1C), borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFF2A2A2A))),
           child: Column(
             children: [
-              isLoading
-                  ? const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                    )
-                  : Text(
-                      value,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+              isLoading ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white)) : Text(value, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700)),
               const SizedBox(height: 4),
-              Text(
-                title,
-                style: const TextStyle(color: Colors.white60, fontSize: 12),
-              ),
+              Text(title, style: const TextStyle(color: Colors.white60, fontSize: 12)),
             ],
           ),
         ),
@@ -641,47 +267,53 @@ class _StatCard extends StatelessWidget {
   }
 }
 
-class _Avatar extends StatelessWidget {
+class _Avatar extends StatefulWidget {
   final double size;
   const _Avatar({required this.size});
+  @override
+  State<_Avatar> createState() => _AvatarState();
+}
 
-  static const Color border = Color(0xFF2A2A2A);
+class _AvatarState extends State<_Avatar> {
+  bool _uploading = false;
+  Future<void> _pick(ImageSource src) async {
+    try {
+      final picker = ImagePicker();
+      final photo = await picker.pickImage(source: src, maxWidth: 512, maxHeight: 512, imageQuality: 75);
+      if (photo == null || !mounted) return;
+      setState(() => _uploading = true);
+      final result = await AuthApi().uploadProfilePhoto(filePath: photo.path);
+      if (result['data'] != null && result['data']['profile_picture_url'] != null) {
+        await AppState.setAvatarUrl(result['data']['profile_picture_url']);
+      }
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Updated!')));
+    } catch (e) {
+      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppError.sanitize(e))));
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final url = AppState.avatarUrl;
-    final radius = size / 2;
-    if (url != null && url.isNotEmpty) {
-      return Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          border: Border.all(color: border),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: CachedNetworkImage(
-          imageUrl: url,
-          fit: BoxFit.cover,
-          placeholder: (context, url) => Shimmer.fromColors(
-            baseColor: Colors.grey[800]!,
-            highlightColor: Colors.grey[700]!,
-            child: Container(color: Colors.white),
+    return GestureDetector(
+      onTap: () => showModalBottomSheet(context: context, builder: (ctx) => SafeArea(child: Column(mainAxisSize: MainAxisSize.min, children: [
+        ListTile(leading: const Icon(Icons.camera_alt), title: const Text('Camera'), onTap: () { Navigator.pop(ctx); _pick(ImageSource.camera); }),
+        ListTile(leading: const Icon(Icons.photo_library), title: const Text('Gallery'), onTap: () { Navigator.pop(ctx); _pick(ImageSource.gallery); }),
+      ]))),
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          Container(
+            width: widget.size, height: widget.size,
+            decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: const Color(0xFF2A2A2A), width: 2), color: const Color(0xFF151515)),
+            clipBehavior: Clip.antiAlias,
+            child: (url != null && url.isNotEmpty) ? CachedNetworkImage(imageUrl: url, fit: BoxFit.cover) : const Icon(Icons.person, color: Colors.white70, size: 32),
           ),
-          errorWidget: (context, url, error) =>
-              const Icon(Icons.person, color: Colors.white70, size: 32),
-        ),
-      );
-    }
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        color: const Color(0xFF151515),
-        borderRadius: BorderRadius.circular(radius),
-        border: Border.all(color: border),
+          if (_uploading) const CircularProgressIndicator(strokeWidth: 2),
+        ],
       ),
-      child: const Icon(Icons.person, color: Colors.white70, size: 32),
     );
   }
 }
@@ -691,99 +323,22 @@ class _Section extends StatelessWidget {
   const _Section({required this.title});
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 16,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-    );
+    return Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w700)));
   }
 }
 
-class _Tile extends StatelessWidget {
-  final String label;
-  final String value;
-  final IconData icon;
-  const _Tile({required this.label, required this.value, required this.icon});
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final card = colorScheme.surfaceContainerHighest.withValues(alpha: 0.5);
-    final border = colorScheme.outline.withValues(alpha: 0.2);
-
-    return Container(
-      margin: const EdgeInsets.symmetric(vertical: 6),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-      decoration: BoxDecoration(
-        color: card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: border),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start, // Better for wrapped lines
-        children: [
-          Icon(icon, color: colorScheme.onSurfaceVariant),
-          const SizedBox(width: 12),
-          // Strategy 2: Using flex ratios to prevent label compression
-          Expanded(
-            flex: 2,
-            child: Text(
-              label, 
-              style: TextStyle(color: colorScheme.onSurfaceVariant, fontSize: 13)
-            ),
-          ),
-          const SizedBox(width: 8),
-          Expanded(
-            flex: 5,
-            child: Text(
-              value, 
-              textAlign: TextAlign.right,
-              style: TextStyle(color: colorScheme.onSurface, fontWeight: FontWeight.w500),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 class _ActionTile extends StatelessWidget {
   final String label;
   final IconData icon;
   final VoidCallback onTap;
-
-  const _ActionTile({
-    required this.label,
-    required this.icon,
-    required this.onTap,
-  });
-
+  const _ActionTile({required this.label, required this.icon, required this.onTap});
   @override
   Widget build(BuildContext context) {
     final cs = Theme.of(context).colorScheme;
     return Container(
       margin: const EdgeInsets.symmetric(vertical: 6),
-      decoration: BoxDecoration(
-        color: cs.surfaceContainerHighest.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.outline.withValues(alpha: 0.2)),
-      ),
-      child: ListTile(
-        onTap: onTap,
-        leading: Icon(icon, color: cs.primary),
-        title: Text(
-          label,
-          style: TextStyle(
-            color: cs.onSurface,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant),
-      ),
+      decoration: BoxDecoration(color: cs.surfaceContainerHighest.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(12), border: Border.all(color: cs.outline.withValues(alpha: 0.2))),
+      child: ListTile(onTap: onTap, leading: Icon(icon, color: cs.primary), title: Text(label, style: TextStyle(color: cs.onSurface, fontWeight: FontWeight.w500)), trailing: Icon(Icons.chevron_right, color: cs.onSurfaceVariant)),
     );
   }
 }

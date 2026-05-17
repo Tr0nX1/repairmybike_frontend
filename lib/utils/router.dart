@@ -9,6 +9,8 @@ import '../ui/home_page.dart';
 import '../ui/search_page.dart';
 import '../ui/cart_page.dart';
 import '../ui/booking_list_page.dart';
+import '../ui/booking_detail_page.dart';
+import '../ui/booking_confirmation_page.dart';
 import '../ui/profile_page.dart';
 import '../ui/policy_page.dart';
 import '../ui/vehicle_type_page.dart';
@@ -31,6 +33,25 @@ import '../models/service.dart';
 import '../models/subscription.dart';
 import '../ui/not_found_page.dart';
 
+// Management Imports
+import '../ui/management/mechanic/mechanic_dashboard.dart';
+import '../ui/management/staff/staff_dashboard.dart';
+import '../ui/management/admin/admin_dashboard.dart';
+import '../ui/management/admin/inventory_panel.dart';
+import '../ui/management/admin/financial_dashboard.dart';
+import '../ui/management/admin/cms_panel.dart';
+import '../ui/management/admin/staff_directory_page.dart';
+import '../ui/management/admin/pricing_editor_page.dart';
+import '../ui/management/admin/audit_log_page.dart';
+import '../ui/management/mechanic/job_detail_screen.dart';
+import '../ui/management/staff/walk_in_creator_page.dart';
+import '../ui/management/staff/logistics_dashboard.dart';
+import '../ui/management/staff/handover_form_page.dart';
+import '../ui/management/staff/crm_panel_page.dart';
+import '../ui/management/staff/cash_reconciliation_page.dart';
+import '../ui/staff/cash/cash_session_screen.dart';
+import '../ui/addresses_page.dart';
+
 final _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 /// Whether AppState has been loaded from disk in this session.
@@ -49,16 +70,113 @@ final router = GoRouter(
     }
 
     final isAuthenticated = AppState.isAuthenticated;
+    final isStaff = AppState.isStaff;
     final location = state.uri.toString();
 
-    // Authenticated users on the landing page get redirected to the app
-    if (location == '/' && isAuthenticated) {
+    // Not authenticated? Allow only public routes
+    if (!isAuthenticated) {
+      if (location == '/' || location == '/auth' || location.startsWith('/splash')) return null;
+      return '/auth';
+    }
+
+    // AUTHENTICATED REDIRECTIONS
+
+    // 1. Authenticated users on public login/landing pages
+    if (location == '/' || location == '/auth') {
+      return isStaff ? '/staff' : '/home';
+    }
+
+    // 2. Prevent staff from accessing customer home/shell
+    if (isStaff && (location.startsWith('/home') || location.startsWith('/search') || location.startsWith('/cart') || location.startsWith('/bookings') || location.startsWith('/profile'))) {
+      return '/staff';
+    }
+
+    // 3. Prevent customers from accessing management routes
+    if (!isStaff && (location.startsWith('/mechanic') || location.startsWith('/staff') || location.startsWith('/admin'))) {
       return '/home';
     }
 
     return null;
   },
   routes: [
+    // --- Management Routes ---
+    GoRoute(
+      path: '/mechanic',
+      builder: (context, state) => const MechanicDashboardPage(),
+      routes: [
+        GoRoute(
+          path: 'job/:id',
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            return JobDetailScreen(bookingId: id);
+          },
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/staff',
+      builder: (context, state) => const StaffDashboardPage(),
+      routes: [
+        GoRoute(
+          path: 'walk-in',
+          builder: (context, state) => const WalkInCreatorPage(),
+        ),
+        GoRoute(
+          path: 'logistics',
+          builder: (context, state) => const LogisticsDashboardPage(),
+        ),
+        GoRoute(
+          path: 'handover/:id',
+          builder: (context, state) {
+            final id = int.parse(state.pathParameters['id']!);
+            return HandoverFormPage(bookingId: id);
+          },
+        ),
+        GoRoute(
+          path: 'crm',
+          builder: (context, state) => const CrmPanelPage(),
+        ),
+        GoRoute(
+          path: 'reconciliation',
+          builder: (context, state) => const CashReconciliationPage(),
+        ),
+        GoRoute(
+          path: 'cash',
+          builder: (context, state) => const CashSessionScreen(),
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/admin',
+      builder: (context, state) => const AdminDashboardPage(),
+      routes: [
+        GoRoute(
+          path: 'staff',
+          builder: (context, state) => const StaffDirectoryPage(),
+        ),
+        GoRoute(
+          path: 'cms',
+          builder: (context, state) => const CmsPanelPage(),
+        ),
+        GoRoute(
+          path: 'pricing',
+          builder: (context, state) => const PricingEditorPage(),
+        ),
+        GoRoute(
+          path: 'inventory',
+          builder: (context, state) => const InventoryPanel(),
+        ),
+        GoRoute(
+          path: 'financial',
+          builder: (context, state) => const FinancialDashboardPage(),
+        ),
+        GoRoute(
+          path: 'audit-logs',
+          builder: (context, state) => const AuditLogPage(),
+        ),
+      ],
+    ),
+
     // --- Aliases for shortened paths (Prevent 404s) ---
     GoRoute(
       path: '/terms',
@@ -171,6 +289,15 @@ final router = GoRouter(
             GoRoute(
               path: '/bookings',
               builder: (context, state) => const BookingListPage(),
+              routes: [
+                GoRoute(
+                  path: ':id',
+                  builder: (context, state) {
+                    final id = int.parse(state.pathParameters['id']!);
+                    return BookingDetailPage(bookingId: id);
+                  },
+                ),
+              ],
             ),
           ],
         ),
@@ -186,6 +313,14 @@ final router = GoRouter(
     ),
 
     // App Pages
+    GoRoute(
+      path: '/booking-confirmation',
+      builder: (context, state) {
+        final booking = state.extra as Map<String, dynamic>?;
+        if (booking == null) return const Scaffold(body: Center(child: Text('Invalid booking data')));
+        return BookingConfirmationPage(booking: booking);
+      },
+    ),
     GoRoute(
       path: '/notifications',
       builder: (context, state) => const NotificationsPage(),
@@ -240,6 +375,10 @@ final router = GoRouter(
     GoRoute(
       path: '/profile-details',
       builder: (context, state) => const ProfileDetailsPage(popOnSave: true),
+    ),
+    GoRoute(
+      path: '/addresses',
+      builder: (context, state) => const AddressesPage(),
     ),
     GoRoute(
       path: '/saved-services',

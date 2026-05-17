@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shimmer/shimmer.dart';
 import '../providers/landing_provider.dart';
 import '../models/service.dart';
 import '../models/spare_part.dart';
@@ -100,13 +101,8 @@ class _LandingPageState extends ConsumerState<LandingPage>
                             key: _subscriptionsKey),
                       ],
                     ),
-                    loading: () => const Center(
-                        child: Padding(
-                      padding: EdgeInsets.all(80),
-                      child: CircularProgressIndicator(),
-                    )),
-                    error: (err, stack) =>
-                        Center(child: Text('Error loading data: $err')),
+                    loading: () => _buildLoadingShimmer(),
+                    error: (err, stack) => _buildOfflineState(),
                   ),
 
                   _buildHowItWorks(horizontalPad, isDesktop,
@@ -228,7 +224,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
   Widget _buildHero(BuildContext context, double pad, bool isDesktop) {
     return Container(
       width: double.infinity,
-      padding: EdgeInsets.fromLTRB(pad, isDesktop ? 120 : 80, pad, 80),
+      padding: EdgeInsets.fromLTRB(pad, isDesktop ? 180 : 120, pad, 100),
       child: Column(
         crossAxisAlignment:
             isDesktop ? CrossAxisAlignment.start : CrossAxisAlignment.center,
@@ -269,7 +265,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
           Container(
             constraints: const BoxConstraints(maxWidth: 600),
             child: Text(
-              'Expert mechanics. Genuine parts. Real-time tracking. Your motorcycle or scooter — serviced right where you are.',
+              "We're a local bike repair shop Near Railway Station, Auto Market Rewari Haryana helping two-wheeler owners get back on the road — quickly, honestly, and without the runaround.",
               textAlign: isDesktop ? TextAlign.left : TextAlign.center,
               style: GoogleFonts.barlow(
                   color: brandGray, fontSize: 18, height: 1.7),
@@ -355,11 +351,12 @@ class _LandingPageState extends ConsumerState<LandingPage>
   // --- Ticker ---
   Widget _buildTicker() {
     final items = [
-      'DOORSTEP SERVICE',
-      'GENUINE SPARE PARTS',
-      'REAL-TIME TRACKING',
-      'ALL BRANDS',
-      'TRANSPARENT PRICING'
+      'NEAR RAILWAY STATION, AUTO MARKET REWARI HARYANA',
+      'TRANSPARENT PRICING',
+      'ALL BRANDS SERVICED',
+      'CASH PAYMENT',
+      'BOOK IN 60 SECONDS',
+      'TWO-WHEELERS',
     ];
     return Container(
       color: brandPrimary,
@@ -402,13 +399,13 @@ class _LandingPageState extends ConsumerState<LandingPage>
     if (services.isEmpty) return const SizedBox.shrink();
     return Container(
       key: key,
-      padding: EdgeInsets.symmetric(horizontal: pad, vertical: isDesktop ? 120 : 60),
+      padding: EdgeInsets.symmetric(horizontal: pad, vertical: isDesktop ? 140 : 80),
       child: Column(
         children: [
           _sectionHeader(
               'Service Excellence',
               'OUR\nSERVICES',
-              'Expert repairs and maintenance carried out by certified professionals at your location.',
+              'From quick fixes to full servicing — we handle what your bike needs, when you need it.',
               isDesktop),
           const SizedBox(height: 70),
           GridView.builder(
@@ -481,14 +478,14 @@ class _LandingPageState extends ConsumerState<LandingPage>
       double pad, bool isDesktop, List<SparePartListItem> parts) {
     if (parts.isEmpty) return const SizedBox.shrink();
     return Container(
-      padding: EdgeInsets.symmetric(horizontal: pad, vertical: isDesktop ? 120 : 60),
+      padding: EdgeInsets.symmetric(horizontal: pad, vertical: isDesktop ? 140 : 80),
       color: brandDark,
       child: Column(
         children: [
           _sectionHeader(
               'Genuine Quality',
               'SPARE\nPARTS',
-              'We use only authentic parts from top brands to ensure your bike performs at its peak.',
+              'Quality parts for your bike — available at the shop or fitted during your service.',
               isDesktop),
           const SizedBox(height: 70),
           GridView.builder(
@@ -559,13 +556,13 @@ class _LandingPageState extends ConsumerState<LandingPage>
     if (plans.isEmpty) return const SizedBox.shrink();
     return Container(
       key: key,
-      padding: EdgeInsets.symmetric(horizontal: pad, vertical: isDesktop ? 120 : 60),
+      padding: EdgeInsets.symmetric(horizontal: pad, vertical: isDesktop ? 140 : 80),
       child: Column(
         children: [
           _sectionHeader(
-              'Ultimate Convenience',
+              'Save More',
               'MEMBERSHIP\nPLANS',
-              'Enjoy priority service, zero labor charges, and expert care with our annual subscription plans.',
+              'Service your bike regularly and save more with every visit. Simple plans, no hidden terms.',
               isDesktop),
           const SizedBox(height: 70),
           Wrap(
@@ -667,35 +664,136 @@ class _LandingPageState extends ConsumerState<LandingPage>
 
   // --- Helpers ---
   Widget _sectionHeader(String tag, String title, String desc, bool isDesktop) {
-    return Flex(
-      direction: isDesktop ? Axis.horizontal : Axis.vertical,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment:
-          isDesktop ? CrossAxisAlignment.end : CrossAxisAlignment.start,
-      children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(tag.toUpperCase(),
-                style: GoogleFonts.barlowCondensed(
-                    color: brandPrimary, fontSize: 12, letterSpacing: 5)),
-            const SizedBox(height: 16),
-            Text(title,
-                style: GoogleFonts.bebasNeue(
-                    fontSize: isDesktop ? 72 : 48,
-                    height: 1,
-                    color: brandWhite)),
-          ],
+    return Container(
+      width: double.infinity,
+      child: Flex(
+        direction: isDesktop ? Axis.horizontal : Axis.vertical,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment:
+            isDesktop ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            flex: isDesktop ? 3 : 0,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(tag.toUpperCase(),
+                    style: GoogleFonts.barlowCondensed(
+                        color: brandPrimary, 
+                        fontSize: 14, 
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 6)),
+                const SizedBox(height: 20),
+                Text(title,
+                    style: GoogleFonts.bebasNeue(
+                        fontSize: isDesktop ? 84 : 52,
+                        height: 0.95,
+                        letterSpacing: 2,
+                        color: brandWhite)),
+              ],
+            ),
+          ),
+          if (isDesktop) const SizedBox(width: 60),
+          Expanded(
+            flex: isDesktop ? 2 : 0,
+            child: Container(
+              margin: EdgeInsets.only(top: isDesktop ? 0 : 32),
+              child: Text(desc,
+                  style: GoogleFonts.barlow(
+                      color: brandGray, 
+                      fontSize: 17, 
+                      height: 1.7)),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+
+  Widget _buildLoadingShimmer() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        vertical: 80, horizontal: 40),
+      child: Column(
+        children: List.generate(3, (i) => 
+          Container(
+            margin: const EdgeInsets.only(bottom: 24),
+            height: 200,
+            decoration: BoxDecoration(
+              color: brandCard,
+              border: Border.all(color: brandBorder),
+            ),
+            child: Shimmer.fromColors(
+              baseColor: brandCard,
+              highlightColor: 
+                brandPrimary.withValues(alpha: 0.05),
+              child: Container(color: brandCard),
+            ),
+          ),
         ),
-        if (isDesktop) const SizedBox(width: 40),
-        Container(
-          width: isDesktop ? 360 : double.infinity,
-          margin: EdgeInsets.only(top: isDesktop ? 0 : 20),
-          child: Text(desc,
-              style: GoogleFonts.barlow(
-                  color: brandGray, fontSize: 15, height: 1.8)),
-        ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildOfflineState() {
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        vertical: 120, horizontal: 40),
+      child: Column(
+        children: [
+          TweenAnimationBuilder<double>(
+            tween: Tween(begin: -0.1, end: 0.1),
+            duration: const Duration(seconds: 2),
+            builder: (context, value, child) {
+              return Transform.rotate(
+                angle: value,
+                child: child,
+              );
+            },
+            onEnd: () => setState(() {}),
+            child: Icon(
+              Icons.build_circle_outlined,
+              size: 80,
+              color: brandPrimary,
+            ),
+          ),
+          const SizedBox(height: 32),
+          Text(
+            "WE'LL BE RIGHT BACK",
+            style: GoogleFonts.bebasNeue(
+              fontSize: 36,
+              color: brandWhite,
+              letterSpacing: 2,
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Our systems are taking a quick break.\nCall us directly at +91 8168121711',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.barlow(
+              color: brandGray,
+              fontSize: 16,
+              height: 1.8,
+            ),
+          ),
+          const SizedBox(height: 40),
+          ElevatedButton.icon(
+            onPressed: () => ref.invalidate(
+              landingDataProvider
+            ),
+            icon: const Icon(Icons.refresh),
+            label: const Text('TRY AGAIN'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: brandPrimary,
+              foregroundColor: brandBlack,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 32, vertical: 14),
+              shape: const RoundedRectangleBorder(),
+            ),
+          ),
+        ],
+      ),
     );
   }
 
@@ -706,37 +804,37 @@ class _LandingPageState extends ConsumerState<LandingPage>
         'num': '01',
         'title': 'Book Online',
         'desc':
-            'Choose your service, pick a time slot, and confirm in under 2 minutes.'
+            'Open the app, pick your service, choose a time. Done in under a minute.'
       },
       {
         'num': '02',
-        'title': 'Mechanic Arrives',
+        'title': 'Drop or Visit',
         'desc':
-            'A certified mechanic reaches your doorstep with all tools and genuine parts.'
+            'Bring your bike to our shop Near Railway Station, Auto Market Rewari Haryana or call us to arrange pickup nearby.'
       },
       {
         'num': '03',
-        'title': 'Live Tracking',
-        'desc': 'Track the repair in real-time. Get notified at every step.'
+        'title': 'We Get to Work',
+        'desc': 'Our mechanic inspects, confirms what needs fixing, and keeps you in the loop.'
       },
       {
         'num': '04',
         'title': 'Ride Away',
         'desc':
-            'Pay only after you\'re satisfied. Get a digital service report and warranty.'
+            'Pay cash when the job is done. No advance, no surprises.'
       },
     ];
 
     return Container(
       key: key,
       color: brandDark,
-      padding: EdgeInsets.symmetric(horizontal: pad, vertical: isDesktop ? 120 : 60),
+      padding: EdgeInsets.symmetric(horizontal: pad, vertical: isDesktop ? 140 : 80),
       child: Column(
         children: [
           _sectionHeader(
               'The Process',
               'HOW IT\nWORKS',
-              'Four simple steps and your bike is as good as new — without leaving your home.',
+              'Getting your bike fixed has never been this simple.',
               isDesktop),
           const SizedBox(height: 80),
           Flex(
@@ -808,7 +906,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                 Align(
                   alignment: Alignment.bottomLeft,
                   child: Text(
-                    'We don\'t just fix bikes.\nWe fix your peace of mind.',
+                    'We\'re just getting started — but we mean business.',
                     style: GoogleFonts.barlow(
                         fontSize: isDesktop ? 24 : 18,
                         fontStyle: FontStyle.italic,
@@ -841,12 +939,12 @@ class _LandingPageState extends ConsumerState<LandingPage>
               style: GoogleFonts.bebasNeue(
                   fontSize: isDesktop ? 52 : 42, color: brandWhite)),
           const SizedBox(height: 40),
-          _featureRow('⚡', 'Doorstep Convenience',
-              'No need to tow your bike. We come to your location at your preferred time.'),
-          _featureRow('✅', 'Genuine Spare Parts',
-              'We use only OEM-certified parts sourced directly from authorized suppliers.'),
-          _featureRow('🛡️', 'Service Warranty',
-              'Every repair comes with a warranty. If something goes wrong, we fix it free.'),
+          _featureRow('📍', 'Based in Rewari, Haryana',
+              'We are a local shop — not a faceless platform. You know exactly where to find us.'),
+          _featureRow('💬', 'Honest About What Needs Fixing',
+              'We tell you what your bike needs and what it can wait on. No unnecessary upsells.'),
+          _featureRow('💰', 'Pay Only When Done',
+              'Cash payment after the job is complete. No advance payments, no hidden charges.'),
         ],
       ),
     );
@@ -917,7 +1015,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
             ),
           ),
           const SizedBox(height: 28),
-          Text('Book your doorstep service in less than 2 minutes.',
+          Text('Book a service in under a minute. Pay cash when done.',
               style: GoogleFonts.barlow(color: brandGray, fontSize: 18)),
           const SizedBox(height: 52),
           Text('+91 8168121711',
@@ -964,7 +1062,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                     ),
                     const SizedBox(height: 16),
                     Text(
-                        'India\'s most trusted doorstep motorcycle and scooter repair service.',
+                        'Your neighbourhood bike repair shop Near Railway Station, Auto Market Rewari Haryana.',
                         style: GoogleFonts.barlow(
                             color: brandGray, fontSize: 14, height: 1.8)),
                   ],
@@ -972,8 +1070,9 @@ class _LandingPageState extends ConsumerState<LandingPage>
               ),
               if (isDesktop) const Spacer(),
               Wrap(
-                spacing: 40,
-                runSpacing: 40,
+                spacing: isDesktop ? 80 : 40,
+                runSpacing: 50,
+                alignment: WrapAlignment.start,
                 children: [
                   _footerCol(
                       'Services',
@@ -985,11 +1084,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                       ],
                       [],
                       isDesktop),
-                  _footerCol(
-                      'Company',
-                      ['About Us', 'Careers', 'Partner With Us', 'Blog'],
-                      [],
-                      isDesktop),
+
                   _footerCol(
                     'Legal',
                     [
@@ -1030,14 +1125,17 @@ class _LandingPageState extends ConsumerState<LandingPage>
               border: Border(top: BorderSide(color: brandBorder))),
           child: Flex(
             direction: isDesktop ? Axis.horizontal : Axis.vertical,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: isDesktop ? MainAxisAlignment.spaceBetween : MainAxisAlignment.center,
+            crossAxisAlignment: isDesktop ? CrossAxisAlignment.center : CrossAxisAlignment.center,
             children: [
               Text('© 2026 RepairMyBike.in — All rights reserved.',
+                  textAlign: TextAlign.center,
                   style: GoogleFonts.barlow(color: brandGray, fontSize: 12)),
-              if (!isDesktop) const SizedBox(height: 10),
+              const SizedBox(height: 20, width: 20),
               Wrap(
-                spacing: 16,
-                runSpacing: 8,
+                spacing: 24,
+                runSpacing: 12,
+                alignment: WrapAlignment.center,
                 children: [
                   _footerLink('Privacy Policy', '/privacy-policy', context),
                   _footerLink('Terms of Service', '/terms-and-conditions', context),
@@ -1066,32 +1164,37 @@ class _LandingPageState extends ConsumerState<LandingPage>
 
   Widget _footerCol(
       String title, List<String> links, List<String> routes, bool isDesktop) {
-    return SizedBox(
-      width: isDesktop ? 160 : 140,
+    return Container(
+      constraints: BoxConstraints(minWidth: isDesktop ? 180 : 120),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Text(title.toUpperCase(),
               style: GoogleFonts.barlowCondensed(
-                  color: brandGray, fontSize: 12, letterSpacing: 4)),
-          const SizedBox(height: 20),
+                  color: brandPrimary, 
+                  fontSize: 13, 
+                  fontWeight: FontWeight.w700,
+                  letterSpacing: 3)),
+          const SizedBox(height: 24),
           ...List.generate(links.length, (i) {
             final hasRoute = i < routes.length && routes[i].isNotEmpty;
             return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: hasRoute
-                  ? GestureDetector(
-                      onTap: () => context.push(routes[i]),
-                      child: Text(links[i],
-                          style: TextStyle(
-                              color: const Color(0xFF999999),
-                              fontSize: 14,
-                              decoration: TextDecoration.underline,
-                              decorationColor: const Color(0xFF555555))),
-                    )
-                  : Text(links[i],
-                      style: const TextStyle(
-                          color: Color(0xFF999999), fontSize: 14)),
+              padding: const EdgeInsets.only(bottom: 14),
+              child: InkWell(
+                onTap: hasRoute ? () => context.push(routes[i]) : null,
+                hoverColor: Colors.transparent,
+                child: Text(
+                  links[i],
+                  style: GoogleFonts.barlow(
+                    color: const Color(0xFFB0BEC5),
+                    fontSize: 14,
+                    height: 1.4,
+                    decoration: hasRoute ? TextDecoration.underline : null,
+                    decorationColor: brandPrimary.withValues(alpha: 0.3),
+                  ),
+                ),
+              ),
             );
           }),
         ],

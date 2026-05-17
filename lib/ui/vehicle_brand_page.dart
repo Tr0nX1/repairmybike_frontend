@@ -55,6 +55,7 @@ class _VehicleBrandPageState extends State<VehicleBrandPage> {
       name: AppState.vehicleName ?? '', 
       brand: item.name, 
       brandImageUrl: imgUrl,
+      syncToBackend: false, // BUG 4 FIX
     );
     context.push('/vehicle-name', extra: {
       'phone': widget.phone,

@@ -57,4 +57,28 @@ class FeedbackApi {
     }
     return [];
   }
+
+  /// New implementation for Phase C5
+  Future<void> submitFeedback({
+    required int bookingId,
+    required int rating,
+    required String comment,
+    required String category, // 'service' | 'app' | 'complaint' | 'suggestion'
+  }) async {
+    final payload = {
+      'booking': bookingId,
+      'rating': rating,
+      'comment': comment,
+      'category': category,
+    };
+
+    try {
+      final res = await _dio.post('/api/feedback/', data: payload);
+      if (res.data?['error'] == true) {
+         throw Exception(res.data?['message'] ?? 'Failed to submit feedback');
+      }
+    } catch (e) {
+      throw Exception('Feedback error: $e');
+    }
+  }
 }

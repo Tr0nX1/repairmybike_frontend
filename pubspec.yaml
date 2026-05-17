@@ -51,6 +51,10 @@ dependencies:
   flutter_local_notifications: ^17.2.3
   flutter_markdown: ^0.7.7+1
   google_fonts: ^6.2.1
+  fl_chart: ^0.70.2
+  signature: ^5.5.0
+  google_maps_flutter: ^2.12.3
+  image_picker: ^1.1.2
 
 dev_dependencies:
   flutter_test:

@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/shared_preferences_provider.dart';
+import '../../utils/fcm_service.dart';
 import 'dart:convert' as convert;
 
 enum AuthStatus { initial, authenticated, guest, unauthenticated }
@@ -128,6 +129,9 @@ class AuthNotifier extends Notifier<AuthState> {
       phoneNumber: phone,
       isStaff: false,
     );
+    
+    // Register FCM Token
+    FcmService().registerTokenWithBackend(session);
   }
 
   Future<void> setStaffAuth({required String username, required String session, String? refresh}) async {
@@ -142,6 +146,20 @@ class AuthNotifier extends Notifier<AuthState> {
       refreshToken: refresh,
       staffUsername: username,
       isStaff: true,
+    );
+    
+    // Register FCM Token
+    FcmService().registerTokenWithBackend(session);
+  }
+
+  Future<void> setToken({required String session, String? refresh}) async {
+    await _prefs.setString(_kSession, session);
+    if (refresh != null) await _prefs.setString(_kRefresh, refresh);
+    
+    state = state.copyWith(
+      status: AuthStatus.authenticated,
+      sessionToken: session,
+      refreshToken: refresh ?? state.refreshToken,
     );
   }
 

@@ -54,7 +54,21 @@ class AddressFormFields extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (savedAddresses != null && savedAddresses!.isNotEmpty) ...[
-          _buildSavedAddressDropdown(context),
+          const Text('Select saved address:', style: TextStyle(color: Colors.white70, fontSize: 12, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          SingleChildScrollView(
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                _buildAddressChip(null, 'Manual'),
+                ...savedAddresses!.map((addr) {
+                  final id = addr['id'] as int;
+                  final label = addr['label'] ?? addr['address_type'] ?? 'Address';
+                  return _buildAddressChip(id, label);
+                }),
+              ],
+            ),
+          ),
           const SizedBox(height: 16),
           if (isReadOnly)
             const Padding(
@@ -63,7 +77,7 @@ class AddressFormFields extends StatelessWidget {
                 children: [
                    Icon(Icons.lock, size: 14, color: Colors.green),
                    SizedBox(width: 6),
-                   Text('Using saved address from your profile.', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                   Text('Using saved address from profile.', style: TextStyle(color: Colors.white70, fontSize: 13)),
                 ],
               ),
             ),
@@ -78,16 +92,17 @@ class AddressFormFields extends StatelessWidget {
             keyboardType: TextInputType.phone,
             validator: (v) {
               final s = (v ?? '').replaceAll(RegExp(r'\D'), '');
-              return s.length < 10 ? 'Enter a valid phone' : null;
+              if (s.isEmpty) return 'Phone is required';
+              return s.length < 10 ? 'Enter at least 10 digits' : null;
             }),
         const SizedBox(height: 12),
         _buildTextField(flatCtrl, 'Flat, House no., Building', Icons.home_outlined,
             readOnly: isReadOnly,
-            validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null),
+            validator: (v) => (v == null || v.trim().length < 2) ? 'Min 2 chars' : null),
         const SizedBox(height: 12),
         _buildTextField(areaCtrl, 'Area, Street, Sector', Icons.map_outlined,
             readOnly: isReadOnly,
-            validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null),
+            validator: (v) => (v == null || v.trim().length < 5) ? 'Min 5 chars' : null),
         const SizedBox(height: 12),
         _buildTextField(landmarkCtrl, 'Landmark (optional)', Icons.location_on_outlined, readOnly: isReadOnly),
         const SizedBox(height: 12),
@@ -99,7 +114,7 @@ class AddressFormFields extends StatelessWidget {
                   keyboardType: TextInputType.number,
                   validator: (v) {
                     final s = (v ?? '').replaceAll(RegExp(r'\D'), '');
-                    return s.length < 6 ? 'Enter valid pincode' : null;
+                    return s.length != 6 ? 'Exactly 6 digits' : null;
                   }),
             ),
             const SizedBox(width: 12),
@@ -116,48 +131,32 @@ class AddressFormFields extends StatelessWidget {
     );
   }
 
-  Widget _buildSavedAddressDropdown(BuildContext context) {
-    return DropdownButtonFormField<int?>(
-      key: ValueKey(selectedAddressId),
-      initialValue: selectedAddressId,
-      decoration: InputDecoration(
-        labelText: 'Saved Addresses',
-        prefixIcon: const Icon(Icons.bookmarks_outlined, size: 20, color: Color(0xFF01C9F5)),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        filled: true,
-        fillColor: const Color(0xFF141414),
-      ),
-      dropdownColor: const Color(0xFF1C1C1C),
-      items: [
-        const DropdownMenuItem<int?>(
-          value: null,
-          child: Text('Enter a new address manually'),
+  Widget _buildAddressChip(int? id, String label) {
+    final isSelected = selectedAddressId == id;
+    return Padding(
+      padding: const EdgeInsets.only(right: 8.0),
+      child: ChoiceChip(
+        label: Text(label),
+        selected: isSelected,
+        onSelected: (val) {
+          if (onAddressSelected != null) onAddressSelected!(id);
+        },
+        selectedColor: const Color(0xFF01C9F5),
+        labelStyle: TextStyle(
+          color: isSelected ? Colors.black : Colors.white70,
+          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
         ),
-        ...savedAddresses!.map((addr) {
-          final addrIdInfo = addr['id'];
-          int? id;
-          if (addrIdInfo is int) {
-            id = addrIdInfo;
-          } else if (addrIdInfo != null) {
-            id = int.tryParse(addrIdInfo.toString());
-          }
-          final type = addr['address_type'] ?? 'Address';
-          final flat = addr['flat_house_no'] ?? '';
-          final text = '$type: $flat, ${addr['town_city']}';
-          return DropdownMenuItem<int?>(
-            value: id,
-            child: Text(
-              text,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(color: Colors.white),
-            ),
-          );
-        }),
-      ],
-      onChanged: onAddressSelected,
+        backgroundColor: const Color(0xFF1C1C1C),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: BorderSide(color: isSelected ? Colors.transparent : const Color(0xFF2A2A2A)),
+        ),
+      ),
     );
+  }
+
+  Widget _buildSavedAddressDropdown(BuildContext context) {
+     return const SizedBox.shrink(); // Replaced by chips
   }
 
   Widget _buildTextField(

@@ -6,6 +6,8 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:dio/dio.dart';
 import 'api_config.dart';
 
+import 'router.dart';
+
 @pragma('vm:entry-point')
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
@@ -25,8 +27,7 @@ class FcmService {
   final FlutterLocalNotificationsPlugin _localNotifications = FlutterLocalNotificationsPlugin();
 
   Future<void> initialize() async {
-    // 1. Initialize Firebase
-    // Note: Firebase.initializeApp() should be called in main.dart before this
+    if (kIsWeb) return;
     
     // 2. Request Permissions (iOS/Android 13+)
     NotificationSettings settings = await _fcm.requestPermission(
@@ -35,25 +36,18 @@ class FcmService {
       sound: true,
     );
 
-    if (settings.authorizationStatus == AuthorizationStatus.authorized) {
-      debugPrint('User granted permission');
-    } else {
-      debugPrint('User declined or has not accepted permission');
-    }
-
     // 3. Setup Local Notifications for Foreground
     const AndroidInitializationSettings initializationSettingsAndroid =
         AndroidInitializationSettings('@mipmap/ic_launcher');
     const InitializationSettings initializationSettings =
         InitializationSettings(android: initializationSettingsAndroid);
     await _localNotifications.initialize(initializationSettings,
-        onDidReceiveNotificationResponse: _onDidReceiveNotificationResponse);
+        onDidReceiveNotificationResponse: (details) {
+           _handleNotificationTap(RemoteMessage(data: {'payload': details.payload}));
+        });
 
     // 4. Handle Foreground Messages
     FirebaseMessaging.onMessage.listen((RemoteMessage message) {
-      debugPrint('Got a message whilst in the foreground!');
-      debugPrint('Message data: ${message.data}');
-
       if (message.notification != null) {
         _showLocalNotification(message);
       }
@@ -95,9 +89,8 @@ class FcmService {
         },
       ));
 
-      await dio.post('/api/notifications/device/', data: {
+      await dio.post('/api/auth/fcm-token/', data: {
         'token': fcmToken,
-        'platform': kIsWeb ? 'web' : (Platform.isAndroid ? 'android' : (Platform.isIOS ? 'ios' : 'unknown')),
       });
       debugPrint('FCM Token registered with backend');
     } catch (e) {
@@ -108,8 +101,8 @@ class FcmService {
   void _showLocalNotification(RemoteMessage message) async {
     const AndroidNotificationDetails androidPlatformChannelSpecifics =
         AndroidNotificationDetails(
-      'high_importance_channel', // id
-      'High Importance Notifications', // title
+      'high_importance_channel',
+      'High Importance Notifications',
       importance: Importance.max,
       priority: Priority.high,
     );
@@ -121,20 +114,31 @@ class FcmService {
       message.notification?.title,
       message.notification?.body,
       platformChannelSpecifics,
-      payload: message.data['booking_id'] ?? message.data['order_id'],
+      payload: message.data['booking_id'] ?? message.data['type'],
     );
   }
 
-  void _onDidReceiveNotificationResponse(NotificationResponse response) {
-    // Handle local notification tap
-    debugPrint('Local notification tapped: ${response.payload}');
-  }
-
   void _handleNotificationTap(RemoteMessage message) {
-    debugPrint('App opened from notification: ${message.data}');
-    // Navigation logic based on data['type'] would go here
+    final data = message.data;
+    final type = data['type'] as String?;
+    final bookingId = data['booking_id'] as String?;
+
+    if (type == 'new_booking') {
+       router.push('/staff'); // Manager/Staff will see in list
+    } else if (type == 'booking_status' || type == 'payment' || type == 'parts_approval') {
+       if (bookingId != null) {
+         router.push('/bookings/$bookingId');
+       } else {
+         router.push('/bookings');
+       }
+    } else if (type == 'cash_variance') {
+       router.push('/staff/reconciliation');
+    } else if (type == 'promotion') {
+       router.push('/home');
+    }
   }
 }
+
 
 // Export the background handler so main.dart can see it
 Future<void> fcmBackgroundHandler(RemoteMessage message) => _firebaseMessagingBackgroundHandler(message);

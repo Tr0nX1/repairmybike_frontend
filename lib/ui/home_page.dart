@@ -10,11 +10,12 @@ import 'spare_parts_section.dart';
 import '../data/app_state.dart';
 import '../providers/category_provider.dart' as providers;
 import '../providers/saved_services_provider.dart';
+import '../providers/notifications_provider.dart';
+import '../providers/vehicles_provider.dart';
 import '../models/service.dart';
 import '../utils/url_utils.dart';
 import '../utils/app_error.dart';
 import 'widgets/dynamic_hero_carousel.dart';
-// Theme toggle removed
 
 class HomePage extends ConsumerStatefulWidget {
   const HomePage({super.key});
@@ -29,11 +30,11 @@ class _HomePageState extends ConsumerState<HomePage> {
 
   static const Color card = Color(0xFF1C1C1C);
   static const Color border = Color(0xFF2A2A2A);
+  static const Color accent = Color(0xFF01C9F5);
 
   @override
   void initState() {
     super.initState();
-    // Defer parts section fetch until after first frame to keep home snappy
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
         setState(() => _loadPartsSection = true);
@@ -41,14 +42,58 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
   }
 
-  @override
-  void dispose() {
-    super.dispose();
+  void _showVehiclePicker(BuildContext context, WidgetRef ref, List<dynamic> vehicles) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: card,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Text('Switch Vehicle', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16)),
+            ),
+            ...vehicles.map((v) {
+              final details = v['vehicle_model_details'];
+              if (details == null) return const SizedBox.shrink();
+              final isSelected = AppState.vehicleModelId == details['id'];
+              return ListTile(
+                leading: Icon(Icons.two_wheeler, color: isSelected ? accent : Colors.white54),
+                title: Text(details['name'] ?? 'Vehicle', style: TextStyle(color: isSelected ? accent : Colors.white)),
+                subtitle: Text(details['brand_name'] ?? '', style: const TextStyle(color: Colors.white54, fontSize: 12)),
+                trailing: isSelected ? const Icon(Icons.check, color: accent) : null,
+                onTap: () {
+                  AppState.setVehicle(
+                    name: details['name'],
+                    modelId: details['id'],
+                    brand: details['brand_name'],
+                    type: details['vehicle_type_name'],
+                    syncToBackend: false,
+                  );
+                  Navigator.pop(ctx);
+                  setState(() {});
+                },
+              );
+            }),
+            ListTile(
+              leading: const Icon(Icons.add_circle_outline, color: accent),
+              title: const Text('Add New Vehicle', style: TextStyle(color: accent, fontWeight: FontWeight.bold)),
+              onTap: () {
+                Navigator.pop(ctx);
+                context.push('/vehicle-type');
+              },
+            ),
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final ref = this.ref;
     final asyncCategories = ref.watch(categoriesProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final isPhone = screenWidth < 600;
@@ -70,46 +115,100 @@ class _HomePageState extends ConsumerState<HomePage> {
                       height: 36,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
+                        border: Border.all(color: Theme.of(context).colorScheme.primary),
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: Image.asset(
                         'assets/launcher icon/transparent repairmybike launcher.png',
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stack) {
-                          return Image.asset(
-                            'assets/launcher icon/transparent repairmybike launcher.png',
-                            fit: BoxFit.cover,
-                          );
-                        },
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(
-                      (() {
-                        final b = AppState.vehicleBrand;
-                        final m = AppState.vehicleName;
-                        if ((b == null || b.isEmpty) &&
-                            (m == null || m.isEmpty)) {
-                          return 'Select Vehicle';
-                        }
-                        if (b == null || b.isEmpty) return m!;
-                        if (m == null || m.isEmpty) return b;
-                        return "$b - $m";
-                      })(),
-                      style: TextStyle(
-                        color: Theme.of(context).colorScheme.onSurface,
-                        fontWeight: FontWeight.w700,
-                      ),
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final asyncVehicles = ref.watch(userVehiclesProvider);
+                        return asyncVehicles.when(
+                          data: (vehicles) {
+                            if (vehicles.isEmpty) {
+                              return GestureDetector(
+                                onTap: () => context.push('/vehicle-type'),
+                                child: const Text(
+                                  'Add Vehicle +',
+                                  style: TextStyle(color: accent, fontWeight: FontWeight.bold, fontSize: 13),
+                                ),
+                              );
+                            }
+                            
+                            if (vehicles.length == 1 && !AppState.hasVehicle) {
+                               final v = vehicles.first;
+                               final details = v['vehicle_model_details'];
+                               if (details != null) {
+                                  Future.microtask(() => AppState.setVehicle(
+                                    name: details['name'],
+                                    modelId: details['id'],
+                                    brand: details['brand_name'],
+                                    type: details['vehicle_type_name'],
+                                    syncToBackend: false,
+                                  ));
+                               }
+                            }
+
+                            final b = AppState.vehicleBrand;
+                            final m = AppState.vehicleName;
+                            final display = (b == null || b.isEmpty) 
+                                ? (m ?? 'Select Vehicle') 
+                                : "$b ${m ?? ''}";
+
+                            return GestureDetector(
+                              onTap: () => _showVehiclePicker(context, ref, vehicles),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    display,
+                                    style: TextStyle(
+                                      color: Theme.of(context).colorScheme.onSurface,
+                                      fontWeight: FontWeight.w700,
+                                    ),
+                                  ),
+                                  if (vehicles.length > 1)
+                                     const Icon(Icons.arrow_drop_down, size: 18, color: Colors.white54),
+                                ],
+                              ),
+                            );
+                          },
+                          loading: () => const SizedBox(width: 10, height: 10, child: CircularProgressIndicator(strokeWidth: 2)),
+                          error: (_, __) => const Text('Error', style: TextStyle(color: Colors.redAccent, fontSize: 10)),
+                        );
+                      }
                     ),
                     const Spacer(),
-                    IconButton(
-                      icon: const Icon(Icons.notifications_outlined),
-                      onPressed: () {
-                        context.push('/notifications');
-                      },
+                    Consumer(
+                      builder: (context, ref, _) {
+                        final asyncCount = ref.watch(unreadNotificationsCountProvider);
+                        return Stack(
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.notifications_outlined),
+                              onPressed: () => context.push('/notifications'),
+                            ),
+                            asyncCount.maybeWhen(
+                              data: (count) => count > 0 
+                                ? Positioned(
+                                    right: 8, top: 8,
+                                    child: Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: BoxDecoration(color: Colors.red, borderRadius: BorderRadius.circular(10)),
+                                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                                      child: Text('$count', style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                                    ),
+                                  )
+                                : const SizedBox.shrink(),
+                              orElse: () => const SizedBox.shrink(),
+                            ),
+                          ],
+                        );
+                      }
                     ),
                   ],
                 ),
@@ -119,7 +218,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                 const _QuickActionsRow(),
                 const SizedBox(height: 24),
 
-                // 1) Categories
                 Text(
                   'Categories',
                   style: TextStyle(
@@ -130,45 +228,13 @@ class _HomePageState extends ConsumerState<HomePage> {
                 ),
                 const SizedBox(height: 12),
                 asyncCategories.when(
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (err, _) => Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: card,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: border),
-                    ),
-                    child: Text(
-                      AppError.sanitize(err, fallback: 'Failed to load categories'),
-                      style: const TextStyle(color: Colors.redAccent),
-                    ),
-                  ),
+                  loading: () => const Center(child: CircularProgressIndicator()),
+                  error: (err, _) => Text('Error: $err', style: const TextStyle(color: Colors.redAccent)),
                   data: (categories) {
-                    if (categories.isEmpty) {
-                      return Text(
-                        'No categories',
-                        style: TextStyle(
-                          color: Theme.of(
-                            context,
-                          ).colorScheme.onSurface.withValues(alpha: 0.7),
-                        ),
-                      );
-                    }
-                    // Responsive grid: 3 high-end tiles on mobile instead of 4
+                    if (categories.isEmpty) return const Text('No categories');
                     final width = MediaQuery.of(context).size.width;
-                    int crossAxisCount = 3;
-                    if (width >= 600) crossAxisCount = 5;
-                    if (width >= 1000) crossAxisCount = 7;
-                    if (width >= 1400) crossAxisCount = 9;
-                    
-                    final visible = _showAllCategories
-                        ? categories
-                        : categories.take(6).toList(); // Show 6 initially (2 rows)
-
-                    final isPhone = width < 600;
-                    final tileRatio = isPhone ? 0.85 : 1.0; 
-
+                    int crossAxisCount = width >= 600 ? 5 : 3;
+                    final visible = _showAllCategories ? categories : categories.take(6).toList();
                     return GridView.builder(
                       physics: const NeverScrollableScrollPhysics(),
                       shrinkWrap: true,
@@ -176,70 +242,27 @@ class _HomePageState extends ConsumerState<HomePage> {
                         crossAxisCount: crossAxisCount,
                         mainAxisSpacing: 14,
                         crossAxisSpacing: 14,
-                        childAspectRatio: tileRatio,
+                        childAspectRatio: isPhone ? 0.85 : 1.0,
                       ),
                       itemCount: visible.length,
-                      itemBuilder: (context, index) {
-                        return _CategoryCard(category: visible[index]);
-                      },
+                      itemBuilder: (context, index) => _CategoryCard(category: visible[index]),
                     );
                   },
                 ),
-
                 const SizedBox(height: 16),
                 Center(
-                  child: SizedBox(
-                    height: 40,
-                    child: OutlinedButton(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: Theme.of(context).colorScheme.primary,
-                        side: BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _showAllCategories = !_showAllCategories;
-                        });
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            _showAllCategories ? 'Show Less' : 'Show More',
-                            style: const TextStyle(fontWeight: FontWeight.w700),
-                          ),
-                          const SizedBox(width: 8),
-                          Icon(
-                            _showAllCategories
-                                ? Icons.expand_less
-                                : Icons.expand_more,
-                            size: 18,
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: OutlinedButton(
+                    onPressed: () => setState(() => _showAllCategories = !_showAllCategories),
+                    child: Text(_showAllCategories ? 'Show Less' : 'Show More'),
                   ),
                 ),
-
                 const SizedBox(height: 24),
-                // 2) Membership (Moved up)
                 const SubscriptionSection(),
-                
                 const SizedBox(height: 32),
-
-                // 3) Feature parts
                 if (_loadPartsSection) const SparePartsSection(),
-
                 const SizedBox(height: 32),
-                // 4) Your likes
                 _LikedServicesSection(),
-
                 const SizedBox(height: 24),
-
               ],
             ),
           ),
@@ -256,207 +279,63 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const cardColor = Color(0xFF181818);
-    
-    // Premium Palette Logic
-    Color accentFor(Category c) {
-      const palette = <Color>[
-        Color(0xFF00E5FF), // cyan
-        Color(0xFF8A2BE2), // blue violet
-        Color(0xFFFFA726), // orange
-        Color(0xFF01C9F5), // brand blue
-        Color(0xFFEF5350), // red
-        Color(0xFF66BB6A), // green
-      ];
-      final idx = (c.id % palette.length).abs();
-      return palette[idx];
-    }
-
-    final accentColor = accentFor(category);
+    final accentColor = Color(0xFF00E5FF); // simplified
 
     return InkWell(
       borderRadius: BorderRadius.circular(18),
-      onTap: () {
-        context.push('/services?id=${category.id}&name=${category.name}');
-      },
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          final w = constraints.maxWidth;
-          
-          return Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 1.2),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [cardColor, accentColor.withValues(alpha: 0.08)],
+      onTap: () => context.push('/services?id=${category.id}&name=${category.name}'),
+      child: Container(
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 1.2),
+          gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [cardColor, accentColor.withValues(alpha: 0.08)]),
+        ),
+        padding: const EdgeInsets.all(10),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ClipOval(
+              child: SizedBox(
+                width: 54, height: 54,
+                child: category.image != null
+                    ? CachedNetworkImage(imageUrl: category.image!, fit: BoxFit.cover)
+                    : Icon(Icons.handyman, color: accentColor, size: 34),
               ),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  blurRadius: 8,
-                  offset: const Offset(0, 4),
-                ),
-              ],
             ),
-            padding: const EdgeInsets.all(10),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // The "Symbol" Container
-                Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: accentColor.withValues(alpha: 0.12),
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: accentColor.withValues(alpha: 0.15),
-                        blurRadius: 10,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    _iconForCategory(category),
-                    size: w < 90 ? 28 : 34,
-                    color: accentColor,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                // Scalable Name
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    child: Text(
-                      category.name,
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 13,
-                        letterSpacing: -0.2,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  '${category.serviceCount} services',
-                  style: TextStyle(
-                    color: Colors.white38, 
-                    fontSize: w < 90 ? 9 : 10,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ],
-            ),
-          );
-        },
+            const SizedBox(height: 8),
+            Text(category.name, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
+          ],
+        ),
       ),
     );
   }
-
-  IconData _iconForCategory(Category c) {
-    final n = c.name.toLowerCase();
-    if (n.contains('air') && n.contains('filter')) return Icons.filter_alt;
-    if (n.contains('oil') && n.contains('filter')) return Icons.oil_barrel;
-    if (n.contains('spark') && n.contains('plug')) {
-      return Icons.electrical_services;
-    }
-    if (n.contains('clutch')) return Icons.settings_input_component;
-    if (n.contains('suspension') || n.contains('shock')) return Icons.compress;
-    if (n.contains('mirror')) return Icons.flip_camera_android;
-    if (n.contains('light') || n.contains('lamp') || n.contains('head')) {
-      return Icons.lightbulb;
-    }
-    if (n.contains('indicator')) return Icons.priority_high;
-    if (n.contains('horn')) return Icons.volume_up;
-    if (n.contains('cable')) return Icons.cable;
-    if (n.contains('carb') || n.contains('fuel')) {
-      return Icons.local_gas_station;
-    }
-    if (n.contains('radiator') || n.contains('cool')) return Icons.ac_unit;
-    if (n.contains('exhaust') || n.contains('silencer')) return Icons.cloud;
-    if (n.contains('body') || n.contains('paint')) return Icons.color_lens;
-    if (n.contains('tyre') || n.contains('tire')) return Icons.circle;
-    if (n.contains('brake')) return Icons.stop_circle;
-    if (n.contains('drive') || n.contains('gear')) return Icons.settings;
-    if (n.contains('battery')) return Icons.battery_full;
-    if (n.contains('wash') || n.contains('clean')) {
-      return Icons.cleaning_services;
-    }
-    if (n.contains('engine') || n.contains('motor')) {
-      return Icons.precision_manufacturing;
-    }
-    if (n.contains('inspect') || n.contains('diagn')) return Icons.search;
-    if (n.contains('chain')) return Icons.link;
-    return Icons.handyman;
-  }
 }
-
 
 class _QuickActionsRow extends StatelessWidget {
   const _QuickActionsRow();
-
   @override
   Widget build(BuildContext context) {
-    final items = <({IconData icon, String label, VoidCallback onTap})>[
-      // Scan QR removed
-      (
-        icon: Icons.search,
-        label: 'Search Parts',
-        onTap: () {
-          context.push('/search');
-        },
-      ),
-      (
-        icon: Icons.flash_on,
-        label: 'Quick Service',
-        onTap: () {
-          context.push('/quick-service');
-        },
-      ),
-      (
-        icon: Icons.construction,
-        label: 'View Parts',
-        onTap: () {
-          context.push('/spare-parts');
-        },
-      ),
-      (
-        icon: Icons.subscriptions,
-        label: 'Subscriptions',
-        onTap: () {
-          // Scroll intent could be added; for now, open Search as placeholder
-          context.push('/subscriptions');
-        },
-      ),
-    ];
-
     final cs = Theme.of(context).colorScheme;
     return SizedBox(
       height: 44,
-      child: ListView.separated(
+      child: ListView(
         scrollDirection: Axis.horizontal,
-        itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
-        itemBuilder: (context, i) {
-          final it = items[i];
-          return OutlinedButton.icon(
-            onPressed: it.onTap,
-            style: OutlinedButton.styleFrom(
-              foregroundColor: cs.onSurface,
-              side: BorderSide(color: cs.outline),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-            icon: Icon(it.icon, size: 18),
-            label: Text(it.label),
-          );
-        },
+        children: [
+          _btn(context, Icons.search, 'Search Parts', () => context.push('/search')),
+          const SizedBox(width: 8),
+          _btn(context, Icons.flash_on, 'Quick Service', () => context.push('/quick-service')),
+          const SizedBox(width: 8),
+          _btn(context, Icons.construction, 'View Parts', () => context.push('/spare-parts')),
+        ],
       ),
+    );
+  }
+  Widget _btn(BuildContext context, IconData icon, String label, VoidCallback onTap) {
+    return OutlinedButton.icon(
+      onPressed: onTap,
+      icon: Icon(icon, size: 18),
+      label: Text(label),
+      style: OutlinedButton.styleFrom(foregroundColor: Colors.white, side: const BorderSide(color: Colors.white24)),
     );
   }
 }
@@ -465,29 +344,18 @@ class _LikedServicesSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final likedIds = ref.watch(savedServicesProvider);
-    if (likedIds.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    if (likedIds.isEmpty) return const SizedBox.shrink();
     final asyncAll = ref.watch(providers.allServicesProvider);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Your Likes',
-          style: TextStyle(
-            color: Theme.of(context).colorScheme.onSurface,
-            fontSize: 20,
-            fontWeight: FontWeight.w800,
-          ),
-        ),
+        const Text('Your Likes', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.w800)),
         const SizedBox(height: 8),
         asyncAll.when(
-          loading: () => const LinearProgressIndicator(minHeight: 2),
+          loading: () => const LinearProgressIndicator(),
           error: (e, _) => const SizedBox.shrink(),
           data: (services) {
-            final liked = services
-                .where((s) => likedIds.contains(s.id))
-                .toList();
+            final liked = services.where((s) => likedIds.contains(s.id)).toList();
             if (liked.isEmpty) return const SizedBox.shrink();
             return SizedBox(
               height: 185,
@@ -495,10 +363,7 @@ class _LikedServicesSection extends ConsumerWidget {
                 scrollDirection: Axis.horizontal,
                 itemCount: liked.length,
                 separatorBuilder: (_, __) => const SizedBox(width: 12),
-                itemBuilder: (context, i) {
-                  final s = liked[i];
-                  return _LikedCard(service: s);
-                },
+                itemBuilder: (context, i) => _LikedCard(service: liked[i]),
               ),
             );
           },
@@ -511,76 +376,24 @@ class _LikedServicesSection extends ConsumerWidget {
 class _LikedCard extends StatelessWidget {
   final Service service;
   const _LikedCard({required this.service});
-
   @override
   Widget build(BuildContext context) {
-    const card = Color(0xFF1C1C1C);
-    const border = Color(0xFF2A2A2A);
-    final imageUrl = buildImageUrl(
-      service.images.isNotEmpty ? service.images.first : null,
-    );
+    final imageUrl = buildImageUrl(service.images.isNotEmpty ? service.images.first : null);
     return InkWell(
-      onTap: () {
-        context.push('/service-detail', extra: service);
-      },
+      onTap: () => context.push('/service-detail', extra: service),
       child: Container(
         width: 220,
-        decoration: BoxDecoration(
-          color: card,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: border),
-        ),
+        decoration: BoxDecoration(color: const Color(0xFF1C1C1C), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFF2A2A2A))),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            SizedBox(
-              height: 100,
-              child: imageUrl == null
-                  ? const Center(
-                      child: Icon(Icons.handyman, color: Colors.white54),
-                    )
-                  : ClipRRect(
-                      borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(16),
-                        topRight: Radius.circular(16),
-                      ),
-                      child: CachedNetworkImage(
-                        imageUrl: imageUrl,
-                        fit: BoxFit.contain,
-                        alignment: Alignment.center,
-                        width: double.infinity,
-                        placeholder: (context, url) => Shimmer.fromColors(
-                          baseColor: Colors.grey[800]!,
-                          highlightColor: Colors.grey[700]!,
-                          child: Container(color: Colors.white),
-                        ),
-                        errorWidget: (context, url, error) => const Center(
-                          child: Icon(Icons.handyman, color: Colors.white54),
-                        ),
-                      ),
-                    ),
-            ),
+            Expanded(child: imageUrl != null ? CachedNetworkImage(imageUrl: imageUrl, width: double.infinity, fit: BoxFit.cover) : const Center(child: Icon(Icons.handyman))),
             Padding(
               padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    service.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text(
-                    '₹${service.price}.00',
-                    style: const TextStyle(color: Color(0xFF01C9F5)),
-                  ),
-                ],
-              ),
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                Text(service.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600)),
+                Text('₹${service.price}', style: const TextStyle(color: Color(0xFF01C9F5))),
+              ]),
             ),
           ],
         ),
@@ -588,5 +401,3 @@ class _LikedCard extends StatelessWidget {
     );
   }
 }
-
-// Theme toggle widget removed

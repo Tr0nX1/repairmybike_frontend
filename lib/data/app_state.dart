@@ -39,6 +39,7 @@ class AppState {
   static const _kRefresh = 'refresh_token';
   static const _kGuestId = 'guest_id';
   static const _kLastPostalAddress = 'last_postal_address';
+  static const _kLoyaltyPoints = 'loyalty_points';
   static const kLastTabIndex = 'last_tab_index';
 
   // Auth state
@@ -54,6 +55,7 @@ class AppState {
   static String? fullName;
   static String? email;
   static String? avatarUrl;
+  static int? loyaltyPoints;
   static String? addrFlat;
   static String? addrArea;
   static String? addrLandmark;
@@ -211,10 +213,14 @@ class AppState {
     if (brandImageUrl != null) await prefs.setString(_kVehicleBrandImageUrl, brandImageUrl);
     if (typeImageUrl != null) await prefs.setString(_kVehicleTypeImageUrl, typeImageUrl);
     if (syncToBackend && sessionToken != null) {
+      if (modelId == null) {
+        debugPrint('Blocked early vehicle sync: modelId is null');
+        return;
+      }
       try {
         await VehiclesApi().addUserVehicle(
           sessionToken: sessionToken!,
-          vehicleModelId: modelId ?? 1,
+          vehicleModelId: modelId,
         );
       } catch (_) {}
     }
@@ -300,10 +306,12 @@ class AppState {
     if (fullName!.isEmpty) fullName = data['username'];
     email = data['email'];
     avatarUrl = data['profile_picture'];
+    loyaltyPoints = data['loyalty_points'] as int?;
     
     await prefs.setString(_kFullName, fullName!);
     if (email != null) await prefs.setString(_kEmail, email!);
     if (avatarUrl != null) await prefs.setString(_kAvatarUrl, avatarUrl!);
+    if (loyaltyPoints != null) await prefs.setInt(_kLoyaltyPoints, loyaltyPoints!);
 
     // 2. Address Info (Sync default address)
     final List? addresses = data['addresses'];
