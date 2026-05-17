@@ -1,3 +1,4 @@
+import 'package:url_launcher/url_launcher.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/staff_provider.dart';
@@ -115,7 +116,12 @@ class _CrmPanelPageState extends ConsumerState<CrmPanelPage> {
                 children: [
                   Expanded(
                     child: ElevatedButton.icon(
-                      onPressed: () {}, // TODO: Call API
+                      onPressed: () async {
+                        final url = 'tel:${customer['phone']}';
+                        if (await canLaunchUrl(Uri.parse(url))) {
+                          await launchUrl(Uri.parse(url));
+                        }
+                      },
                       icon: const Icon(Icons.call),
                       label: const Text('Call'),
                     ),
@@ -123,7 +129,11 @@ class _CrmPanelPageState extends ConsumerState<CrmPanelPage> {
                   const SizedBox(width: 12),
                   Expanded(
                     child: OutlinedButton.icon(
-                      onPressed: () {}, // TODO: Open WhatsApp
+                      onPressed: () async {
+                        final phone = customer['phone'];
+                        final url = 'https://wa.me/91$phone';
+                        await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                      },
                       icon: const Icon(Icons.message),
                       label: const Text('WhatsApp'),
                     ),

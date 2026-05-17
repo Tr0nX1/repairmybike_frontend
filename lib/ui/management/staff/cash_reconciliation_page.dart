@@ -123,10 +123,12 @@ class CashReconciliationPage extends ConsumerWidget {
         final api = ref.read(staffApiProvider);
         final res = await api.verifyCash(paymentId);
         if (res['error'] == false) {
+          if (!context.mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cash verified and moved to register')));
           ref.invalidate(pendingReconciliationsProvider);
         }
       } catch (e) {
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Verification failed: $e')));
       }
     }

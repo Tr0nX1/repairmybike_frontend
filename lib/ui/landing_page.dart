@@ -663,7 +663,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
 
   // --- Helpers ---
   Widget _sectionHeader(String tag, String title, String desc, bool isDesktop) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
       child: Flex(
         direction: isDesktop ? Axis.horizontal : Axis.vertical,

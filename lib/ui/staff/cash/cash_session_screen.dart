@@ -52,6 +52,7 @@ class _CashSessionScreenState extends ConsumerState<CashSessionScreen> {
       await StaffApi().startCashSession(val);
       await _refresh();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppError.sanitize(e))));
       setState(() => _loading = false);
     }
@@ -66,6 +67,7 @@ class _CashSessionScreenState extends ConsumerState<CashSessionScreen> {
       await StaffApi().closeCashSession(_session!['id'], val);
       await _refresh();
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppError.sanitize(e))));
       setState(() => _loading = false);
     }

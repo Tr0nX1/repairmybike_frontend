@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../data/admin_api.dart';
 
 class StaffDirectoryPage extends ConsumerStatefulWidget {
   const StaffDirectoryPage({super.key});
@@ -10,7 +9,7 @@ class StaffDirectoryPage extends ConsumerStatefulWidget {
 }
 
 class _StaffDirectoryPageState extends ConsumerState<StaffDirectoryPage> {
-  final _adminApi = AdminApi();
+
   bool _isLoading = true;
   List<dynamic> _staffList = [];
 
@@ -31,6 +30,7 @@ class _StaffDirectoryPageState extends ConsumerState<StaffDirectoryPage> {
         {'id': 3, 'name': 'Mike Staff', 'role': 'staff', 'identifier': '9988776655', 'is_active': true},
       ];
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e')));
     } finally {
       if (mounted) setState(() => _isLoading = false);

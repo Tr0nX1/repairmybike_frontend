@@ -5,7 +5,6 @@ import 'package:intl/intl.dart';
 import '../../../providers/staff_provider.dart';
 import '../../../providers/vehicles_provider.dart';
 import '../../../providers/services_provider.dart';
-import '../../../data/app_state.dart';
 
 class WalkInCreatorPage extends ConsumerStatefulWidget {
   const WalkInCreatorPage({super.key});
@@ -105,7 +104,7 @@ class _WalkInCreatorPageState extends ConsumerState<WalkInCreatorPage> {
   Widget _buildVehicleStep() {
     // This is a simplified vehicle selector. In a real app, 
     // we'd fetch types/brands/models.
-    final vehiclesAsync = ref.watch(vehicleTypesProvider); // Simplified for this demo
+    ref.watch(vehicleTypesProvider); // Simplified for this demo
     
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,

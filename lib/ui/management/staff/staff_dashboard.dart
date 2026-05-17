@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../../providers/staff_provider.dart';
+import '../../../data/repositories/auth_repository.dart';
+import '../../../data/app_state.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/task_card.dart';
 
@@ -106,7 +108,12 @@ class _StaffDashboardPageState extends ConsumerState<StaffDashboardPage> with Si
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text('Logout', style: TextStyle(color: Colors.red)),
-              onTap: () {}, // TODO: Implement Logout
+              onTap: () async {
+                await ref.read(authProvider.notifier).logout();
+                await AppState.clearAllData();
+                if (!context.mounted) return;
+                context.go('/');
+              },
             ),
             const SizedBox(height: 20),
           ],
@@ -218,6 +225,7 @@ class _BookingList extends ConsumerWidget {
       final api = ref.read(staffApiProvider);
       final res = await api.updateBookingStatus(id, status);
       if (res['error'] == false) {
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Booking updated')),
         );
@@ -229,6 +237,7 @@ class _BookingList extends ConsumerWidget {
         ref.invalidate(staffBookingsProvider('completed'));
       }
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Update failed: $e')),
       );

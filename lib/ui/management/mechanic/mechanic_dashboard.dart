@@ -156,6 +156,7 @@ class MechanicDashboardPage extends ConsumerWidget {
       final api = ref.read(staffApiProvider);
       final res = await api.updateBookingStatus(id, status);
       if (res['error'] == false) {
+        if (!context.mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Status updated to $status')),
         );
@@ -165,6 +166,7 @@ class MechanicDashboardPage extends ConsumerWidget {
         ref.invalidate(staffBookingsProvider('confirmed'));
       }
     } catch (e) {
+      if (!context.mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Failed to update status: $e')),
       );

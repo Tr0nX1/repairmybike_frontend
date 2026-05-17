@@ -1,5 +1,4 @@
 import 'api_client.dart';
-import 'package:dio/dio.dart';
 
 class StaffApi {
   final ApiClient _client = ApiClient();
@@ -37,6 +36,18 @@ class StaffApi {
   }
 
   /// Get aggregate statistics for staff/admin
+  Future<Map<String, dynamic>> updateBookingNotes(int bookingId, String notes) async {
+    try {
+      final response = await _client.dio.patch(
+        'api/staff/bookings/$bookingId/',
+        data: {'internal_notes': notes},
+      );
+      return response.data;
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   Future<Map<String, dynamic>> getStats() async {
     try {
       final response = await _client.dio.get('api/staff/bookings/stats/');

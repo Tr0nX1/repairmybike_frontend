@@ -39,9 +39,9 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
 
   final _vehiclesApi = VehiclesApi();
   List<VehicleTypeItem> _vehicleTypes = [];
-  VehicleTypeItem? _selectedType;
+
   List<VehicleBrandItem> _vehicleBrands = [];
-  VehicleBrandItem? _selectedBrand;
+
   List<VehicleModelItem> _vehicleModels = [];
   VehicleModelItem? _selectedModel;
 
@@ -198,13 +198,13 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
                 DropdownButtonFormField<VehicleTypeItem>(
                   dropdownColor: card, decoration: _inputDecoration('Type'),
                   items: _vehicleTypes.map((t) => DropdownMenuItem(value: t, child: Text(t.name, style: const TextStyle(color: Colors.white)))).toList(),
-                  onChanged: (v) { setState(() { _selectedType = v; _selectedBrand = null; _selectedModel = null; }); if (v != null) _loadVehicleBrands(v.id); },
+                  onChanged: (v) { setState(() { _selectedModel = null; }); if (v != null) _loadVehicleBrands(v.id); },
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<VehicleBrandItem>(
                   dropdownColor: card, decoration: _inputDecoration('Brand'),
                   items: _vehicleBrands.map((b) => DropdownMenuItem(value: b, child: Text(b.name, style: const TextStyle(color: Colors.white)))).toList(),
-                  onChanged: (v) { setState(() { _selectedBrand = v; _selectedModel = null; }); if (v != null) _loadVehicleModels(v.id); },
+                  onChanged: (v) { setState(() { _selectedModel = null; }); if (v != null) _loadVehicleModels(v.id); },
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<VehicleModelItem>(

@@ -73,7 +73,7 @@ class _AuditLogPageState extends ConsumerState<AuditLogPage> {
                     return ListTile(
                       isThreeLine: true,
                       leading: CircleAvatar(
-                        backgroundColor: _getActionColor(log['action_type']).withOpacity(0.1),
+                        backgroundColor: _getActionColor(log['action_type']).withValues(alpha: 0.1),
                         child: Icon(_getActionIcon(log['action_type']), color: _getActionColor(log['action_type']), size: 20),
                       ),
                       title: Text(log['description'], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500)),

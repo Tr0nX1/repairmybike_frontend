@@ -131,11 +131,13 @@ class _InventoryPanelState extends ConsumerState<InventoryPanel> {
     try {
       final api = ref.read(sparePartsApiProvider);
       await api.updatePart(id, {'stock_qty': qty});
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Stock updated successfully')),
       );
       ref.invalidate(sparePartsByFilterProvider);
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Update failed: $e')),
       );

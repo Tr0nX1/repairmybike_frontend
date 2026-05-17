@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/staff_provider.dart';
@@ -6,24 +7,54 @@ import '../widgets/status_chip.dart';
 import '../widgets/cash_collection_dialog.dart';
 import '../widgets/part_picker_dialog.dart';
 
-class JobDetailScreen extends ConsumerWidget {
+class JobDetailScreen extends ConsumerStatefulWidget {
   final int bookingId;
 
   const JobDetailScreen({super.key, required this.bookingId});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<JobDetailScreen> createState() => _JobDetailScreenState();
+}
+
+class _JobDetailScreenState extends ConsumerState<JobDetailScreen> {
+  Timer? _notesDebounce;
+
+  void _onNotesChanged(String value) {
+    _notesDebounce?.cancel();
+    _notesDebounce = Timer(
+      const Duration(milliseconds: 800),
+      () => _saveNotes(value),
+    );
+  }
+
+  Future<void> _saveNotes(String notes) async {
+    try {
+      final api = ref.read(staffApiProvider);
+      await api.updateBookingNotes(widget.bookingId, notes);
+    } catch (e) {
+      debugPrint('Failed to save notes: $e');
+    }
+  }
+
+  @override
+  void dispose() {
+    _notesDebounce?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final bookingsAsync = ref.watch(staffBookingsProvider(null));
     final theme = Theme.of(context);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Job #$bookingId'),
+        title: Text('Job #${widget.bookingId}'),
       ),
       body: bookingsAsync.when(
         data: (bookings) {
           final booking = bookings.firstWhere(
-            (b) => b['id'] == bookingId,
+            (b) => b['id'] == widget.bookingId,
             orElse: () => null,
           );
 
@@ -108,7 +139,7 @@ class JobDetailScreen extends ConsumerWidget {
                   title: 'Spare Parts', 
                   icon: Icons.inventory_2_outlined,
                   action: currentStatus == 'in_progress' ? TextButton.icon(
-                    onPressed: () => _addPart(context, ref),
+                    onPressed: () => _addPart(),
                     icon: const Icon(Icons.add, size: 16),
                     label: const Text('Add Part'),
                   ) : null,
@@ -137,7 +168,7 @@ class JobDetailScreen extends ConsumerWidget {
                                 if (currentStatus == 'in_progress')
                                   IconButton(
                                     icon: const Icon(Icons.remove_circle_outline, color: Colors.red, size: 18),
-                                    onPressed: () => _removePart(context, ref, p['id']),
+                                    onPressed: () => _removePart(p['id']),
                                   ),
                               ],
                             ),
@@ -172,9 +203,7 @@ class JobDetailScreen extends ConsumerWidget {
                         border: InputBorder.none,
                         contentPadding: EdgeInsets.all(8),
                       ),
-                      onChanged: (val) {
-                         // TODO: debounce and call api to save internal notes
-                      },
+                      onChanged: _onNotesChanged,
                     ),
                   ),
                 ),
@@ -188,9 +217,9 @@ class JobDetailScreen extends ConsumerWidget {
       ),
       bottomNavigationBar: bookingsAsync.maybeWhen(
         data: (bookings) {
-          final booking = bookings.firstWhere((b) => b['id'] == bookingId, orElse: () => null);
+          final booking = bookings.firstWhere((b) => b['id'] == widget.bookingId, orElse: () => null);
           if (booking == null) return null;
-          return _buildBottomActions(context, ref, bookingId, booking['booking_status'], booking);
+          return _buildBottomActions(context, ref, widget.bookingId, booking['booking_status'], booking);
         },
         orElse: () => null,
       ),
@@ -220,7 +249,7 @@ class JobDetailScreen extends ConsumerWidget {
           if (payStatus == 'pending' && (currentStatus == 'completed' || currentStatus == 'in_progress'))
             Expanded(
               child: ElevatedButton.icon(
-                onPressed: () => _showCollectionDialog(context, ref, booking),
+                onPressed: () => _showCollectionDialog(booking),
                 icon: const Icon(Icons.payments_outlined),
                 label: const Text('Collect Cash'),
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.green, foregroundColor: Colors.white),
@@ -231,7 +260,7 @@ class JobDetailScreen extends ConsumerWidget {
           if (currentStatus != 'completed')
             Expanded(
               child: ElevatedButton(
-                onPressed: () => _updateStatus(context, ref, id, currentStatus), 
+                onPressed: () => _updateStatus(id, currentStatus), 
                 child: const Text('Update Status'),
               ),
             ),
@@ -240,24 +269,26 @@ class JobDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _updateStatus(BuildContext context, WidgetRef ref, int id, String currentStatus) async {
+  Future<void> _updateStatus(int id, String currentStatus) async {
     String nextStatus;
-    if (currentStatus == 'pending') nextStatus = 'confirmed';
-    else if (currentStatus == 'confirmed') nextStatus = 'in_progress';
-    else if (currentStatus == 'in_progress') nextStatus = 'completed';
-    else return;
+    if (currentStatus == 'pending') { nextStatus = 'confirmed'; }
+    else if (currentStatus == 'confirmed') { nextStatus = 'in_progress'; }
+    else if (currentStatus == 'in_progress') { nextStatus = 'completed'; }
+    else { return; }
 
     try {
       final api = ref.read(staffApiProvider);
       await api.updateBookingStatus(id, nextStatus);
       ref.invalidate(staffBookingsProvider(null));
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Status updated to $nextStatus')));
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed: $e')));
     }
   }
 
-  void _showCollectionDialog(BuildContext context, WidgetRef ref, Map<String, dynamic> booking) {
+  void _showCollectionDialog(Map<String, dynamic> booking) {
     showDialog(
       context: context,
       builder: (context) => CashCollectionDialog(
@@ -267,7 +298,7 @@ class JobDetailScreen extends ConsumerWidget {
     );
   }
 
-  Future<void> _addPart(BuildContext context, WidgetRef ref) async {
+  Future<void> _addPart() async {
     final SparePartListItem? part = await showDialog<SparePartListItem>(
       context: context,
       builder: (context) => const PartPickerDialog(),
@@ -276,22 +307,26 @@ class JobDetailScreen extends ConsumerWidget {
     if (part != null) {
       try {
         final api = ref.read(staffApiProvider);
-        await api.addPartToBooking(bookingId, part.id, 1);
+        await api.addPartToBooking(widget.bookingId, part.id, 1);
         ref.invalidate(staffBookingsProvider(null));
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Part added to job')));
       } catch (e) {
+        if (!mounted) return;
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to add part: $e')));
       }
     }
   }
 
-  Future<void> _removePart(BuildContext context, WidgetRef ref, int bookingPartId) async {
+  Future<void> _removePart(int bookingPartId) async {
     try {
       final api = ref.read(staffApiProvider);
-      await api.removePartFromBooking(bookingId, bookingPartId);
+      await api.removePartFromBooking(widget.bookingId, bookingPartId);
       ref.invalidate(staffBookingsProvider(null));
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Part removed from job')));
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to remove part: $e')));
     }
   }

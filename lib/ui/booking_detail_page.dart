@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shimmer/shimmer.dart';
 import '../data/booking_api.dart';
 import '../utils/app_error.dart';
 import 'widgets/booking_timeline.dart';
@@ -32,9 +31,11 @@ class _BookingDetailPageState extends ConsumerState<BookingDetailPage> {
     setState(() => _actionLoading = true);
     try {
       await BookingApi().approveParts(widget.bookingId, partIds);
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Parts approved successfully')));
       setState(() => _fetch());
     } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(AppError.sanitize(e))));
     } finally {
       setState(() => _actionLoading = false);
@@ -43,7 +44,7 @@ class _BookingDetailPageState extends ConsumerState<BookingDetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),

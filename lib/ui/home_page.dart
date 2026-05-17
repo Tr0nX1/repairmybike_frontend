@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shimmer/shimmer.dart';
+
 import '../providers/category_provider.dart';
 import '../models/category.dart';
 import 'subscription_section.dart';
@@ -14,7 +14,7 @@ import '../providers/notifications_provider.dart';
 import '../providers/vehicles_provider.dart';
 import '../models/service.dart';
 import '../utils/url_utils.dart';
-import '../utils/app_error.dart';
+
 import 'widgets/dynamic_hero_carousel.dart';
 
 class HomePage extends ConsumerStatefulWidget {
@@ -29,7 +29,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   bool _loadPartsSection = false;
 
   static const Color card = Color(0xFF1C1C1C);
-  static const Color border = Color(0xFF2A2A2A);
+
   static const Color accent = Color(0xFF01C9F5);
 
   @override
@@ -315,7 +315,7 @@ class _QuickActionsRow extends StatelessWidget {
   const _QuickActionsRow();
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+
     return SizedBox(
       height: 44,
       child: ListView(

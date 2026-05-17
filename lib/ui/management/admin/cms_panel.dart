@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../data/admin_api.dart';
 
 class CmsPanelPage extends ConsumerStatefulWidget {
   const CmsPanelPage({super.key});
@@ -10,7 +9,7 @@ class CmsPanelPage extends ConsumerStatefulWidget {
 }
 
 class _CmsPanelPageState extends ConsumerState<CmsPanelPage> {
-  final _adminApi = AdminApi();
+
   final _notifTitleController = TextEditingController();
   final _notifBodyController = TextEditingController();
   bool _isBroadcasting = false;

@@ -1,4 +1,4 @@
-import 'dart:io';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
@@ -30,7 +30,7 @@ class FcmService {
     if (kIsWeb) return;
     
     // 2. Request Permissions (iOS/Android 13+)
-    NotificationSettings settings = await _fcm.requestPermission(
+    await _fcm.requestPermission(
       alert: true,
       badge: true,
       sound: true,

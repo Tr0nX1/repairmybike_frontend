@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../providers/spare_parts_provider.dart';
-import '../../../models/spare_part.dart';
+
 
 class PartPickerDialog extends ConsumerStatefulWidget {
   const PartPickerDialog({super.key});

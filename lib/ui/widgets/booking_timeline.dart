@@ -14,7 +14,7 @@ class BookingTimeline extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final cs = Theme.of(context).colorScheme;
+
     
     final stages = [
       ('pending', 'Requested'),
@@ -49,7 +49,7 @@ class BookingTimeline extends StatelessWidget {
     required bool isLast,
     bool isCancelled = false,
   }) {
-    final cs = Theme.of(context).colorScheme;
+
     return Row(
       children: [
         Container(
@@ -59,9 +59,9 @@ class BookingTimeline extends StatelessWidget {
             shape: BoxShape.circle,
             color: isCancelled 
                 ? Colors.red 
-                : (isActive ? cs.primary : cs.surfaceContainerHighest),
+                : (isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.surfaceContainerHighest),
             border: Border.all(
-              color: isActive ? Colors.transparent : cs.outline.withValues(alpha: 0.3),
+              color: isActive ? Colors.transparent : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
             ),
           ),
           child: Icon(
@@ -84,12 +84,12 @@ class BookingTimeline extends StatelessWidget {
   }
 
   Widget _buildLine(BuildContext context, {required bool isActive}) {
-    final cs = Theme.of(context).colorScheme;
+
     return Container(
       margin: const EdgeInsets.only(left: 11),
       height: 20,
       width: 2,
-      color: isActive ? cs.primary : cs.outline.withValues(alpha: 0.2),
+      color: isActive ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.outline.withValues(alpha: 0.2),
     );
   }
 }

@@ -10,7 +10,7 @@ class PricingEditorPage extends ConsumerStatefulWidget {
 }
 
 class _PricingEditorPageState extends ConsumerState<PricingEditorPage> {
-  String _searchQuery = '';
+
 
   @override
   Widget build(BuildContext context) {
@@ -26,7 +26,7 @@ class _PricingEditorPageState extends ConsumerState<PricingEditorPage> {
             padding: const EdgeInsets.all(8.0),
             child: SearchBar(
               hintText: 'Search services...',
-              onChanged: (val) => setState(() => _searchQuery = val),
+              onChanged: (val) {},
               leading: const Icon(Icons.search),
             ),
           ),

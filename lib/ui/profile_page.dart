@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:shimmer/shimmer.dart';
+
 import 'package:image_picker/image_picker.dart';
 import '../data/app_state.dart';
 import '../data/auth_api.dart';
@@ -22,7 +22,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
   bool _loggingOut = false;
   int _bookingCount = 0;
   int _orderCount = 0;
-  List<Map<String, dynamic>> _recentBookings = [];
+
   bool _loading = false;
 
   @override
@@ -56,7 +56,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
       
       setState(() {
          _bookingCount = bookings.length;
-         _recentBookings = bookings.take(3).toList();
+
       });
     } catch (_) {} finally {
         if (mounted) setState(() => _loading = false);
@@ -87,11 +87,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
     });
   }
 
-  void _signIn() {
-    context.push('/auth').then((_) {
-      if (mounted) setState(() {});
-    });
-  }
+
 
   @override
   Widget build(BuildContext context) {

@@ -155,9 +155,7 @@ class AddressFormFields extends StatelessWidget {
     );
   }
 
-  Widget _buildSavedAddressDropdown(BuildContext context) {
-     return const SizedBox.shrink(); // Replaced by chips
-  }
+
 
   Widget _buildTextField(
     TextEditingController ctrl, 

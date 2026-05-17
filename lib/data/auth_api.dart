@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'api_client.dart';
 import 'app_state.dart';
 import '../utils/phone_utils.dart';
@@ -99,15 +100,26 @@ class AuthApi {
   }) async {
     try {
       final normalized = _normalizePhone(phone);
+      final payload = {
+        'identifier': normalized, 
+        'otp_code': code, 
+        'method': 'phone',
+        'device_id': AppState.deviceId,
+      };
+
+      debugPrint('=== API CALL DEBUG ===');
+      debugPrint('Endpoint: api/auth/otp/verify/');
+      debugPrint('Payload: $payload');
+
       final res = await _dio.post(
         'api/auth/otp/verify/',
-        data: {
-          'identifier': normalized, 
-          'otp_code': code, 
-          'method': 'phone',
-          'device_id': AppState.deviceId,
-        },
+        data: payload,
       );
+
+      debugPrint('=== RESPONSE DEBUG ===');
+      debugPrint('Status: ${res.statusCode}');
+      debugPrint('Body: ${res.data}');
+
       final data = res.data;
       if (data is Map<String, dynamic>) {
         final error = data['error'] == true;
@@ -118,6 +130,14 @@ class AuthApi {
       }
       throw Exception('Unexpected response shape for verify OTP');
     } on DioException catch (e) {
+      debugPrint('=== ERROR DEBUG ===');
+      debugPrint('Error type: ${e.runtimeType}');
+      debugPrint('Error: $e');
+      
+      debugPrint('DioError type: ${e.type}');
+      debugPrint('Response status: ${e.response?.statusCode}');
+      debugPrint('Response body: ${e.response?.data}');
+      
       final data = e.response?.data;
       String msg = 'OTP verification failed';
       if (data is Map) {
@@ -129,8 +149,8 @@ class AuthApi {
         } else if (data['error'] is String && data['error'].isNotEmpty) {
           msg = data['error'] as String;
         }
-      } else if (data is String && data.isNotEmpty) {
-        msg = data;
+      } else if (data['string'] is String && (data['string'] as String).isNotEmpty) {
+        msg = data['string'];
       }
       throw Exception(msg);
     }
@@ -248,5 +268,9 @@ class AuthApi {
       },
     );
     return res.data;
+  }
+
+  Future<void> deleteAddress(int id, {required String sessionToken}) async {
+    await _dio.delete('api/auth/addresses/$id/');
   }
 }
