@@ -34,7 +34,7 @@ class FeedbackApi {
       'order': orderId,
     };
 
-    final response = await _dio.post('$baseUrl/reviews/', data: payload);
+    final response = await _dio.post('api/feedback/', data: payload);
     return response.data;
   }
 
@@ -43,15 +43,14 @@ class FeedbackApi {
       'image': await MultipartFile.fromFile(imageFile.path),
     });
 
-    await _dio.post('$baseUrl/reviews/$reviewId/upload-photo/', data: formData);
+    await _dio.post('api/feedback/$reviewId/upload-photo/', data: formData);
   }
 
-  Future<List<Map<String, dynamic>>> getReviews({String? type, int? targetId}) async {
+  Future<List<Map<String, dynamic>>> getReviews({int? bookingId}) async {
     final params = <String, dynamic>{};
-    if (type != null) params['type'] = type;
-    if (targetId != null) params['target_id'] = targetId;
+    if (bookingId != null) params['booking_id'] = bookingId;
 
-    final response = await _dio.get('$baseUrl/reviews/', queryParameters: params);
+    final response = await _dio.get('api/feedback/', queryParameters: params);
     if (response.data is List) {
       return (response.data as List).cast<Map<String, dynamic>>();
     }
@@ -73,7 +72,7 @@ class FeedbackApi {
     };
 
     try {
-      final res = await _dio.post('/api/feedback/', data: payload);
+      final res = await _dio.post('api/feedback/', data: payload);
       if (res.data?['error'] == true) {
          throw Exception(res.data?['message'] ?? 'Failed to submit feedback');
       }

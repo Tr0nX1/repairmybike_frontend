@@ -148,12 +148,6 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     }
     final phone = _lockedPhone!;
     final code = _otpCtrl.text.trim();
-    
-    debugPrint('=== OTP VERIFY DEBUG ===');
-    debugPrint('Phone sent: $phone');
-    debugPrint('OTP entered: ${_otpCtrl.text}');
-    debugPrint('OTP trimmed: $code');
-    debugPrint('OTP length: ${code.length}');
 
     if (code.isEmpty || code.length < 4) {
       _showSnack('Enter the 4–6 digit OTP code');

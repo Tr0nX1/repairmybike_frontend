@@ -130,14 +130,6 @@ class AuthApi {
       }
       throw Exception('Unexpected response shape for verify OTP');
     } on DioException catch (e) {
-      debugPrint('=== ERROR DEBUG ===');
-      debugPrint('Error type: ${e.runtimeType}');
-      debugPrint('Error: $e');
-      
-      debugPrint('DioError type: ${e.type}');
-      debugPrint('Response status: ${e.response?.statusCode}');
-      debugPrint('Response body: ${e.response?.data}');
-      
       final data = e.response?.data;
       String msg = 'OTP verification failed';
       if (data is Map) {
@@ -224,7 +216,7 @@ class AuthApi {
 
     try {
       final res = await _dio.post(
-        '/api/auth/profile/upload-photo/',
+        'api/auth/profile/upload-photo/',
         data: formData,
         options: Options(
           headers: {'Content-Type': 'multipart/form-data'},

@@ -14,7 +14,7 @@ class NotificationsApi {
 
   Future<List<NotificationItem>> getNotifications({int page = 1}) async {
     try {
-      final response = await _client.get('/api/notifications/', queryParameters: {'page': page});
+      final response = await _client.get('api/notifications/', queryParameters: {'page': page});
       List<dynamic> list = [];
       if (response.data is List) {
         list = response.data;
@@ -30,7 +30,7 @@ class NotificationsApi {
 
   Future<void> markAsRead(int id) async {
     try {
-      await _client.post('/api/notifications/$id/mark-read/');
+      await _client.post('api/notifications/$id/mark-read/');
     } catch (e) {
       // log error
     }
@@ -38,7 +38,7 @@ class NotificationsApi {
 
   Future<void> markAllRead() async {
     try {
-      await _client.post('/api/notifications/mark-all-read/');
+      await _client.post('api/notifications/mark-all-read/');
     } catch (e) {
       // log error
     }
@@ -47,7 +47,7 @@ class NotificationsApi {
   // Legacy support for backward compatibility if needed
   Future<List<Map<String, dynamic>>> getNotificationHistory() async {
      try {
-      final response = await _client.get('/api/notifications/');
+      final response = await _client.get('api/notifications/');
       if (response.data is List) return List<Map<String, dynamic>>.from(response.data);
       if (response.data is Map && response.data['results'] is List) return List<Map<String, dynamic>>.from(response.data['results']);
       return [];

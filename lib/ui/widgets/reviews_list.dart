@@ -2,15 +2,34 @@ import 'package:flutter/material.dart';
 import '../../data/feedback_api.dart';
 
 class ReviewsList extends StatelessWidget {
-  final String type;
-  final int targetId;
+  final String? type;
+  final int? targetId;
+  final int? bookingId;
 
-  const ReviewsList({super.key, required this.type, required this.targetId});
+  const ReviewsList({
+    super.key,
+    this.type,
+    this.targetId,
+    this.bookingId,
+  });
 
   @override
   Widget build(BuildContext context) {
+    // If no bookingId provided, the current backend doesn't support specific service/part reviews yet
+    if (bookingId == null && (type != null || targetId != null)) {
+      return const Padding(
+        padding: EdgeInsets.symmetric(vertical: 20),
+        child: Center(
+          child: Text(
+            'No reviews yet. Be the first to rate!',
+            style: TextStyle(color: Colors.white24, fontSize: 14),
+          ),
+        ),
+      );
+    }
+
     return FutureBuilder<List<Map<String, dynamic>>>(
-      future: FeedbackApi().getReviews(type: type, targetId: targetId),
+      future: FeedbackApi().getReviews(bookingId: bookingId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Center(child: CircularProgressIndicator());

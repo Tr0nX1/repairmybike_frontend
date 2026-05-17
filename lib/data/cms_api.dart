@@ -14,7 +14,7 @@ class CMSApi {
 
   Future<List<BannerItem>> getBanners() async {
     try {
-      final response = await _client.get('/api/cms/banners/');
+      final response = await _client.get('api/cms/banners/');
       List<dynamic> list = [];
       if (response.data is List) {
         list = response.data;
