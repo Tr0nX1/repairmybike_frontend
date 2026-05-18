@@ -90,8 +90,8 @@ class Policy {
     return Policy(
       id: json['id'],
       title: json['title'],
-      slug: json['slug'],
-      content: json['content'],
+      slug: json['slug'] ?? json['key'],
+      content: json['content'] ?? json['body'],
       updatedAt: DateTime.parse(json['updated_at']),
     );
   }

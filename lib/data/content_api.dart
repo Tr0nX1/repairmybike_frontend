@@ -46,17 +46,7 @@ class ContentApi {
 
   Future<Policy?> getPolicy(String slug) async {
     try {
-      // Map frontend slugs to backend keys if necessary
-      final String key;
-      if (slug == 'terms-and-conditions') {
-        key = 'terms';
-      } else if (slug == 'privacy-policy') {
-        key = 'privacy';
-      } else {
-        key = slug;
-      }
-      
-      final response = await _client.get('api/content/pages/$key/');
+      final response = await _client.get('api/content/pages/$slug/');
       return Policy.fromJson(response.data);
     } catch (_) {
       return null;
