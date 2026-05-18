@@ -54,6 +54,24 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     super.dispose();
   }
 
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted && AppState.isAuthenticated) {
+        _redirectAuthenticated();
+      }
+    });
+  }
+
+  void _redirectAuthenticated() {
+    if (AppState.isStaff) {
+      context.go('/staff');
+      return;
+    }
+    context.go(AppState.hasVehicle ? '/home' : '/vehicle-type?phone=${AppState.phoneNumber}');
+  }
+
   void _startCountdown([int seconds = 30]) {
     _timer?.cancel();
     setState(() => _secondsLeft = seconds);
@@ -285,6 +303,11 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   @override
   Widget build(BuildContext context) {
     final authenticated = AppState.isAuthenticated;
+    if (authenticated) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _redirectAuthenticated();
+      });
+    }
     return Scaffold(
       backgroundColor: bg,
       appBar: AppBar(
@@ -428,13 +451,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                   ),
                 ),
               ] else ...[
-                const Icon(Icons.check_circle, color: accent, size: 48),
-                const SizedBox(height: 8),
-                const Text(
-                  'Signed in',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.white70, fontSize: 18),
-                ),
+                const Center(child: CircularProgressIndicator(color: accent)),
               ],
             ],
           ),

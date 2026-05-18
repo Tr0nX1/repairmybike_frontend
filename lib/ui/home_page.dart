@@ -7,7 +7,6 @@ import '../providers/category_provider.dart';
 import '../models/category.dart';
 import 'subscription_section.dart';
 import 'spare_parts_section.dart';
-import '../data/app_state.dart';
 import '../providers/category_provider.dart' as providers;
 import '../providers/saved_services_provider.dart';
 import '../providers/notifications_provider.dart';
@@ -44,7 +43,12 @@ class _HomePageState extends ConsumerState<HomePage> {
     });
   }
 
-  void _showVehiclePicker(BuildContext context, WidgetRef ref, List<dynamic> vehicles) {
+  void _showVehiclePicker(
+    BuildContext context,
+    WidgetRef ref,
+    List<dynamic> vehicles,
+    CurrentVehicle currentVehicle,
+  ) {
     showModalBottomSheet(
       context: context,
       backgroundColor: card,
@@ -60,23 +64,24 @@ class _HomePageState extends ConsumerState<HomePage> {
             ...vehicles.map((v) {
               final details = v['vehicle_model_details'];
               if (details == null) return const SizedBox.shrink();
-              final isSelected = AppState.vehicleModelId == details['id'];
+              final detailsId = (details['id'] as num?)?.toInt();
+              final isSelected = currentVehicle.modelId == detailsId;
               return ListTile(
                 leading: Icon(Icons.two_wheeler, color: isSelected ? accent : Colors.white54),
                 title: Text(details['name'] ?? 'Vehicle', style: TextStyle(color: isSelected ? accent : Colors.white)),
                 subtitle: Text(details['brand_name'] ?? '', style: const TextStyle(color: Colors.white54, fontSize: 12)),
                 trailing: isSelected ? const Icon(Icons.check, color: accent) : null,
                 onTap: () async {
+                  if (detailsId == null) return;
                   try {
                     await ref.read(currentVehicleProvider.notifier).setVehicle(
-                      modelId: (details['id'] as num).toInt(),
+                      modelId: detailsId,
                       name: details['name']?.toString() ?? 'Vehicle',
                       brandName: details['brand_name']?.toString(),
                       typeName: details['vehicle_type_name']?.toString(),
                       imageUrl: buildImageUrl(details['image']),
                       syncToBackend: true,
                     );
-                    // The notifier now handles profile fetch and self-invalidation
                   } catch (e) {
                     debugPrint('Error switching vehicle: $e');
                     if (context.mounted) {
@@ -87,7 +92,6 @@ class _HomePageState extends ConsumerState<HomePage> {
                     return;
                   }
                   if (context.mounted) Navigator.pop(ctx);
-                  if (mounted) setState(() {});
                 },
               );
             }),
@@ -109,6 +113,7 @@ class _HomePageState extends ConsumerState<HomePage> {
   @override
   Widget build(BuildContext context) {
     final asyncCategories = ref.watch(categoriesProvider);
+    final currentVehicle = ref.watch(currentVehicleProvider);
     final screenWidth = MediaQuery.of(context).size.width;
     final isPhone = screenWidth < 600;
     final horizontalPad = isPhone ? 16.0 : 24.0;
@@ -153,28 +158,34 @@ class _HomePageState extends ConsumerState<HomePage> {
                               );
                             }
                             
-                            if (vehicles.length == 1 && !AppState.hasVehicle) {
+                            if (vehicles.length == 1 && !currentVehicle.isSet) {
                                final v = vehicles.first;
                                final details = v['vehicle_model_details'];
                                if (details != null) {
-                                  Future.microtask(() => AppState.setVehicle(
-                                    name: details['name'],
-                                    modelId: details['id'],
-                                    brand: details['brand_name'],
-                                    type: details['vehicle_type_name'],
-                                    syncToBackend: false,
-                                  ));
+                                  final detailsId = (details['id'] as num?)?.toInt();
+                                  if (detailsId != null) {
+                                    Future.microtask(
+                                      () => ref.read(currentVehicleProvider.notifier).setVehicle(
+                                            modelId: detailsId,
+                                            name: details['name']?.toString() ?? 'Vehicle',
+                                            brandName: details['brand_name']?.toString(),
+                                            typeName: details['vehicle_type_name']?.toString(),
+                                            imageUrl: buildImageUrl(details['image']),
+                                            syncToBackend: false,
+                                          ),
+                                    );
+                                  }
                                }
                             }
 
-                            final b = AppState.vehicleBrand;
-                            final m = AppState.vehicleName;
+                            final b = currentVehicle.brandName;
+                            final m = currentVehicle.name;
                             final display = (b == null || b.isEmpty) 
                                 ? (m ?? 'Select Vehicle') 
                                 : "$b ${m ?? ''}";
 
                             return GestureDetector(
-                              onTap: () => _showVehiclePicker(context, ref, vehicles),
+                              onTap: () => _showVehiclePicker(context, ref, vehicles, currentVehicle),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [

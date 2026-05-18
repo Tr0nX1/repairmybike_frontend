@@ -98,6 +98,14 @@ class AppError {
       return null; // caller uses fallback
     }
 
+    final lower = s.toLowerCase();
+    if (lower.contains('typeerror:') ||
+        lower.contains('minified:') ||
+        lower.contains(' is not a subtype of type ') ||
+        lower.contains('cast') && lower.contains('type')) {
+      return null;
+    }
+
     // Truncate very long messages (stack traces, full exception dumps)
     if (s.length > _maxLength) {
       return '${s.substring(0, _maxLength)}…';

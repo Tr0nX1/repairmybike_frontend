@@ -78,6 +78,23 @@ bool _isPublicRoute(String location) {
   return _publicRoutes.contains(path);
 }
 
+Map<String, dynamic>? _extraMap(Object? extra) {
+  if (extra is Map<String, dynamic>) return extra;
+  if (extra is Map) {
+    return {
+      for (final entry in extra.entries) entry.key.toString(): entry.value,
+    };
+  }
+  return null;
+}
+
+int _extraInt(Map<String, dynamic>? extra, String key) {
+  final value = extra?[key];
+  if (value is int) return value;
+  if (value is num) return value.toInt();
+  return int.tryParse(value?.toString() ?? '') ?? 0;
+}
+
 final router = GoRouter(
   initialLocation: '/',
   navigatorKey: _rootNavigatorKey,
@@ -241,10 +258,10 @@ final router = GoRouter(
     GoRoute(
       path: '/vehicle-brand',
       builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        final phone = extra?['phone'] as String?;
-        final vehicleTypeId = extra?['vehicleTypeId'] as int? ?? 0;
-        final vehicleTypeName = extra?['vehicleTypeName'] as String? ?? '';
+        final extra = _extraMap(state.extra);
+        final phone = extra?['phone']?.toString();
+        final vehicleTypeId = _extraInt(extra, 'vehicleTypeId');
+        final vehicleTypeName = extra?['vehicleTypeName']?.toString() ?? '';
         return VehicleBrandPage(
           phone: phone,
           vehicleTypeId: vehicleTypeId,
@@ -255,12 +272,12 @@ final router = GoRouter(
     GoRoute(
       path: '/vehicle-name',
       builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        final phone = extra?['phone'] as String?;
-        final vehicleTypeId = extra?['vehicleTypeId'] as int? ?? 0;
-        final vehicleTypeName = extra?['vehicleTypeName'] as String? ?? '';
-        final brandId = extra?['brandId'] as int? ?? 0;
-        final brandName = extra?['brandName'] as String? ?? '';
+        final extra = _extraMap(state.extra);
+        final phone = extra?['phone']?.toString();
+        final vehicleTypeId = _extraInt(extra, 'vehicleTypeId');
+        final vehicleTypeName = extra?['vehicleTypeName']?.toString() ?? '';
+        final brandId = _extraInt(extra, 'brandId');
+        final brandName = extra?['brandName']?.toString() ?? '';
         return VehicleNamePage(
           phone: phone,
           vehicleTypeId: vehicleTypeId,
@@ -337,7 +354,7 @@ final router = GoRouter(
     GoRoute(
       path: '/booking-confirmation',
       builder: (context, state) {
-        final booking = state.extra as Map<String, dynamic>?;
+        final booking = _extraMap(state.extra);
         if (booking == null) return const Scaffold(body: Center(child: Text('Invalid booking data')));
         return BookingConfirmationPage(booking: booking);
       },
@@ -373,9 +390,10 @@ final router = GoRouter(
     GoRoute(
       path: '/membership-detail',
       builder: (context, state) {
-        final extra = state.extra as Map<String, dynamic>?;
-        final tierName = extra?['tierName'] as String? ?? '';
-        final options = extra?['options'] as List<SubscriptionPlan>? ?? [];
+        final extra = _extraMap(state.extra);
+        final tierName = extra?['tierName']?.toString() ?? '';
+        final rawOptions = extra?['options'];
+        final options = rawOptions is List<SubscriptionPlan> ? rawOptions : <SubscriptionPlan>[];
         return MembershipDetailPage(tierName: tierName, options: options);
       },
     ),
@@ -386,7 +404,7 @@ final router = GoRouter(
     GoRoute(
       path: '/service-detail',
       builder: (context, state) {
-        final service = state.extra as Service?;
+        final service = state.extra is Service ? state.extra as Service : null;
         if (service != null) {
           return ServiceDetailPage(service: service);
         }

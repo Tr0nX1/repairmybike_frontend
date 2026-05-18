@@ -18,12 +18,6 @@ void main() async {
 
   // 1. Global UI Error Boundary (Red Screen Replacement)
   ErrorWidget.builder = (FlutterErrorDetails details) {
-    bool isDebug = false;
-    assert(() {
-      isDebug = true;
-      return true;
-    }());
-    
     // Log the error globally
     debugPrint('🚨 GLOBAL UI ERROR: ${details.exceptionAsString()}');
     debugPrint(details.stack?.toString());
@@ -43,12 +37,10 @@ void main() async {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.white),
               ),
               const SizedBox(height: 8),
-              Text(
-                isDebug 
-                    ? details.exceptionAsString() 
-                    : 'We hit a technical snag. Our team has been notified. Please restart the app.',
+              const Text(
+                'We hit a technical snag. Please continue or refresh the page.',
                 textAlign: TextAlign.center,
-                style: const TextStyle(fontSize: 14, color: Colors.white70),
+                style: TextStyle(fontSize: 14, color: Colors.white70),
               ),
             ],
           ),
