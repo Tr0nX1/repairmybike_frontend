@@ -93,7 +93,7 @@ class SparePartListItem {
           ? json['rating_average'] as num
           : num.tryParse(json['rating_average']?.toString() ?? '0') ?? 0,
       ratingCount: (json['rating_count'] as num?)?.toInt() ?? 0,
-      thumbnail: extractUrl(json['thumbnail'] ?? json['cloudinary_url']),
+      thumbnail: extractUrl(json['thumbnail_url'] ?? json['thumbnail'] ?? json['cloudinary_url']),
       images: normalizeImages(json['images'] ?? json['gallery'] ?? json['image_urls']),
       description: json['description'] as String?,
       specs: normalizeMap(json['specs'] ?? json['specifications'] ?? json['attributes']),

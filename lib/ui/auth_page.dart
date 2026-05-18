@@ -76,8 +76,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     setState(() => _loading = true);
     try {
       final res = await _api.loginStaff(username: username, password: password);
-      final session = (res['session_token'] ?? '') as String;
-      final refresh = (res['refresh_token'] ?? '') as String?;
+      final session = res['session_token']?.toString() ?? '';
+      final refresh = res['refresh_token']?.toString();
       
       // BUG 1 FIX: Update both AppState and authProvider
       await AppState.setStaffAuth(
@@ -124,7 +124,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         _phoneLocked = true;
         _lockedPhone = phone;
       });
-      _startCountdown(30); // BUG 5 FIX
+      _startCountdown(30); 
       _showSnack('OTP sent');
     } catch (e) {
       final msg = AppError.sanitize(e, fallback: 'Failed to send OTP');
@@ -156,8 +156,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     setState(() => _loading = true);
     try {
       final res = await _api.verifyOtpPhone(phone: phone, code: code);
-      final session = (res['session_token'] ?? '') as String;
-      final refresh = (res['refresh_token'] ?? '') as String;
+      final session = res['session_token']?.toString() ?? '';
+      final refresh = res['refresh_token']?.toString() ?? '';
       
       // BUG 1 FIX: Update both AppState and authProvider
       await AppState.setAuth(phone: phone, session: session, refresh: refresh);
@@ -375,7 +375,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                       ? null
                       : () {
                           final phone = _phoneCtrl.text.trim();
-                          context.push('/vehicle-type?phone=${phone.isEmpty ? "" : phone}');
+                          context.go('/vehicle-type?phone=${phone.isEmpty ? "" : phone}');
                         },
                   style: OutlinedButton.styleFrom(
                     side: const BorderSide(color: accent),
@@ -399,7 +399,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            context.push('/terms');
+                            context.go('/terms');
                           },
                       ),
                       const TextSpan(text: ' & '),
@@ -411,7 +411,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                         ),
                         recognizer: TapGestureRecognizer()
                           ..onTap = () {
-                            context.push('/privacy');
+                            context.go('/privacy');
                           },
                       ),
                       const TextSpan(text: '.'),

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'utils/api_config.dart';
 import 'package:url_strategy/url_strategy.dart';
 
 import 'package:firebase_core/firebase_core.dart';
@@ -75,7 +74,6 @@ void main() async {
     debugPrint('Firebase initialization failed (likely missing config): $e');
   }
 
-  debugPrint('🔥 BACKEND BASE URL: $backendBase');
   runApp(
     ProviderScope(
       overrides: [

@@ -303,38 +303,44 @@ class AppState {
     
     // 1. Basic Profile Info
     fullName = "${data['first_name'] ?? ''} ${data['last_name'] ?? ''}".trim();
-    if (fullName!.isEmpty) fullName = data['username'];
-    email = data['email'];
-    avatarUrl = data['profile_picture'];
-    loyaltyPoints = data['loyalty_points'] as int?;
+    if (fullName!.isEmpty) fullName = data['username']?.toString() ?? 'User';
+    email = data['email']?.toString() ?? '';
+    avatarUrl = data['profile_picture']?.toString();
+    loyaltyPoints = (data['loyalty_points'] as num?)?.toInt();
     
     await prefs.setString(_kFullName, fullName!);
-    if (email != null) await prefs.setString(_kEmail, email!);
-    if (avatarUrl != null) await prefs.setString(_kAvatarUrl, avatarUrl!);
-    if (loyaltyPoints != null) await prefs.setInt(_kLoyaltyPoints, loyaltyPoints!);
+    await prefs.setString(_kEmail, email!);
+    if (avatarUrl != null) {
+      await prefs.setString(_kAvatarUrl, avatarUrl!);
+    } else {
+      await prefs.remove(_kAvatarUrl);
+    }
+    if (loyaltyPoints != null) {
+      await prefs.setInt(_kLoyaltyPoints, loyaltyPoints!);
+    }
 
     // 2. Address Info (Sync default address)
-    final List? addresses = data['addresses'];
-    if (kDebugMode) {
-      debugPrint('📦 Syncing profile addresses: ${addresses?.length ?? 0} found');
-    }
+    final dynamic addressesRaw = data['addresses'];
+    final List? addresses = addressesRaw is List ? addressesRaw : null;
 
     if (addresses != null && addresses.isNotEmpty) {
       // Find default address or take first
       Map<String, dynamic>? addr;
       try {
-        addr = addresses.firstWhere(
-          (a) => a['is_default'] == true,
+        final found = addresses.firstWhere(
+          (a) => a is Map && a['is_default'] == true,
           orElse: () => addresses.first,
-        ) as Map<String, dynamic>?;
+        );
+        if (found is Map) {
+          addr = Map<String, dynamic>.from(found);
+        }
       } catch (_) {
-        addr = addresses.first as Map<String, dynamic>?;
+        if (addresses.first is Map) {
+          addr = Map<String, dynamic>.from(addresses.first);
+        }
       }
       
       if (addr != null) {
-        if (kDebugMode) {
-            debugPrint('🏠 Selected address for sync: ${addr['flat_house_no']}, ${addr['town_city']}');
-        }
         addrFlat = addr['flat_house_no']?.toString();
         addrArea = addr['area_street']?.toString();
         addrLandmark = addr['landmark']?.toString();
@@ -353,29 +359,27 @@ class AppState {
         if (addrPhone != null) await prefs.setString(_kAddrPhone, addrPhone!);
         if (addrInstructions != null) await prefs.setString(_kAddrInstructions, addrInstructions!);
       }
-    } else {
-      if (kDebugMode) {
-        debugPrint('⚠️ No addresses found in profile data');
-      }
     }
 
     // 3. Vehicle Info
-    final Map<String, dynamic>? defVehicle = data['default_vehicle'];
+    final dynamic defVehicleRaw = data['default_vehicle'];
+    final Map<String, dynamic>? defVehicle = defVehicleRaw is Map ? Map<String, dynamic>.from(defVehicleRaw) : null;
+    
     if (defVehicle != null) {
-      vehicleName = defVehicle['name'];
-      vehicleModelId = defVehicle['id'];
+      vehicleName = defVehicle['name']?.toString();
+      vehicleModelId = (defVehicle['id'] as num?)?.toInt();
       
       // Extended fields if present in serializer
-      final brand = defVehicle['brand_name'] ?? defVehicle['brand']?['name'];
-      if (brand != null) vehicleBrand = brand;
+      final brand = defVehicle['brand_name'] ?? (defVehicle['brand'] is Map ? defVehicle['brand']['name'] : null);
+      if (brand != null) vehicleBrand = brand.toString();
       
-      final type = defVehicle['type_name'] ?? defVehicle['vehicle_type']?['name'];
-      if (type != null) vehicleType = type;
+      final type = defVehicle['type_name'] ?? (defVehicle['vehicle_type'] is Map ? defVehicle['vehicle_type']['name'] : null);
+      if (type != null) vehicleType = type.toString();
 
-      final img = defVehicle['image'];
+      final img = defVehicle['image']?.toString();
       if (img != null) vehicleImageUrl = img;
 
-      await prefs.setString(_kVehicleName, vehicleName!);
+      if (vehicleName != null) await prefs.setString(_kVehicleName, vehicleName!);
       if (vehicleModelId != null) await prefs.setInt(_kVehicleModelId, vehicleModelId!);
       if (vehicleBrand != null) await prefs.setString(_kVehicleBrand, vehicleBrand!);
       if (vehicleType != null) await prefs.setString(_kVehicleType, vehicleType!);

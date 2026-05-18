@@ -46,13 +46,14 @@ class ProfileNotifier extends AsyncNotifier<UserProfile?> {
         final profile = UserProfile(
           fullName: "${data['first_name'] ?? ''} ${data['last_name'] ?? ''}".trim().isNotEmpty
               ? "${data['first_name'] ?? ''} ${data['last_name'] ?? ''}".trim()
-              : data['username'] ?? 'User',
-          email: data['email'],
-          avatarUrl: data['profile_picture'],
+              : data['username']?.toString() ?? 'User',
+          email: data['email']?.toString(),
+          avatarUrl: data['profile_picture']?.toString(),
           addresses: (data['addresses'] as List<dynamic>?)
                   ?.whereType<Map<String, dynamic>>()
+                  .map((e) => Map<String, dynamic>.from(e))
                   .toList() ?? [],
-          defaultVehicle: data['default_vehicle'],
+          defaultVehicle: data['default_vehicle'] is Map ? Map<String, dynamic>.from(data['default_vehicle']) : null,
         );
         
         state = AsyncValue.data(profile);

@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'api_client.dart';
 import 'app_state.dart';
 import '../utils/phone_utils.dart';
@@ -107,18 +106,10 @@ class AuthApi {
         'device_id': AppState.deviceId,
       };
 
-      debugPrint('=== API CALL DEBUG ===');
-      debugPrint('Endpoint: api/auth/otp/verify/');
-      debugPrint('Payload: $payload');
-
       final res = await _dio.post(
         'api/auth/otp/verify/',
         data: payload,
       );
-
-      debugPrint('=== RESPONSE DEBUG ===');
-      debugPrint('Status: ${res.statusCode}');
-      debugPrint('Body: ${res.data}');
 
       final data = res.data;
       if (data is Map<String, dynamic>) {

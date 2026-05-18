@@ -205,7 +205,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
 
   Widget _buildLoginBtn(BuildContext context) {
     return ElevatedButton(
-      onPressed: () => context.push('/auth'),
+      onPressed: () => context.go('/auth'),
       style: ElevatedButton.styleFrom(
         backgroundColor: brandPrimary,
         foregroundColor: brandBlack,
@@ -295,7 +295,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
         boxShadow: [neonBlueGlow],
       ),
       child: ElevatedButton(
-        onPressed: () => context.push('/auth'),
+        onPressed: () => context.go('/auth'),
         style: ElevatedButton.styleFrom(
           backgroundColor: neonBlue,
           foregroundColor: neonDark,
@@ -636,7 +636,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
                           SizedBox(
                             width: double.infinity,
                             child: ElevatedButton(
-                              onPressed: () => context.push('/auth'),
+                              onPressed: () => context.go('/auth'),
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: p.name.contains('Premium')
                                     ? neonDark
@@ -1181,7 +1181,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
             return Padding(
               padding: const EdgeInsets.only(bottom: 14),
               child: InkWell(
-                onTap: hasRoute ? () => context.push(routes[i]) : null,
+                onTap: hasRoute ? () => context.go(routes[i]) : null,
                 hoverColor: Colors.transparent,
                 child: Text(
                   links[i],

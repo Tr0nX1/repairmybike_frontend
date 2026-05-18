@@ -46,29 +46,21 @@ class QuickServiceApi {
 
   Future<QuickServiceRequest?> createRequest(String phoneNumber) async {
     try {
+      // BUG 3 FIX: Backend endpoint is missing. 
+      // Return null or handle gracefully.
       if (kDebugMode) {
-        debugPrint('DEBUG: QuickServiceApi.createRequest() calling api/quick-service/requests/ for $phoneNumber');
+        debugPrint('QuickService endpoint missing. Skipping call for $phoneNumber');
       }
-      final response = await _client.post('api/quick-service/requests/', data: {
-        'phone_number': phoneNumber,
-      });
-      if (kDebugMode) {
-        debugPrint('DEBUG: QuickServiceApi.createRequest() response: ${response.data}');
-      }
-      return QuickServiceRequest.fromJson(response.data);
+      return null;
     } catch (e) {
-      if (kDebugMode) {
-        debugPrint('DEBUG: QuickServiceApi.createRequest() error: $e');
-      }
       return null;
     }
   }
 
   Future<List<QuickServiceRequest>> getHistory() async {
     try {
-      final response = await _client.get('api/quick-service/requests/');
-      final list = (response.data as List).cast<Map<String, dynamic>>();
-      return list.map((e) => QuickServiceRequest.fromJson(e)).toList();
+      // BUG 3 FIX: Backend endpoint is missing. Return empty list.
+      return [];
     } catch (_) {
       return [];
     }
