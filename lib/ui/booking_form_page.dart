@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../utils/app_error.dart';
 import '../models/service.dart';
+import '../data/app_state.dart';
 import '../data/vehicles_api.dart';
 import '../models/postal_address.dart';
 import 'widgets/address_form_fields.dart';
@@ -39,8 +40,10 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
 
   final _vehiclesApi = VehiclesApi();
   List<VehicleTypeItem> _vehicleTypes = [];
+  VehicleTypeItem? _selectedType;
 
   List<VehicleBrandItem> _vehicleBrands = [];
+  VehicleBrandItem? _selectedBrand;
 
   List<VehicleModelItem> _vehicleModels = [];
   VehicleModelItem? _selectedModel;
@@ -75,6 +78,11 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
     if (_flatCtrl.text.isEmpty && profile.defaultAddress != null) {
       _onAddressPicked(profile.defaultAddress!['id'] as int?);
     }
+    if (_selectedModel == null &&
+        AppState.vehicleModelId != null &&
+        _vehicleTypes.isNotEmpty) {
+      _preselectVehicleFromAppState();
+    }
     _initializedProfile = true;
   }
 
@@ -102,7 +110,11 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
   Future<void> _loadVehicleTypes() async {
     try {
       final items = await _vehiclesApi.getVehicleTypes();
-      if (mounted) setState(() => _vehicleTypes = items);
+      if (!mounted) return;
+      setState(() => _vehicleTypes = items);
+      if (_selectedModel == null && AppState.vehicleModelId != null) {
+        await _preselectVehicleFromAppState();
+      }
     } catch (e) { _showSnack('Error loading vehicle types'); }
   }
 
@@ -118,6 +130,52 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
       final items = await _vehiclesApi.getVehicleModels(id);
       if (mounted) setState(() => _vehicleModels = items);
     } catch (e) { _showSnack('Error loading models'); }
+  }
+
+  T? _firstWhereOrNull<T>(Iterable<T> items, bool Function(T item) test) {
+    for (final item in items) {
+      if (test(item)) return item;
+    }
+    return null;
+  }
+
+  Future<void> _preselectVehicleFromAppState() async {
+    final modelId = AppState.vehicleModelId;
+    if (modelId == null || !mounted) return;
+
+    try {
+      final model = await _vehiclesApi.getVehicleModelById(modelId);
+      if (!mounted) return;
+
+      final matchingType = _firstWhereOrNull(
+        _vehicleTypes,
+        (t) => t.name == model.vehicleTypeName,
+      );
+      if (matchingType == null) return;
+
+      final brands = await _vehiclesApi.getVehicleBrands(matchingType.id);
+      if (!mounted) return;
+
+      final matchingBrand = _firstWhereOrNull(
+        brands,
+        (b) => b.id == model.vehicleBrandId,
+      );
+      if (matchingBrand == null) return;
+
+      final models = await _vehiclesApi.getVehicleModels(model.vehicleBrandId);
+      if (!mounted) return;
+
+      final matched = _firstWhereOrNull(models, (m) => m.id == modelId);
+      if (matched == null) return;
+
+      setState(() {
+        _selectedType = matchingType;
+        _vehicleBrands = brands;
+        _selectedBrand = matchingBrand;
+        _vehicleModels = models;
+        _selectedModel = matched;
+      });
+    } catch (_) {}
   }
 
   void _showSnack(String msg) {
@@ -142,7 +200,8 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
 
   Future<void> _submit() async {
     if (!_formKey.currentState!.validate()) return;
-    if (_selectedModel == null) return _showSnack('Select vehicle model');
+    final vehicleId = _selectedModel?.id ?? AppState.vehicleModelId;
+    if (vehicleId == null) return _showSnack('Select vehicle model');
     if (_selectedDate == null || _selectedTime == null) return _showSnack('Select schedule');
 
     final address = PostalAddress(
@@ -155,7 +214,7 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
     final payload = {
       'customer_name': _nameCtrl.text.trim(), 'customer_phone': _phoneCtrl.text.trim(),
       'customer_email': _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
-      'vehicle_model_id': _selectedModel!.id, 'service_ids': [widget.service.id],
+      'vehicle_model_id': vehicleId, 'service_ids': [widget.service.id],
       'service_location': _serviceLocation,
       'address': _serviceLocation == 'home' ? address.toFullString() : null,
       'address_details': _serviceLocation == 'home' ? address.toJson() : null,
@@ -196,20 +255,66 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
               const SizedBox(height: 16),
               _inputCard(title: 'Vehicle', child: Column(children: [
                 DropdownButtonFormField<VehicleTypeItem>(
-                  dropdownColor: card, decoration: _inputDecoration('Type'),
-                  items: _vehicleTypes.map((t) => DropdownMenuItem(value: t, child: Text(t.name, style: const TextStyle(color: Colors.white)))).toList(),
-                  onChanged: (v) { setState(() { _selectedModel = null; }); if (v != null) _loadVehicleBrands(v.id); },
+                  dropdownColor: card,
+                  decoration: _inputDecoration('Type'),
+                  value: _selectedType,
+                  items: _vehicleTypes
+                      .map((t) => DropdownMenuItem(
+                            value: t,
+                            child: Text(
+                              t.name,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (v) {
+                    setState(() {
+                      _selectedType = v;
+                      _selectedBrand = null;
+                      _selectedModel = null;
+                      _vehicleBrands = [];
+                      _vehicleModels = [];
+                    });
+                    if (v != null) _loadVehicleBrands(v.id);
+                  },
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<VehicleBrandItem>(
-                  dropdownColor: card, decoration: _inputDecoration('Brand'),
-                  items: _vehicleBrands.map((b) => DropdownMenuItem(value: b, child: Text(b.name, style: const TextStyle(color: Colors.white)))).toList(),
-                  onChanged: (v) { setState(() { _selectedModel = null; }); if (v != null) _loadVehicleModels(v.id); },
+                  dropdownColor: card,
+                  decoration: _inputDecoration('Brand'),
+                  value: _selectedBrand,
+                  items: _vehicleBrands
+                      .map((b) => DropdownMenuItem(
+                            value: b,
+                            child: Text(
+                              b.name,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ))
+                      .toList(),
+                  onChanged: (v) {
+                    setState(() {
+                      _selectedBrand = v;
+                      _selectedModel = null;
+                      _vehicleModels = [];
+                    });
+                    if (v != null) _loadVehicleModels(v.id);
+                  },
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<VehicleModelItem>(
-                  dropdownColor: card, decoration: _inputDecoration('Model'),
-                  items: _vehicleModels.map((m) => DropdownMenuItem(value: m, child: Text(m.name, style: const TextStyle(color: Colors.white)))).toList(),
+                  dropdownColor: card,
+                  decoration: _inputDecoration('Model'),
+                  value: _selectedModel,
+                  items: _vehicleModels
+                      .map((m) => DropdownMenuItem(
+                            value: m,
+                            child: Text(
+                              m.name,
+                              style: const TextStyle(color: Colors.white),
+                            ),
+                          ))
+                      .toList(),
                   onChanged: (v) => setState(() => _selectedModel = v),
                 ),
               ])),

@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../network/secure_api_client.dart';
+import '../../providers/current_vehicle_provider.dart';
 // ignore: depend_on_referenced_packages
 import '../app_state.dart' as legacy;
 
@@ -60,6 +61,7 @@ class ProfileNotifier extends AsyncNotifier<UserProfile?> {
 
         // SYNC BACKWARDS TO LEGACY APPSTATE 
         await legacy.AppState.updateFromProfileMap(data);
+        ref.read(currentVehicleProvider.notifier).hydrateFromProfile(profile.defaultVehicle);
       } else {
         state = AsyncValue.error('Invalid profile data payload from server', StackTrace.current);
       }

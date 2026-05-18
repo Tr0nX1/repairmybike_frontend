@@ -180,6 +180,18 @@ class VehiclesApi {
     throw Exception('Unexpected response shape for vehicle models');
   }
 
+  Future<VehicleModelItem> getVehicleModelById(int modelId) async {
+    final res = await _dio.get('api/vehicles/vehicle-models/$modelId/');
+    final body = res.data;
+    if (body is Map<String, dynamic>) {
+      if (body['error'] == true) {
+        throw Exception(body['message'] ?? 'Failed to load vehicle model');
+      }
+      return VehicleModelItem.fromJson(body);
+    }
+    throw Exception('Unexpected response shape for vehicle model $modelId');
+  }
+
   Future<Map<String, dynamic>> addUserVehicle({
     required String sessionToken,
     required int vehicleModelId,
