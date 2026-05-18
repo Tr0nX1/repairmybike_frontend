@@ -216,6 +216,26 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                 _Section(title: 'Legal'),
                 _ActionTile(label: 'Terms & Conditions', icon: Icons.description_outlined, onTap: () => context.push('/terms-and-conditions')),
                 _ActionTile(label: 'Privacy Policy', icon: Icons.privacy_tip_outlined, onTap: () => context.push('/privacy-policy')),
+                _ActionTile(
+                  label: 'Refund & Cancellation Policy',
+                  icon: Icons.receipt_long_outlined,
+                  onTap: () => context.push('/refund-and-cancellation-policy'),
+                ),
+                _ActionTile(
+                  label: 'Shipping & Delivery Policy',
+                  icon: Icons.local_shipping_outlined,
+                  onTap: () => context.push('/shipping-and-delivery-policy'),
+                ),
+                _ActionTile(
+                  label: 'Payment Policy',
+                  icon: Icons.payments_outlined,
+                  onTap: () => context.push('/payment-policy'),
+                ),
+                _ActionTile(
+                  label: 'Service Policy',
+                  icon: Icons.build_circle_outlined,
+                  onTap: () => context.push('/service-policy'),
+                ),
                 const SizedBox(height: 24),
                 if (AppState.isAuthenticated)
                   SizedBox(

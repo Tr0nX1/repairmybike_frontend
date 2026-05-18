@@ -57,6 +57,27 @@ final _rootNavigatorKey = GlobalKey<NavigatorState>();
 /// Whether AppState has been loaded from disk in this session.
 bool _appStateInitialized = false;
 
+const Set<String> _publicRoutes = {
+  '/',
+  '/auth',
+  '/splash',
+  '/terms-and-conditions',
+  '/privacy-policy',
+  '/refund-and-cancellation-policy',
+  '/shipping-and-delivery-policy',
+  '/payment-policy',
+  '/service-policy',
+  '/terms',
+  '/privacy',
+  '/refund',
+  '/shipping',
+};
+
+bool _isPublicRoute(String location) {
+  final path = Uri.parse(location).path;
+  return _publicRoutes.contains(path);
+}
+
 final router = GoRouter(
   initialLocation: '/',
   navigatorKey: _rootNavigatorKey,
@@ -75,7 +96,7 @@ final router = GoRouter(
 
     // Not authenticated? Allow only public routes
     if (!isAuthenticated) {
-      if (location == '/' || location == '/auth' || location.startsWith('/splash')) return null;
+      if (_isPublicRoute(location)) return null;
       return '/auth';
     }
 
