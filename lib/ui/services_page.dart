@@ -200,24 +200,19 @@ class _ChipItem {
   const _ChipItem({required this.id, required this.label, this.image});
 }
 
-class _ServiceCard extends StatefulWidget {
+class _ServiceCard extends ConsumerWidget {
   final Service service;
   const _ServiceCard({required this.service});
 
   @override
-  State<_ServiceCard> createState() => _ServiceCardState();
-}
-
-class _ServiceCardState extends State<_ServiceCard> {
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     const cardColor = Color(0xFF1C1C1C);
     const borderColor = Color(0xFF2A2A2A);
 
-    final s = widget.service;
+    final s = service;
     final rating = double.tryParse(s.rating) ?? 0.0;
     final imageUrl = buildImageUrl(s.images.isNotEmpty ? s.images.first : null);
-    final liked = AppState.isServiceLiked(s.id);
+    final liked = ref.watch(savedServicesProvider).contains(s.id);
 
     return GestureDetector(
       onTap: () {
@@ -367,8 +362,7 @@ class _ServiceCardState extends State<_ServiceCard> {
             right: 10,
             child: InkWell(
               onTap: () async {
-                await AppState.toggleLikeService(s.id);
-                if (mounted) setState(() {});
+                await ref.read(savedServicesProvider.notifier).toggle(s.id);
               },
               child: Container(
                 width: 34,

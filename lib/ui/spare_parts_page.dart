@@ -164,13 +164,15 @@ class _SparePartsPageState extends ConsumerState<SparePartsPage> {
   }
 }
 
-class _SparePartCard extends StatelessWidget {
+class _SparePartCard extends ConsumerWidget {
   final SparePartListItem item;
   const _SparePartCard({required this.item});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final theme = Theme.of(context);
+    final saved = ref.watch(savedPartsProvider).contains(item.id);
+
     return InkWell(
       onTap: () {
         Navigator.of(context).push(
@@ -179,56 +181,87 @@ class _SparePartCard extends StatelessWidget {
       },
       borderRadius: BorderRadius.circular(12),
       child: Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: theme.dividerColor)),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+            side: BorderSide(color: theme.dividerColor)),
+        child: Stack(
           children: [
-            Expanded(
-              child: item.thumbnail != null && item.thumbnail!.isNotEmpty
-                  ? ClipRRect(
-                      borderRadius: BorderRadius.circular(8),
-                      child: CachedNetworkImage(
-                        imageUrl: buildImageUrl(item.thumbnail)!,
-                        fit: BoxFit.cover,
-                        width: double.infinity,
-                        placeholder: (context, url) => Shimmer.fromColors(
-                          baseColor: Colors.grey[300]!,
-                          highlightColor: Colors.grey[100]!,
-                          child: Container(color: Colors.white),
-                        ),
-                        errorWidget: (context, url, error) => const PartImagePlaceholder(),
-                      ),
-                    )
-                  : const PartImagePlaceholder(),
-            ),
-            const SizedBox(height: 8),
-            Text(item.name, style: theme.textTheme.titleMedium, maxLines: 1, overflow: TextOverflow.ellipsis),
-            const SizedBox(height: 4),
-            Row(
-              children: [
-                Text(
-                  '${item.currency} ${item.salePrice > 0 ? item.salePrice : item.mrp}',
-                  style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.bold),
-                ),
-                if (item.salePrice > 0 && item.salePrice < item.mrp) ...[
-                  const SizedBox(width: 6),
-                  Text(
-                    '${item.currency} ${item.mrp}',
-                    style: theme.textTheme.bodySmall?.copyWith(
-                      decoration: TextDecoration.lineThrough,
-                      color: theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.6),
-                    ),
+            Padding(
+              padding: const EdgeInsets.all(12.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: item.thumbnail != null && item.thumbnail!.isNotEmpty
+                        ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8),
+                            child: CachedNetworkImage(
+                              imageUrl: buildImageUrl(item.thumbnail)!,
+                              fit: BoxFit.cover,
+                              width: double.infinity,
+                              placeholder: (context, url) => Shimmer.fromColors(
+                                baseColor: Colors.grey[300]!,
+                                highlightColor: Colors.grey[100]!,
+                                child: Container(color: Colors.white),
+                              ),
+                              errorWidget: (context, url, error) =>
+                                  const PartImagePlaceholder(),
+                            ),
+                          )
+                        : const PartImagePlaceholder(),
                   ),
+                  const SizedBox(height: 8),
+                  Text(item.name,
+                      style: theme.textTheme.titleMedium,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Text(
+                        '${item.currency} ${item.salePrice > 0 ? item.salePrice : item.mrp}',
+                        style: theme.textTheme.titleSmall
+                            ?.copyWith(fontWeight: FontWeight.bold),
+                      ),
+                      if (item.salePrice > 0 && item.salePrice < item.mrp) ...[
+                        const SizedBox(width: 6),
+                        Text(
+                          '${item.currency} ${item.mrp}',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            decoration: TextDecoration.lineThrough,
+                            color: theme.colorScheme.onSurfaceVariant
+                                .withValues(alpha: 0.6),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 4),
                 ],
-              ],
+              ),
             ),
-            const SizedBox(height: 4),
+            Positioned(
+              top: 8,
+              right: 8,
+              child: InkWell(
+                onTap: () => ref.read(savedPartsProvider.notifier).toggle(item.id),
+                child: Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Colors.black26,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    saved ? Icons.favorite : Icons.favorite_border,
+                    color: saved ? Colors.redAccent : Colors.white70,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
-    ),
     );
   }
 }

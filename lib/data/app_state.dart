@@ -563,19 +563,24 @@ class AppState {
   }
 
   static Future<void> toggleLikeService(int id) async {
-    if (likedServiceIds.contains(id)) {
+    final bool currentlyLiked = likedServiceIds.contains(id);
+    if (currentlyLiked) {
       likedServiceIds.remove(id);
     } else {
       likedServiceIds.add(id);
     }
+    
+    final bool isNowLiked = likedServiceIds.contains(id);
+    
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_kLikedServices, likedServiceIds.map((e) => e.toString()).toList());
-    if (isAuthenticated) {
+    
+    if (isAuthenticated && sessionToken != null) {
       try {
-        if (likedServiceIds.contains(id)) {
-          await SavedServicesApi().removeService(id, sessionToken!);
-        } else {
+        if (isNowLiked) {
           await SavedServicesApi().saveService(id, sessionToken!);
+        } else {
+          await SavedServicesApi().removeService(id, sessionToken!);
         }
       } catch (_) {}
     }
@@ -584,19 +589,24 @@ class AppState {
   static bool isServiceLiked(int id) => likedServiceIds.contains(id);
 
   static Future<void> toggleLikePart(int id) async {
-    if (likedPartIds.contains(id)) {
+    final bool currentlyLiked = likedPartIds.contains(id);
+    if (currentlyLiked) {
       likedPartIds.remove(id);
     } else {
       likedPartIds.add(id);
     }
+    
+    final bool isNowLiked = likedPartIds.contains(id);
+    
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_kLikedParts, likedPartIds.map((e) => e.toString()).toList());
+    
     if (isAuthenticated) {
       try {
-        if (likedPartIds.contains(id)) {
-          await SparePartsApi().removePart(id);
-        } else {
+        if (isNowLiked) {
           await SparePartsApi().savePart(id);
+        } else {
+          await SparePartsApi().removePart(id);
         }
       } catch (_) {}
     }
