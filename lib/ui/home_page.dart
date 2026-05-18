@@ -14,6 +14,7 @@ import '../providers/notifications_provider.dart';
 import '../providers/vehicles_provider.dart';
 import '../providers/current_vehicle_provider.dart';
 import '../models/service.dart';
+import '../utils/app_error.dart';
 import '../utils/url_utils.dart';
 
 import 'widgets/dynamic_hero_carousel.dart';
@@ -68,11 +69,11 @@ class _HomePageState extends ConsumerState<HomePage> {
                 onTap: () async {
                   try {
                     await ref.read(currentVehicleProvider.notifier).setVehicle(
-                      modelId: details['id'],
-                      name: details['name'],
-                      brandName: details['brand_name'],
-                      typeName: details['vehicle_type_name'],
-                      imageUrl: details['image'],
+                      modelId: (details['id'] as num).toInt(),
+                      name: details['name']?.toString() ?? 'Vehicle',
+                      brandName: details['brand_name']?.toString(),
+                      typeName: details['vehicle_type_name']?.toString(),
+                      imageUrl: buildImageUrl(details['image']),
                       syncToBackend: true,
                     );
                     // The notifier now handles profile fetch and self-invalidation
@@ -80,7 +81,7 @@ class _HomePageState extends ConsumerState<HomePage> {
                     debugPrint('Error switching vehicle: $e');
                     if (context.mounted) {
                       ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Could not switch vehicle. Please try again.')),
+                        SnackBar(content: Text(AppError.sanitize(e))),
                       );
                     }
                     return;

@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/app_state.dart';
 import '../data/vehicles_api.dart';
+import '../utils/app_error.dart';
 import '../utils/url_utils.dart';
 import '../providers/current_vehicle_provider.dart';
 import 'widgets/rm_app_bar.dart';
@@ -144,7 +145,7 @@ class _VehicleNamePageState extends ConsumerState<VehicleNamePage> {
           debugPrint('Error selecting vehicle: $e');
           if (context.mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(content: Text('Could not save vehicle. Please try again.')),
+              SnackBar(content: Text(AppError.sanitize(e))),
             );
           }
           return;
