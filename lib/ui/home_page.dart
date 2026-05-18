@@ -8,11 +8,11 @@ import '../models/category.dart';
 import 'subscription_section.dart';
 import 'spare_parts_section.dart';
 import '../data/app_state.dart';
-import '../data/vehicles_api.dart';
 import '../providers/category_provider.dart' as providers;
 import '../providers/saved_services_provider.dart';
 import '../providers/notifications_provider.dart';
 import '../providers/vehicles_provider.dart';
+import '../providers/current_vehicle_provider.dart';
 import '../models/service.dart';
 import '../utils/url_utils.dart';
 
@@ -66,21 +66,27 @@ class _HomePageState extends ConsumerState<HomePage> {
                 subtitle: Text(details['brand_name'] ?? '', style: const TextStyle(color: Colors.white54, fontSize: 12)),
                 trailing: isSelected ? const Icon(Icons.check, color: accent) : null,
                 onTap: () async {
-                  await AppState.setVehicle(
-                    name: details['name'],
-                    modelId: details['id'],
-                    brand: details['brand_name'],
-                    type: details['vehicle_type_name'],
-                    syncToBackend: false,
-                  );
                   try {
-                    await VehiclesApi().setDefaultUserVehicle(
-                      userVehicleId: (v['id'] as num).toInt(),
+                    await ref.read(currentVehicleProvider.notifier).setVehicle(
+                      modelId: details['id'],
+                      name: details['name'],
+                      brandName: details['brand_name'],
+                      typeName: details['vehicle_type_name'],
+                      imageUrl: details['image'],
+                      syncToBackend: true,
                     );
-                  } catch (_) {}
-                  Navigator.pop(ctx);
-                  ref.invalidate(userVehiclesProvider);
-                  setState(() {});
+                    // The notifier now handles profile fetch and self-invalidation
+                  } catch (e) {
+                    debugPrint('Error switching vehicle: $e');
+                    if (context.mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Could not switch vehicle. Please try again.')),
+                      );
+                    }
+                    return;
+                  }
+                  if (context.mounted) Navigator.pop(ctx);
+                  if (mounted) setState(() {});
                 },
               );
             }),

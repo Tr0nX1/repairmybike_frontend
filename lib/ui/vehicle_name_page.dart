@@ -2,12 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/app_state.dart';
 import '../data/vehicles_api.dart';
 import '../utils/url_utils.dart';
+import '../providers/current_vehicle_provider.dart';
 import 'widgets/rm_app_bar.dart';
 
-class VehicleNamePage extends StatefulWidget {
+class VehicleNamePage extends ConsumerStatefulWidget {
   const VehicleNamePage({
     super.key,
     this.phone,
@@ -23,10 +25,10 @@ class VehicleNamePage extends StatefulWidget {
   final String brandName;
 
   @override
-  State<VehicleNamePage> createState() => _VehicleNamePageState();
+  ConsumerState<VehicleNamePage> createState() => _VehicleNamePageState();
 }
 
-class _VehicleNamePageState extends State<VehicleNamePage> {
+class _VehicleNamePageState extends ConsumerState<VehicleNamePage> {
   final _api = VehiclesApi();
   List<VehicleModelItem> _models = [];
   bool _loading = false;
@@ -129,11 +131,24 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
     final img = buildImageUrl(item.image);
     return GestureDetector(
       onTap: () async {
-        await AppState.setVehicle(
-            name: model, 
+        try {
+          await ref.read(currentVehicleProvider.notifier).setVehicle(
             modelId: item.id,
+            name: model,
+            brandName: widget.brandName,
+            typeName: widget.vehicleTypeName,
             imageUrl: img,
-        );
+            syncToBackend: true,
+          );
+        } catch (e) {
+          debugPrint('Error selecting vehicle: $e');
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Could not save vehicle. Please try again.')),
+            );
+          }
+          return;
+        }
         if (!context.mounted) return;
         context.go('/home');
       },
@@ -229,7 +244,11 @@ class _VehicleNamePageState extends State<VehicleNamePage> {
                 onPressed: () async {
                   if (customController.text.trim().isNotEmpty) {
                     final name = customController.text.trim();
-                    await AppState.setVehicle(name: name);
+                    // For custom models, we don't have an ID yet.
+                    // The backend will create one or we handle it as a placeholder.
+                    // For now, we'll just set it in AppState but we should ideally
+                    // have a flow that creates a custom vehicle on backend.
+                    await AppState.setVehicle(name: name, syncToBackend: false);
                     if (!context.mounted) return;
                     context.go('/home');
                   }

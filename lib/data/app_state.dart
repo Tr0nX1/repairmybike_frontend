@@ -186,6 +186,25 @@ class AppState {
     if (refresh != null) await prefs.setString(_kRefresh, refresh);
   }
 
+  static Future<void> clearVehicleCache() async {
+    if (kDebugMode) debugPrint('[AppState] clearing vehicle cache');
+    vehicleType = null;
+    vehicleBrand = null;
+    vehicleName = null;
+    vehicleModelId = null;
+    vehicleImageUrl = null;
+    vehicleBrandImageUrl = null;
+    vehicleTypeImageUrl = null;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kVehicleType);
+    await prefs.remove(_kVehicleBrand);
+    await prefs.remove(_kVehicleName);
+    await prefs.remove(_kVehicleModelId);
+    await prefs.remove(_kVehicleImageUrl);
+    await prefs.remove(_kVehicleBrandImageUrl);
+    await prefs.remove(_kVehicleTypeImageUrl);
+  }
+
   static Future<void> setVehicle({
     required String name,
     String? type,
@@ -196,6 +215,17 @@ class AppState {
     String? typeImageUrl,
     bool syncToBackend = true,
   }) async {
+    if (syncToBackend && sessionToken != null) {
+      if (modelId == null) {
+        debugPrint('Blocked vehicle sync: modelId is null');
+        return;
+      }
+      await VehiclesApi().addUserVehicle(
+        sessionToken: sessionToken!,
+        vehicleModelId: modelId,
+      );
+    }
+
     vehicleName = name;
     vehicleModelId = modelId;
     if (type != null) vehicleType = type;
@@ -212,18 +242,8 @@ class AppState {
     if (imageUrl != null) await prefs.setString(_kVehicleImageUrl, imageUrl);
     if (brandImageUrl != null) await prefs.setString(_kVehicleBrandImageUrl, brandImageUrl);
     if (typeImageUrl != null) await prefs.setString(_kVehicleTypeImageUrl, typeImageUrl);
-    if (syncToBackend && sessionToken != null) {
-      if (modelId == null) {
-        debugPrint('Blocked early vehicle sync: modelId is null');
-        return;
-      }
-      try {
-        await VehiclesApi().addUserVehicle(
-          sessionToken: sessionToken!,
-          vehicleModelId: modelId,
-        );
-      } catch (_) {}
-    }
+    if (modelId == null) await prefs.remove(_kVehicleModelId);
+    if (kDebugMode) debugPrint('[AppState] updated local vehicle id: $vehicleModelId');
   }
 
   static Future<void> setVehicleType(String type) async {
@@ -299,8 +319,26 @@ class AppState {
   }
 
   static Future<void> updateFromProfileMap(Map<String, dynamic> data) async {
-    final prefs = await SharedPreferences.getInstance();
+    if (kDebugMode) debugPrint('[AppState] updateFromProfileMap triggered');
     
+    // Clear stale vehicle values before writing
+    vehicleModelId = null;
+    vehicleName = null;
+    vehicleBrand = null;
+    vehicleType = null;
+    vehicleImageUrl = null;
+    vehicleBrandImageUrl = null;
+    vehicleTypeImageUrl = null;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_kVehicleName);
+    await prefs.remove(_kVehicleType);
+    await prefs.remove(_kVehicleBrand);
+    await prefs.remove(_kVehicleModelId);
+    await prefs.remove(_kVehicleImageUrl);
+    await prefs.remove(_kVehicleBrandImageUrl);
+    await prefs.remove(_kVehicleTypeImageUrl);
+
     // 1. Basic Profile Info
     fullName = "${data['first_name'] ?? ''} ${data['last_name'] ?? ''}".trim();
     if (fullName!.isEmpty) fullName = data['username']?.toString() ?? 'User';
@@ -385,6 +423,8 @@ class AppState {
       if (vehicleType != null) await prefs.setString(_kVehicleType, vehicleType!);
       if (vehicleImageUrl != null) await prefs.setString(_kVehicleImageUrl, vehicleImageUrl!);
     }
+
+    if (kDebugMode) debugPrint('[AppState] profile vehicle id: $vehicleModelId');
 
     // 4. Sync Favorites
     await syncSavedServices();

@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../data/app_state.dart';
+import 'vehicles_provider.dart';
 
 class CurrentVehicle {
   final int? modelId;
@@ -54,7 +55,10 @@ class CurrentVehicleNotifier extends Notifier<CurrentVehicle> {
   }
 
   void hydrateFromProfile(Map<String, dynamic>? defaultVehicle) {
-    if (defaultVehicle == null) return;
+    if (defaultVehicle == null) {
+      state = const CurrentVehicle();
+      return;
+    }
     final id = (defaultVehicle['id'] as num?)?.toInt();
     if (id == null) return;
     state = CurrentVehicle(
@@ -74,13 +78,6 @@ class CurrentVehicleNotifier extends Notifier<CurrentVehicle> {
     String? imageUrl,
     bool syncToBackend = true,
   }) async {
-    state = CurrentVehicle(
-      modelId: modelId,
-      name: name,
-      brandName: brandName,
-      typeName: typeName,
-      imageUrl: imageUrl,
-    );
     await AppState.setVehicle(
       name: name,
       type: typeName,
@@ -89,6 +86,18 @@ class CurrentVehicleNotifier extends Notifier<CurrentVehicle> {
       imageUrl: imageUrl,
       syncToBackend: syncToBackend,
     );
+
+    state = CurrentVehicle(
+      modelId: modelId,
+      name: name,
+      brandName: brandName,
+      typeName: typeName,
+      imageUrl: imageUrl,
+    );
+
+    if (syncToBackend) {
+      ref.invalidate(userVehiclesProvider);
+    }
   }
 
   void clear() => state = const CurrentVehicle();

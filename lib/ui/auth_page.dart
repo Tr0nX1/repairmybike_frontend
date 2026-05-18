@@ -10,6 +10,7 @@ import '../utils/fcm_service.dart';
 import '../utils/app_error.dart';
 import '../data/repositories/auth_repository.dart';
 import '../data/repositories/profile_repository.dart';
+import '../providers/current_vehicle_provider.dart';
 import '../providers/vehicles_provider.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
@@ -193,12 +194,20 @@ class _AuthPageState extends ConsumerState<AuthPage> {
 
   Future<void> _loadPostLoginData() async {
     try {
+      // 1. Clear stale vehicle cache
+      await AppState.clearVehicleCache();
+
+      // 2. Fetch fresh profile (this also hydrates AppState and CurrentVehicle)
+      await ref.read(profileProvider.notifier).fetchProfile();
+
+      // 3. Explicitly refresh vehicle provider just in case
+      ref.invalidate(currentVehicleProvider);
+
       // Refresh cart
       ref.invalidate(cartProvider);
       
       // Load essential data in parallel
       await Future.wait([
-        ref.read(profileProvider.notifier).fetchProfile(),
         // We'll invalidate providers that should reload on home
         Future.microtask(() => ref.invalidate(userVehiclesProvider)),
       ]);

@@ -207,13 +207,28 @@ class VehiclesApi {
     required String sessionToken,
     required int vehicleModelId,
   }) async {
-    final res = await _dio.post(
-      'api/vehicles/user-vehicles/',
-      data: {'vehicle_model_id': vehicleModelId, 'is_default': true},
-    );
-    final data = res.data;
-    if (data is Map<String, dynamic>) return data;
-    throw Exception('Unexpected response shape for add user vehicle');
+    try {
+      final res = await _dio.post(
+        'api/vehicles/user-vehicles/',
+        data: {'vehicle_model_id': vehicleModelId, 'is_default': true},
+      );
+      final data = res.data;
+      if (data is Map<String, dynamic>) return data;
+      throw Exception('Unexpected response shape for add user vehicle');
+    } on DioException catch (e) {
+      if (e.response?.statusCode != 400) rethrow;
+
+      final existingVehicles = await getUserVehicles(sessionToken: sessionToken);
+      for (final userVehicle in existingVehicles) {
+        final details = userVehicle['vehicle_model_details'];
+        final detailsId = details is Map ? (details['id'] as num?)?.toInt() : null;
+        if (detailsId == vehicleModelId) {
+          final id = (userVehicle['id'] as num).toInt();
+          return setDefaultUserVehicle(userVehicleId: id);
+        }
+      }
+      rethrow;
+    }
   }
 
   Future<Map<String, dynamic>> setDefaultUserVehicle({

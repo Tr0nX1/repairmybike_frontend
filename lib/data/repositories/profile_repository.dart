@@ -42,8 +42,10 @@ class ProfileNotifier extends AsyncNotifier<UserProfile?> {
       
       final res = await dio.get('api/auth/profile/');
       final data = res.data;
-      
+
       if (data is Map<String, dynamic>) {
+        await legacy.AppState.updateFromProfileMap(data);
+
         final profile = UserProfile(
           fullName: "${data['first_name'] ?? ''} ${data['last_name'] ?? ''}".trim().isNotEmpty
               ? "${data['first_name'] ?? ''} ${data['last_name'] ?? ''}".trim()
@@ -57,8 +59,6 @@ class ProfileNotifier extends AsyncNotifier<UserProfile?> {
           defaultVehicle: data['default_vehicle'] is Map ? Map<String, dynamic>.from(data['default_vehicle']) : null,
         );
         
-        // SYNC BACKWARDS TO LEGACY APPSTATE 
-        await legacy.AppState.updateFromProfileMap(data);
         ref.read(currentVehicleProvider.notifier).hydrateFromProfile(profile.defaultVehicle);
         state = AsyncValue.data(profile);
       } else {
