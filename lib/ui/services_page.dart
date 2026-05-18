@@ -6,7 +6,7 @@ import '../providers/category_provider.dart';
 import '../models/service.dart';
 import 'service_detail_page.dart';
 import '../utils/url_utils.dart';
-import '../data/app_state.dart';
+import '../providers/saved_services_provider.dart';
 
 class ServicesPage extends ConsumerStatefulWidget {
   final int categoryId;

@@ -327,9 +327,10 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
               const SizedBox(height: 16),
               _inputCard(title: 'Vehicle', child: Column(children: [
                 DropdownButtonFormField<VehicleTypeItem>(
+                  key: ValueKey(_selectedType),
                   dropdownColor: card,
                   decoration: _inputDecoration('Type'),
-                  value: _selectedType,
+                  initialValue: _selectedType,
                   items: _vehicleTypes
                       .map((t) => DropdownMenuItem(
                             value: t,
@@ -352,9 +353,10 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<VehicleBrandItem>(
+                  key: ValueKey(_selectedBrand),
                   dropdownColor: card,
                   decoration: _inputDecoration('Brand'),
-                  value: _selectedBrand,
+                  initialValue: _selectedBrand,
                   items: _vehicleBrands
                       .map((b) => DropdownMenuItem(
                             value: b,
@@ -375,9 +377,10 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
                 ),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<VehicleModelItem>(
+                  key: ValueKey(_selectedModel),
                   dropdownColor: card,
                   decoration: _inputDecoration('Model'),
-                  value: _selectedModel,
+                  initialValue: _selectedModel,
                   items: _vehicleModels
                       .map((m) => DropdownMenuItem(
                             value: m,

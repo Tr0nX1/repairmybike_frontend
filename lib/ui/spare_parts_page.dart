@@ -6,6 +6,7 @@ import '../models/spare_part.dart';
 import '../models/spare_part_category.dart';
 import '../models/spare_part_brand.dart';
 import '../providers/spare_parts_provider.dart';
+import '../providers/saved_parts_provider.dart';
 import 'spare_part_detail_page.dart';
 import '../utils/url_utils.dart';
 import 'widgets/part_image_placeholder.dart';
