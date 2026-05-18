@@ -9,8 +9,8 @@ import 'package:repairmybike/ui/spare_parts_page.dart';
 import 'package:repairmybike/ui/spare_part_detail_page.dart';
 import 'package:repairmybike/utils/url_utils.dart';
 import 'package:repairmybike/providers/cart_provider.dart';
+import 'package:repairmybike/utils/app_error.dart';
 import 'package:repairmybike/ui/widgets/part_image_placeholder.dart';
-import 'widgets/part_image_placeholder.dart';
 
 final sparePartsProvider = FutureProvider.autoDispose<List<SparePartListItem>>((ref) async {
   final api = SparePartsApi();
