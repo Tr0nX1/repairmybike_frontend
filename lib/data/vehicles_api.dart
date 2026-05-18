@@ -94,11 +94,13 @@ class VehiclesApi {
   Future<List<VehicleTypeItem>> getVehicleTypes() async {
     final res = await _dio.get('api/vehicles/vehicle-types/');
     final body = res.data;
+    
+    // DRF Standard Pagination or Wrapped Data
     if (body is Map<String, dynamic>) {
       if (body['error'] == true) {
         throw Exception(body['message'] ?? 'Failed to load vehicle types');
       }
-      final data = body['data'];
+      final data = body['results'] ?? body['data'] ?? body;
       if (data is List) {
         return data
             .whereType<Map<String, dynamic>>()
@@ -106,6 +108,15 @@ class VehiclesApi {
             .toList();
       }
     }
+    
+    // Direct List
+    if (body is List) {
+      return body
+          .whereType<Map<String, dynamic>>()
+          .map(VehicleTypeItem.fromJson)
+          .toList();
+    }
+    
     throw Exception('Unexpected response shape for vehicle types');
   }
 
@@ -115,11 +126,12 @@ class VehiclesApi {
       queryParameters: {'vehicle_type': vehicleTypeId},
     );
     final body = res.data;
+    
     if (body is Map<String, dynamic>) {
       if (body['error'] == true) {
         throw Exception(body['message'] ?? 'Failed to load vehicle brands');
       }
-      final data = body['data'];
+      final data = body['results'] ?? body['data'] ?? body;
       if (data is List) {
         return data
             .whereType<Map<String, dynamic>>()
@@ -127,6 +139,14 @@ class VehiclesApi {
             .toList();
       }
     }
+
+    if (body is List) {
+      return body
+          .whereType<Map<String, dynamic>>()
+          .map(VehicleBrandItem.fromJson)
+          .toList();
+    }
+
     throw Exception('Unexpected response shape for vehicle brands');
   }
 
@@ -136,11 +156,12 @@ class VehiclesApi {
       queryParameters: {'vehicle_brand': vehicleBrandId},
     );
     final body = res.data;
+
     if (body is Map<String, dynamic>) {
       if (body['error'] == true) {
         throw Exception(body['message'] ?? 'Failed to load vehicle models');
       }
-      final data = body['data'];
+      final data = body['results'] ?? body['data'] ?? body;
       if (data is List) {
         return data
             .whereType<Map<String, dynamic>>()
@@ -148,6 +169,14 @@ class VehiclesApi {
             .toList();
       }
     }
+
+    if (body is List) {
+      return body
+          .whereType<Map<String, dynamic>>()
+          .map(VehicleModelItem.fromJson)
+          .toList();
+    }
+
     throw Exception('Unexpected response shape for vehicle models');
   }
 
@@ -168,19 +197,22 @@ class VehiclesApi {
     required String sessionToken,
   }) async {
     final res = await _dio.get('api/vehicles/user-vehicles/');
-
     final body = res.data;
+
+    if (body is Map<String, dynamic>) {
+      if (body['error'] == true) {
+         throw Exception(body['message'] ?? 'Failed to load user vehicles');
+      }
+      final data = body['results'] ?? body['data'] ?? body;
+      if (data is List) {
+        return data.whereType<Map<String, dynamic>>().toList();
+      }
+    }
+
     if (body is List) {
       return body.whereType<Map<String, dynamic>>().toList();
     }
-    // Pagination check
-    if (body is Map<String, dynamic>) {
-      if (body['results'] is List) {
-        return (body['results'] as List)
-            .whereType<Map<String, dynamic>>()
-            .toList();
-      }
-    }
+
     throw Exception('Unexpected response shape for user vehicles');
   }
 }

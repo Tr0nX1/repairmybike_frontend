@@ -25,7 +25,7 @@ class ServiceApi {
       if (error) {
         throw Exception(body['message'] ?? 'Failed to load services');
       }
-      final data = body['data'];
+      final data = body['results'] ?? body['data'] ?? body;
       if (data is List) {
         final list = data
             .map((e) => Service.fromJson(e as Map<String, dynamic>))
@@ -37,6 +37,17 @@ class ServiceApi {
         return list;
       }
     }
+    
+    if (body is List) {
+      final list = body
+          .map((e) => Service.fromJson(e as Map<String, dynamic>))
+          .toList();
+      if (categoryId != null) {
+        return list.where((s) => s.serviceCategory == categoryId).toList();
+      }
+      return list;
+    }
+    
     throw Exception('Unexpected response shape for services');
   }
 }

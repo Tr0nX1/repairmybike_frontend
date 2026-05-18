@@ -104,10 +104,22 @@ class SparePartsApi {
   Future<List<Map<String, dynamic>>> getSavedParts() async {
     try {
       final response = await _dio.get('$baseUrl/saved-parts/');
-      if (response.statusCode == 200 && response.data['error'] == false) {
-        final List data = response.data['data'];
-        return List<Map<String, dynamic>>.from(data);
+      final body = response.data;
+      
+      if (body is Map<String, dynamic>) {
+        if (body['error'] == true) {
+          return [];
+        }
+        final data = body['results'] ?? body['data'] ?? body;
+        if (data is List) {
+          return List<Map<String, dynamic>>.from(data);
+        }
       }
+      
+      if (body is List) {
+        return List<Map<String, dynamic>>.from(body);
+      }
+      
       return [];
     } catch (e) {
       return [];
@@ -116,12 +128,11 @@ class SparePartsApi {
 
   Future<List<int>> getSavedPartIds() async {
     try {
-      final response = await _dio.get('$baseUrl/saved-parts/');
-      if (response.statusCode == 200 && response.data['error'] == false) {
-        final List data = response.data['data'];
-        return data.map<int>((item) => item['spare_part']['id'] as int).toList();
-      }
-      return [];
+      final data = await getSavedParts();
+      return data
+          .map<int?>((item) => (item['spare_part'] as Map?)?['id'] as int?)
+          .whereType<int>()
+          .toList();
     } catch (e) {
       return [];
     }
