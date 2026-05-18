@@ -5,11 +5,11 @@ import 'package:shimmer/shimmer.dart';
 import '../models/spare_part.dart';
 import '../models/spare_part_category.dart';
 import '../models/spare_part_brand.dart';
-import '../providers/spare_parts_provider.dart';
-import '../providers/saved_parts_provider.dart';
-import 'spare_part_detail_page.dart';
-import '../utils/url_utils.dart';
-import 'widgets/part_image_placeholder.dart';
+import 'package:repairmybike/providers/spare_parts_provider.dart';
+import 'package:repairmybike/providers/saved_parts_provider.dart';
+import 'package:repairmybike/ui/spare_part_detail_page.dart';
+import 'package:repairmybike/utils/url_utils.dart';
+import 'package:repairmybike/ui/widgets/part_image_placeholder.dart';
 
 class SparePartsPage extends ConsumerStatefulWidget {
   const SparePartsPage({super.key});

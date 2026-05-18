@@ -19,6 +19,7 @@ class SparePartListItem {
   final num ratingAverage;
   final int ratingCount;
   final String? thumbnail;
+  final bool isSaved;
   final List<String> images;
   final String? description;
   final Map<String, dynamic> specs;
@@ -46,6 +47,7 @@ class SparePartListItem {
     required this.ratingAverage,
     required this.ratingCount,
     this.thumbnail,
+    this.isSaved = false,
     this.images = const [],
     this.description,
     this.specs = const {},
@@ -94,6 +96,7 @@ class SparePartListItem {
           : num.tryParse(json['rating_average']?.toString() ?? '0') ?? 0,
       ratingCount: (json['rating_count'] as num?)?.toInt() ?? 0,
       thumbnail: extractUrl(json['thumbnail_url'] ?? json['thumbnail'] ?? json['cloudinary_url']),
+      isSaved: json['is_saved'] == true,
       images: normalizeImages(json['images'] ?? json['gallery'] ?? json['image_urls']),
       description: json['description'] as String?,
       specs: normalizeMap(json['specs'] ?? json['specifications'] ?? json['attributes']),

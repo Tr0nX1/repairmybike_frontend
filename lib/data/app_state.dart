@@ -575,12 +575,13 @@ class AppState {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_kLikedServices, likedServiceIds.map((e) => e.toString()).toList());
     
-    if (isAuthenticated && sessionToken != null) {
+    // Sync if we have either a session token or a guest ID
+    if (isAuthenticated || (guestId != null && guestId!.isNotEmpty)) {
       try {
         if (isNowLiked) {
-          await SavedServicesApi().saveService(id, sessionToken!);
+          await SavedServicesApi().saveService(id, sessionToken ?? '');
         } else {
-          await SavedServicesApi().removeService(id, sessionToken!);
+          await SavedServicesApi().removeService(id, sessionToken ?? '');
         }
       } catch (_) {}
     }
@@ -601,7 +602,8 @@ class AppState {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setStringList(_kLikedParts, likedPartIds.map((e) => e.toString()).toList());
     
-    if (isAuthenticated) {
+    // Sync if we have either a session token or a guest ID
+    if (isAuthenticated || (guestId != null && guestId!.isNotEmpty)) {
       try {
         if (isNowLiked) {
           await SparePartsApi().savePart(id);

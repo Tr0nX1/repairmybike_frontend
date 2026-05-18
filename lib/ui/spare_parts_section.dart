@@ -4,12 +4,12 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
 import '../data/spare_parts_api.dart';
 import '../models/spare_part.dart';
-import '../providers/saved_parts_provider.dart';
-import 'spare_parts_page.dart';
-import 'spare_part_detail_page.dart';
-import '../utils/url_utils.dart';
-import '../providers/cart_provider.dart';
-import '../utils/app_error.dart';
+import 'package:repairmybike/providers/saved_parts_provider.dart';
+import 'package:repairmybike/ui/spare_parts_page.dart';
+import 'package:repairmybike/ui/spare_part_detail_page.dart';
+import 'package:repairmybike/utils/url_utils.dart';
+import 'package:repairmybike/providers/cart_provider.dart';
+import 'package:repairmybike/ui/widgets/part_image_placeholder.dart';
 import 'widgets/part_image_placeholder.dart';
 
 final sparePartsProvider = FutureProvider.autoDispose<List<SparePartListItem>>((ref) async {

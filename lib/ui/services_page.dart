@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:shimmer/shimmer.dart';
-import '../providers/category_provider.dart';
-import '../models/service.dart';
-import 'service_detail_page.dart';
-import '../utils/url_utils.dart';
-import '../providers/saved_services_provider.dart';
+import 'package:repairmybike/providers/category_provider.dart';
+import 'package:repairmybike/models/service.dart';
+import 'package:repairmybike/ui/service_detail_page.dart';
+import 'package:repairmybike/utils/url_utils.dart';
+import 'package:repairmybike/providers/saved_services_provider.dart';
 
 class ServicesPage extends ConsumerStatefulWidget {
   final int categoryId;

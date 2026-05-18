@@ -11,6 +11,7 @@ class Service {
   final int? originalPrice;
   final int price;
   final bool isFeatured;
+  final bool isSaved;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -27,6 +28,7 @@ class Service {
     this.originalPrice,
     required this.price,
     required this.isFeatured,
+    this.isSaved = false,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -54,6 +56,7 @@ class Service {
       originalPrice: (json['original_price'] as num?)?.toInt(),
       price: (json['price'] as num?)?.toInt() ?? 0,
       isFeatured: json['is_featured'] == true,
+      isSaved: json['is_saved'] == true,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
