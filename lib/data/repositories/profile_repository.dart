@@ -57,11 +57,10 @@ class ProfileNotifier extends AsyncNotifier<UserProfile?> {
           defaultVehicle: data['default_vehicle'] is Map ? Map<String, dynamic>.from(data['default_vehicle']) : null,
         );
         
-        state = AsyncValue.data(profile);
-
         // SYNC BACKWARDS TO LEGACY APPSTATE 
         await legacy.AppState.updateFromProfileMap(data);
         ref.read(currentVehicleProvider.notifier).hydrateFromProfile(profile.defaultVehicle);
+        state = AsyncValue.data(profile);
       } else {
         state = AsyncValue.error('Invalid profile data payload from server', StackTrace.current);
       }

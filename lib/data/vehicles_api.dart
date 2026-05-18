@@ -75,11 +75,22 @@ class VehicleModelItem {
       if (v is Map) return (v['original'] ?? v['thumbnail'])?.toString();
       return v.toString();
     }
+    int extractBrandId() {
+      final rawBrand = json['vehicle_brand'];
+      if (rawBrand is num) return rawBrand.toInt();
+      if (rawBrand is Map && rawBrand['id'] is num) {
+        return (rawBrand['id'] as num).toInt();
+      }
+      final fallback = json['vehicle_brand_id'] ?? json['brand_id'];
+      if (fallback is num) return fallback.toInt();
+      return 0;
+    }
     return VehicleModelItem(
       id: (json['id'] as num).toInt(),
-      vehicleBrandId: (json['vehicle_brand'] as num).toInt(),
+      vehicleBrandId: extractBrandId(),
       brandName: json['brand_name'] as String? ?? '',
-      vehicleTypeName: json['vehicle_type_name'] as String? ?? '',
+      vehicleTypeName:
+          json['vehicle_type_name'] as String? ?? json['type_name'] as String? ?? '',
       name: json['name'] as String? ?? '',
       image: extractUrl(json['image'] ?? json['logo'] ?? json['icon']),
     );

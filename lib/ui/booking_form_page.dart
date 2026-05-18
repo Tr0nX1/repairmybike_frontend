@@ -139,6 +139,58 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
     return null;
   }
 
+  String _normalizeVehicleLabel(String? value) =>
+      (value ?? '').trim().toLowerCase();
+
+  void _seedSelectedVehicleFromAppState({
+    VehicleModelItem? model,
+    int? brandId,
+  }) {
+    final modelId = model?.id ?? AppState.vehicleModelId;
+    if (modelId == null) return;
+
+    final typeName = model?.vehicleTypeName.isNotEmpty == true
+        ? model!.vehicleTypeName
+        : AppState.vehicleType ?? '';
+    final brandName = model?.brandName.isNotEmpty == true
+        ? model!.brandName
+        : AppState.vehicleBrand ?? '';
+    final vehicleName = model?.name.isNotEmpty == true
+        ? model!.name
+        : AppState.vehicleName ?? 'Selected vehicle';
+
+    final fallbackType = VehicleTypeItem(
+      id: -1,
+      name: typeName.isNotEmpty ? typeName : 'Selected type',
+    );
+    final fallbackBrand = VehicleBrandItem(
+      id: brandId ?? model?.vehicleBrandId ?? -1,
+      vehicleTypeId: fallbackType.id,
+      vehicleTypeName: fallbackType.name,
+      name: brandName.isNotEmpty ? brandName : 'Selected brand',
+    );
+    final fallbackModel = model ??
+        VehicleModelItem(
+          id: modelId,
+          vehicleBrandId: fallbackBrand.id,
+          brandName: fallbackBrand.name,
+          vehicleTypeName: fallbackType.name,
+          name: vehicleName,
+          image: AppState.vehicleImageUrl,
+        );
+
+    setState(() {
+      if (!_vehicleTypes.any((t) => t.id == fallbackType.id)) {
+        _vehicleTypes = [..._vehicleTypes, fallbackType];
+      }
+      _selectedType = fallbackType;
+      _vehicleBrands = [fallbackBrand];
+      _selectedBrand = fallbackBrand;
+      _vehicleModels = [fallbackModel];
+      _selectedModel = fallbackModel;
+    });
+  }
+
   Future<void> _preselectVehicleFromAppState() async {
     final modelId = AppState.vehicleModelId;
     if (modelId == null || !mounted) return;
@@ -149,18 +201,36 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
 
       final matchingType = _firstWhereOrNull(
         _vehicleTypes,
-        (t) => t.name == model.vehicleTypeName,
+        (t) =>
+            _normalizeVehicleLabel(t.name) ==
+                _normalizeVehicleLabel(model.vehicleTypeName) ||
+            _normalizeVehicleLabel(t.name) ==
+                _normalizeVehicleLabel(AppState.vehicleType),
       );
-      if (matchingType == null) return;
+      if (matchingType == null) {
+        _seedSelectedVehicleFromAppState(model: model);
+        return;
+      }
 
       final brands = await _vehiclesApi.getVehicleBrands(matchingType.id);
       if (!mounted) return;
 
       final matchingBrand = _firstWhereOrNull(
         brands,
-        (b) => b.id == model.vehicleBrandId,
+        (b) =>
+            b.id == model.vehicleBrandId ||
+            _normalizeVehicleLabel(b.name) ==
+                _normalizeVehicleLabel(model.brandName) ||
+            _normalizeVehicleLabel(b.name) ==
+                _normalizeVehicleLabel(AppState.vehicleBrand),
       );
-      if (matchingBrand == null) return;
+      if (matchingBrand == null) {
+        _seedSelectedVehicleFromAppState(
+          model: model,
+          brandId: model.vehicleBrandId,
+        );
+        return;
+      }
 
       final models = await _vehiclesApi.getVehicleModels(model.vehicleBrandId);
       if (!mounted) return;
@@ -175,7 +245,9 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
         _vehicleModels = models;
         _selectedModel = matched;
       });
-    } catch (_) {}
+    } catch (_) {
+      if (mounted) _seedSelectedVehicleFromAppState();
+    }
   }
 
   void _showSnack(String msg) {
