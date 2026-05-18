@@ -216,6 +216,18 @@ class VehiclesApi {
     throw Exception('Unexpected response shape for add user vehicle');
   }
 
+  Future<Map<String, dynamic>> setDefaultUserVehicle({
+    required int userVehicleId,
+  }) async {
+    final res = await _dio.patch(
+      'api/vehicles/user-vehicles/$userVehicleId/',
+      data: {'is_default': true},
+    );
+    final data = res.data;
+    if (data is Map<String, dynamic>) return data;
+    throw Exception('Unexpected response shape for set default user vehicle');
+  }
+
   Future<List<Map<String, dynamic>>> getUserVehicles({
     required String sessionToken,
   }) async {

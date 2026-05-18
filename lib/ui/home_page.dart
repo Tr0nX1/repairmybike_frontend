@@ -8,6 +8,7 @@ import '../models/category.dart';
 import 'subscription_section.dart';
 import 'spare_parts_section.dart';
 import '../data/app_state.dart';
+import '../data/vehicles_api.dart';
 import '../providers/category_provider.dart' as providers;
 import '../providers/saved_services_provider.dart';
 import '../providers/notifications_provider.dart';
@@ -64,15 +65,21 @@ class _HomePageState extends ConsumerState<HomePage> {
                 title: Text(details['name'] ?? 'Vehicle', style: TextStyle(color: isSelected ? accent : Colors.white)),
                 subtitle: Text(details['brand_name'] ?? '', style: const TextStyle(color: Colors.white54, fontSize: 12)),
                 trailing: isSelected ? const Icon(Icons.check, color: accent) : null,
-                onTap: () {
-                  AppState.setVehicle(
+                onTap: () async {
+                  await AppState.setVehicle(
                     name: details['name'],
                     modelId: details['id'],
                     brand: details['brand_name'],
                     type: details['vehicle_type_name'],
                     syncToBackend: false,
                   );
+                  try {
+                    await VehiclesApi().setDefaultUserVehicle(
+                      userVehicleId: (v['id'] as num).toInt(),
+                    );
+                  } catch (_) {}
                   Navigator.pop(ctx);
+                  ref.invalidate(userVehiclesProvider);
                   setState(() {});
                 },
               );
