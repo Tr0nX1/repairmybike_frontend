@@ -81,18 +81,13 @@ class ApiClient {
           }
           
 
-          // Handle 403 Forbidden - Invalid Token / Environment Mismatch
-          // If we send a token that the backend hates (e.g. wrong environment/project), it returns 403.
-          // We must clear the bad token so the app can redirect to login.
+          // Handle 403 Forbidden - Permission Denied / Access Denied
+          // We should NOT clear the auth state (logout the user) on 403, 
+          // because 403 means the user is authenticated but doesn't have access to this resource.
           if (e.response?.statusCode == 403) {
             if (kDebugMode) {
-              debugPrint('⛔ 403 Forbidden detected. Clearing invalid auth state...');
+              debugPrint('⛔ 403 Forbidden / Access Denied detected for: ${e.requestOptions.uri}');
             }
-
-            // 1. Clear invalid auth state locally
-            await AppState.clearAuth();
-            
-            // 2. Propagate error so UI (e.g. FlashPage) knows to redirect
             return handler.next(e);
           }
 
