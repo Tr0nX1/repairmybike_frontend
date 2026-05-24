@@ -15,7 +15,7 @@ class MySubscriptionsPage extends ConsumerWidget {
     return Scaffold(
       backgroundColor: const Color(0xFF0F0F0F),
       appBar: AppBar(
-        title: const Text('My Subscriptions'),
+        title: const Text('My Membership'),
         backgroundColor: const Color(0xFF071A1D),
         elevation: 0,
       ),
@@ -38,7 +38,7 @@ class MySubscriptionsPage extends ConsumerWidget {
                       Icon(isAuthError ? Icons.lock_outline : Icons.error_outline, size: 48, color: Colors.orange),
                       const SizedBox(height: 16),
                       Text(
-                        isAuthError ? 'Session Expired' : 'Failed to load subscriptions',
+                        isAuthError ? 'Session Expired' : 'Failed to load membership',
                         style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 8),
@@ -75,7 +75,7 @@ class MySubscriptionsPage extends ConsumerWidget {
                     const Icon(Icons.card_membership, size: 64, color: Colors.white24),
                     const SizedBox(height: 16),
                     const Text(
-                      'No subscriptions found',
+                      'No membership plans found',
                       style: TextStyle(color: Colors.white70, fontSize: 16),
                     ),
                     const SizedBox(height: 24),

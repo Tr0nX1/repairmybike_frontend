@@ -205,7 +205,7 @@ class _ProfilePageState extends ConsumerState<ProfilePage> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                _ActionTile(label: 'My Subscriptions', icon: Icons.card_membership, onTap: () => context.push('/my-subscriptions')),
+                _ActionTile(label: 'My Membership', icon: Icons.card_membership, onTap: () => context.push('/my-subscriptions')),
                 _ActionTile(label: 'Quick Service History', icon: Icons.flash_on, onTap: () => context.push('/quick-service-history')),
                 const SizedBox(height: 16),
                 _Section(title: 'Account Settings'),
