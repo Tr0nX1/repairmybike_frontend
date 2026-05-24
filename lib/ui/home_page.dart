@@ -316,26 +316,53 @@ class _CategoryCard extends StatelessWidget {
           border: Border.all(color: accentColor.withValues(alpha: 0.3), width: 1.2),
           gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [cardColor, accentColor.withValues(alpha: 0.08)]),
         ),
-        padding: const EdgeInsets.all(10),
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ClipOval(
-              child: SizedBox(
-                width: 54, height: 54,
+            Expanded(
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(12),
                 child: hasImage
-                    ? CachedNetworkImage(imageUrl: category.image!, fit: BoxFit.cover)
+                    ? CachedNetworkImage(
+                        imageUrl: category.image!,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        placeholder: (context, url) => Container(
+                          color: accentColor.withValues(alpha: 0.08),
+                          child: const Center(
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: Colors.white38,
+                            ),
+                          ),
+                        ),
+                        errorWidget: (context, url, error) =>
+                          Container(
+                            color: accentColor.withValues(alpha: 0.12),
+                            alignment: Alignment.center,
+                            child: Text(
+                              category.icon.isNotEmpty 
+                                  ? category.icon 
+                                  : '🔧',
+                              style: const TextStyle(fontSize: 28),
+                            ),
+                          ),
+                      )
                     : Container(
                         color: accentColor.withValues(alpha: 0.12),
                         alignment: Alignment.center,
                         child: Text(
-                          category.icon.isNotEmpty ? category.icon : '🔧',
+                          category.icon.isNotEmpty 
+                              ? category.icon 
+                              : '🔧',
                           style: const TextStyle(fontSize: 28),
                         ),
                       ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: 6),
             Text(category.name, textAlign: TextAlign.center, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 13)),
           ],
         ),
