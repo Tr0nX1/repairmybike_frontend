@@ -126,6 +126,7 @@ class SubscriptionItem {
   final int id;
   final int planId;
   final String? planName;
+  final SubscriptionPlan? planDetails;
   final int? userId;
   final String? contactEmail;
   final String? contactPhone;
@@ -144,6 +145,7 @@ class SubscriptionItem {
     required this.id,
     required this.planId,
     this.planName,
+    this.planDetails,
     this.userId,
     this.contactEmail,
     this.contactPhone,
@@ -173,6 +175,9 @@ class SubscriptionItem {
       id: (json['id'] as num).toInt(),
       planId: (json['plan'] as num).toInt(),
       planName: json['plan_name'] as String?,
+      planDetails: json['plan_details'] != null
+          ? SubscriptionPlan.fromJson(json['plan_details'] as Map<String, dynamic>)
+          : null,
       userId: (json['user'] as num?)?.toInt(),
       contactEmail: json['contact_email'] as String?,
       contactPhone: json['contact_phone'] as String?,

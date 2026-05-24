@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../models/subscription.dart';
 import '../providers/subscription_provider.dart';
 import '../utils/app_error.dart';
@@ -112,11 +113,41 @@ class _MySubscriptionCard extends StatelessWidget {
 
   Color _getStatusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'active': return Colors.greenAccent;
-      case 'expired': return Colors.redAccent;
-      case 'canceled': return Colors.orangeAccent;
-      case 'pending': return Colors.amberAccent;
+      case 'active': return const Color(0xFF00FFCC);
+      case 'expired': return const Color(0xFFFF4D4D);
+      case 'canceled': return const Color(0xFFFF9900);
+      case 'pending': return const Color(0xFFFFCC00);
       default: return Colors.grey;
+    }
+  }
+
+  Future<void> _launchWhatsApp(BuildContext context) async {
+    final planName = item.planName ?? 'Quartly';
+    final subId = item.id;
+    final message = "Hello RepairMyBike! I'd like to pay for my $planName membership (ID: #$subId). Please share the payment Paytm QR code.";
+    final url = "https://wa.me/918168121711?text=${Uri.encodeComponent(message)}";
+    
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not open WhatsApp. Please message support at +91 81681 21711.')),
+        );
+      }
+    }
+  }
+
+  Future<void> _callSupport(BuildContext context) async {
+    final url = "tel:+918168121711";
+    try {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    } catch (e) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Could not launch phone dialer.')),
+        );
+      }
     }
   }
 
@@ -125,6 +156,7 @@ class _MySubscriptionCard extends StatelessWidget {
     final statusColor = _getStatusColor(item.status);
     final planName = item.planName ?? 'Unknown Plan';
     final isPremium = planName.toLowerCase().contains('premium');
+    final isPending = item.status.toLowerCase() == 'pending';
     
     // Formatting dates
     String formatDate(String? dateStr) {
@@ -137,34 +169,51 @@ class _MySubscriptionCard extends StatelessWidget {
       }
     }
 
+    final price = item.planDetails?.price;
+    final billing = item.planDetails?.billingPeriod ?? 'monthly';
+    final benefits = item.planDetails?.benefitsList ?? [];
+    
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF1C1C1C),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFF2A2A2A)),
+        color: const Color(0xFF161616),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isPending 
+              ? const Color(0x33FFCC00) 
+              : item.status.toLowerCase() == 'active' 
+                  ? const Color(0x3300FFCC) 
+                  : const Color(0xFF2A2A2A),
+          width: 1.5,
+        ),
         boxShadow: [
            BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 8,
+            color: isPending 
+                ? const Color(0x0FFFCC00) 
+                : item.status.toLowerCase() == 'active' 
+                    ? const Color(0x0F00FFCC) 
+                    : Colors.black.withValues(alpha: 0.3),
+            blurRadius: 10,
+            spreadRadius: 2,
             offset: const Offset(0, 4),
           ),
         ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Header
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
             decoration: BoxDecoration(
               color: isPremium ? const Color(0xFF2C2C00) : const Color(0xFF002C33),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
             ),
             child: Row(
               children: [
                 Icon(
                   isPremium ? Icons.workspace_premium : Icons.stars_rounded,
                   color: isPremium ? Colors.amber : Colors.cyanAccent,
-                  size: 20,
+                  size: 22,
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -173,23 +222,24 @@ class _MySubscriptionCard extends StatelessWidget {
                     style: const TextStyle(
                       color: Colors.white,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 18,
                     ),
                   ),
                 ),
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: statusColor.withValues(alpha: 0.2),
+                    color: statusColor.withValues(alpha: 0.15),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: statusColor.withValues(alpha: 0.5)),
+                    border: Border.all(color: statusColor.withValues(alpha: 0.4)),
                   ),
                   child: Text(
                     item.status.toUpperCase(),
                     style: TextStyle(
                       color: statusColor,
-                      fontSize: 10,
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
@@ -199,37 +249,202 @@ class _MySubscriptionCard extends StatelessWidget {
           
           // Body
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(18),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                // Price Info
+                if (price != null) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        'Plan Pricing',
+                        style: TextStyle(color: Colors.white54, fontSize: 14),
+                      ),
+                      Text(
+                        '₹${price.toStringAsFixed(0)} / ${billing.toLowerCase()}',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const Divider(color: Color(0xFF2A2A2A), height: 20),
+                ],
+
                 _RowItem(label: 'Start Date', value: formatDate(item.startDate)),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 _RowItem(label: 'End Date', value: formatDate(item.endDate)),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 if (item.remainingVisits > 0) ...[
-                 _RowItem(label: 'Visits Remaining', value: '${item.remainingVisits}', highlight: true),
-                 const SizedBox(height: 8),
+                  _RowItem(label: 'Visits Remaining', value: '${item.remainingVisits}', highlight: true),
+                  const SizedBox(height: 10),
                 ],
                 _RowItem(label: 'Visits Used', value: '${item.visitsConsumed}'),
+                
+                // Show benefits list if present
+                if (benefits.isNotEmpty) ...[
+                  const Divider(color: Color(0xFF2A2A2A), height: 24),
+                  const Text(
+                    'Included Benefits:',
+                    style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 8),
+                  ...benefits.map((b) => Padding(
+                    padding: const EdgeInsets.only(bottom: 6.0),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.check_circle_outline, 
+                          color: b.isActive ? const Color(0xFF00FFCC) : Colors.white24, 
+                          size: 16
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            b.text,
+                            style: TextStyle(
+                              color: b.isActive ? Colors.white70 : Colors.white30,
+                              fontSize: 13,
+                              decoration: b.isActive ? null : TextDecoration.lineThrough,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  )),
+                ],
+
+                // Pending Payment Box
+                if (isPending) ...[
+                  const SizedBox(height: 18),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: const Color(0x13FFCC00),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0x33FFCC00)),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.payment_rounded, color: Color(0xFFFFCC00), size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Payment Required',
+                              style: TextStyle(
+                                color: const Color(0xFFFFCC00).withValues(alpha: 0.9),
+                                fontWeight: FontWeight.bold,
+                                fontSize: 14,
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Your membership is pending activation. Please pay in cash at the shop or complete UPI transfer via Paytm QR.',
+                          style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.4),
+                        ),
+                        const SizedBox(height: 14),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF25D366),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                  elevation: 0,
+                                ),
+                                icon: const Icon(Icons.chat_bubble_outline_rounded, size: 16),
+                                label: const Text(
+                                  'Pay via WhatsApp',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                                onPressed: () => _launchWhatsApp(context),
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Expanded(
+                              child: OutlinedButton.icon(
+                                style: OutlinedButton.styleFrom(
+                                  foregroundColor: const Color(0xFFFFCC00),
+                                  side: const BorderSide(color: Color(0x77FFCC00)),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(vertical: 10),
+                                ),
+                                icon: const Icon(Icons.phone_enabled_rounded, size: 16),
+                                label: const Text(
+                                  'Call Support',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold),
+                                ),
+                                onPressed: () => _callSupport(context),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+
+                // Active instructions
+                if (item.status.toLowerCase() == 'active') ...[
+                  const SizedBox(height: 18),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0x1300FFCC),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: const Color(0x3300FFCC)),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.info_outline_rounded, color: Color(0xFF00FFCC), size: 18),
+                        const SizedBox(width: 8),
+                        const Expanded(
+                          child: Text(
+                            'Book any service and select this active membership to redeem your free visits.',
+                            style: TextStyle(color: Colors.white70, fontSize: 12, height: 1.3),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
           
-          // Footer Actions (e.g. Cancel)
+          // Footer Actions
           if (item.isActive && item.status == 'active')
             Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+              padding: const EdgeInsets.fromLTRB(18, 0, 18, 18),
               child: SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
                     foregroundColor: Colors.redAccent,
                     side: const BorderSide(color: Colors.redAccent),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
                   ),
                   onPressed: () {
-                     // Action: Implement cancel logic
                      ScaffoldMessenger.of(context).showSnackBar(
-                       const SnackBar(content: Text('Cancel feature coming soon')),
+                       const SnackBar(content: Text('Please contact support at +91 81681 21711 to cancel your membership.')),
                      );
                   },
                   child: const Text('Cancel Subscription'),
