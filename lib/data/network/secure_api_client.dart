@@ -80,15 +80,46 @@ final secureApiClientProvider = Provider<Dio>((ref) {
 
   dio.interceptors.add(
     InterceptorsWrapper(
-      onRequest: (options, handler) {
-        // Fetch current snapshot of auth state synchronously 
+      onRequest: (options, handler) async {
+        final path = options.path;
+        final isAuthEndpoint = path.contains('auth/token') || path.contains('auth/otp');
         final authState = ref.read(authProvider);
-        
-        final token = authState.sessionToken;
+
+        if (!isAuthEndpoint && authState.isSessionExpired) {
+          final refreshToken = authState.refreshToken;
+          if (refreshToken != null && refreshToken.isNotEmpty) {
+            try {
+              if (kDebugMode) {
+                debugPrint('🔄 Proactively refreshing expired token before secure request: ${options.uri}');
+              }
+              final refreshResponse = await dio.post(
+                'api/auth/token/refresh/',
+                data: {'refresh_token': refreshToken},
+              );
+              final data = refreshResponse.data;
+              if (data is Map<String, dynamic>) {
+                final newSessionToken = data['session_token'] as String?;
+                final newRefreshToken = data['refresh_token'] as String?;
+                if (newSessionToken != null) {
+                  await ref.read(authProvider.notifier).updateTokens(
+                    session: newSessionToken,
+                    refresh: newRefreshToken ?? refreshToken,
+                  );
+                }
+              }
+            } catch (_) {
+              // Let request proceed; response interceptor will handle 401
+            }
+          }
+        }
+
+        // Fetch current snapshot of auth state synchronously 
+        final freshAuthState = ref.read(authProvider);
+        final token = freshAuthState.sessionToken;
         if (token != null && token.isNotEmpty) {
           options.headers['Authorization'] = 'Bearer $token';
         } else {
-          final guestId = authState.guestId;
+          final guestId = freshAuthState.guestId;
           if (guestId != null && guestId.isNotEmpty) {
             options.headers['X-Guest-ID'] = guestId;
           }
@@ -110,10 +141,13 @@ final secureApiClientProvider = Provider<Dio>((ref) {
           debugPrint('❌ ${e.requestOptions.method} ${e.requestOptions.uri} -> ${e.message} [${e.response?.statusCode}]');
         }
 
-        // 403 Forbidden: Bad environment, malformed keys, or explicitly blocked
+        // 403 Forbidden: Permission Denied / Access Denied
         if (e.response?.statusCode == 403) {
-          if (kDebugMode) debugPrint('⛔ 403 Forbidden detected. Nuking invalid auth state...');
-          await ref.read(authProvider.notifier).logout();
+          if (kDebugMode) {
+            debugPrint('⛔ 403 Forbidden: ${e.requestOptions.uri}');
+          }
+          // Do NOT logout — 403 means permission denied,
+          // not expired token. Token expiry returns 401.
           return handler.next(e);
         }
 
@@ -166,13 +200,15 @@ final secureApiClientProvider = Provider<Dio>((ref) {
               }
             } catch (refreshError) {
               if (kDebugMode) debugPrint('❌ Token refresh failed: $refreshError');
-              // If the refresh token is also expired or invalid, atom-bomb the session
+              // If the refresh token is also expired or invalid, set expired state and atom-bomb the session
+              ref.read(sessionExpiredProvider.notifier).state = true;
               await ref.read(authProvider.notifier).logout();
             } finally {
               isRefreshing = false;
             }
           } else {
              // 401 but no refresh token available = hard logout
+             ref.read(sessionExpiredProvider.notifier).state = true;
              await ref.read(authProvider.notifier).logout();
           }
         }

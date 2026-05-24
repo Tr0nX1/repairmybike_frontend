@@ -50,6 +50,7 @@ class AppState {
   static String get deviceId => guestId ?? '';
   static bool isStaff = false;
   static String? staffUsername;
+  static VoidCallback? onAuthFailure;
 
   // Profile fields
   static String? fullName;

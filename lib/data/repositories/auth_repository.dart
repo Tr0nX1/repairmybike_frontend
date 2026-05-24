@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../providers/shared_preferences_provider.dart';
 import '../../utils/fcm_service.dart';
@@ -189,3 +190,5 @@ class AuthNotifier extends Notifier<AuthState> {
 }
 
 final authProvider = NotifierProvider<AuthNotifier, AuthState>(AuthNotifier.new);
+
+final sessionExpiredProvider = StateProvider<bool>((ref) => false);

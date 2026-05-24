@@ -38,7 +38,38 @@ class ApiClient {
 
     dio.interceptors.add(
       InterceptorsWrapper(
-        onRequest: (options, handler) {
+        onRequest: (options, handler) async {
+          // Check token expiry proactively
+          final path = options.path;
+          final isAuthEndpoint = path.contains('auth/token') || path.contains('auth/otp');
+
+          if (!isAuthEndpoint && AppState.isSessionExpired) {
+            final refreshToken = AppState.refreshToken;
+            if (refreshToken != null && refreshToken.isNotEmpty) {
+              try {
+                if (kDebugMode) {
+                  debugPrint('🔄 Proactively refreshing expired token before request: ${options.uri}');
+                }
+                final refreshResponse = await dio.post(
+                  'api/auth/token/refresh/',
+                  data: {'refresh_token': refreshToken},
+                );
+                final data = refreshResponse.data;
+                if (data is Map<String, dynamic>) {
+                  final newToken = data['session_token'] as String?;
+                  if (newToken != null) {
+                    await AppState.setTokens(
+                      session: newToken,
+                      refresh: data['refresh_token'] as String? ?? refreshToken,
+                    );
+                  }
+                }
+              } catch (_) {
+                // Let request proceed; if it fails with 401, response interceptor will handle it
+              }
+            }
+          }
+
           // Automatically attach Authorization header if token exists
           final token = AppState.sessionToken;
           if (token != null && token.isNotEmpty) {
@@ -92,8 +123,19 @@ class ApiClient {
           }
 
           // Handle 401 Unauthorized - attempt token refresh
-          if (e.response?.statusCode == 401 && !_isRefreshing) {
+          if (e.response?.statusCode == 401) {
+            if (_isRefreshing) {
+              if (kDebugMode) {
+                debugPrint('🔄 Token refresh already in progress, skipping duplicate refresh');
+              }
+              return handler.next(e);
+            }
+            
             final refreshToken = AppState.refreshToken;
+            if (kDebugMode) {
+              debugPrint('🔑 401 Unauthorized detected. Current sessionToken: ${AppState.sessionToken != null ? (AppState.sessionToken!.length > 10 ? AppState.sessionToken!.substring(0, 10) : AppState.sessionToken) : "null"}...');
+              debugPrint('🔑 Refresh token present: ${refreshToken != null && refreshToken.isNotEmpty} (length: ${refreshToken?.length ?? 0})');
+            }
             
             // Only attempt refresh if we have a refresh token
             if (refreshToken != null && refreshToken.isNotEmpty) {
@@ -163,6 +205,7 @@ class ApiClient {
                 
                 // Clear auth state on refresh failure
                 await AppState.clearAuth();
+                AppState.onAuthFailure?.call();
               }
               
               _isRefreshing = false;

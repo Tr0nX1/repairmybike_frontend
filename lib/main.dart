@@ -8,6 +8,8 @@ import 'package:firebase_messaging/firebase_messaging.dart';
 import 'utils/fcm_service.dart';
 
 import 'utils/router.dart';
+import 'data/app_state.dart';
+import 'data/repositories/auth_repository.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'data/providers/shared_preferences_provider.dart';
@@ -82,6 +84,44 @@ class MyApp extends ConsumerWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Redefine static callback to capture Riverpod's ref context
+    AppState.onAuthFailure = () {
+      debugPrint('🚨 Authentication failure detected. Redirecting to login...');
+      ref.read(sessionExpiredProvider.notifier).state = true;
+      router.go('/auth');
+    };
+
+    // Listen to session expiration globally
+    ref.listen(sessionExpiredProvider, (prev, next) {
+      if (next == true) {
+        // Reset the flag
+        ref.read(sessionExpiredProvider.notifier).state = false;
+        
+        // Show session expired dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => AlertDialog(
+            backgroundColor: const Color(0xFF1C1C1C),
+            title: const Text('Session Expired', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            content: const Text(
+              'Your session has expired. Please login again to continue.',
+              style: TextStyle(color: Colors.white70),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                  router.go('/auth');
+                },
+                child: const Text('Login', style: TextStyle(color: Color(0xFF01C9F5), fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        );
+      }
+    });
+
     const mode = ThemeMode.dark;
     // ... Color definitions remain unchanged ...
     const Color brandPrimary = Color(0xFF01C9F5);
