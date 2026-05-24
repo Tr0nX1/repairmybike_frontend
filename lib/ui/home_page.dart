@@ -304,7 +304,8 @@ class _CategoryCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     const cardColor = Color(0xFF181818);
-    final accentColor = Color(0xFF00E5FF); // simplified
+    final accentColor = const Color(0xFF00E5FF);
+    final hasImage = category.image != null && category.image!.isNotEmpty;
 
     return InkWell(
       borderRadius: BorderRadius.circular(18),
@@ -322,9 +323,16 @@ class _CategoryCard extends StatelessWidget {
             ClipOval(
               child: SizedBox(
                 width: 54, height: 54,
-                child: category.image != null
+                child: hasImage
                     ? CachedNetworkImage(imageUrl: category.image!, fit: BoxFit.cover)
-                    : Icon(Icons.handyman, color: accentColor, size: 34),
+                    : Container(
+                        color: accentColor.withValues(alpha: 0.12),
+                        alignment: Alignment.center,
+                        child: Text(
+                          category.icon.isNotEmpty ? category.icon : '🔧',
+                          style: const TextStyle(fontSize: 28),
+                        ),
+                      ),
               ),
             ),
             const SizedBox(height: 8),
