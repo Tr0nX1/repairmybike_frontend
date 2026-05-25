@@ -60,7 +60,7 @@ class StaffApi {
   /// Create a new booking (Walk-in)
   Future<Map<String, dynamic>> createBooking(Map<String, dynamic> bookingData) async {
     try {
-      final response = await _client.dio.post('api/bookings/', data: bookingData);
+      final response = await _client.dio.post('api/bookings/bookings/', data: bookingData);
       return response.data;
     } catch (e) {
       rethrow;

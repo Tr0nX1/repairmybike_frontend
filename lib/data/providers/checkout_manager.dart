@@ -81,7 +81,7 @@ class CheckoutManager extends Notifier<CheckoutState> {
       final dio = ref.read(secureApiClientProvider);
       final payload = _buildPayload(bookingData);
 
-      final res = await dio.post('api/bookings/', data: payload);
+      final res = await dio.post('api/bookings/bookings/', data: payload);
       
       // ROTATE IDEMPOTENCY KEY ON SUCCESS
       ref.read(idempotencyKeyProvider.notifier).refreshKey();
