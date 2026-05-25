@@ -51,6 +51,10 @@ class AppState {
   static bool isStaff = false;
   static String? staffUsername;
   static VoidCallback? onAuthFailure;
+  static VoidCallback? onAuthCleared;
+  static void Function({required String phone, required String session, String? refresh})? onCustomerAuthSet;
+  static void Function({required String username, required String session, String? refresh})? onStaffAuthSet;
+  static void Function({required String session, String? refresh})? onTokensUpdated;
 
   // Profile fields
   static String? fullName;
@@ -185,6 +189,7 @@ class AppState {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString(_kSession, session);
     if (refresh != null) await prefs.setString(_kRefresh, refresh);
+    onTokensUpdated?.call(session: session, refresh: refresh);
   }
 
   static Future<void> clearVehicleCache() async {
@@ -483,6 +488,8 @@ class AppState {
     
     // Sync guest likes to server now that we have a token
     await _pushLocalLikesToServer(session);
+
+    onCustomerAuthSet?.call(phone: phone, session: session, refresh: refresh);
   }
 
   static Future<void> _pushLocalLikesToServer(String token) async {
@@ -520,6 +527,8 @@ class AppState {
     await prefs.setString(_kSession, session);
     if (refresh != null) await prefs.setString(_kRefresh, refresh);
     await prefs.setBool(_kIsStaff, true);
+
+    onStaffAuthSet?.call(username: username, session: session, refresh: refresh);
   }
 
   static Future<void> clearAuth() async {
@@ -535,6 +544,8 @@ class AppState {
     await prefs.remove(_kIsStaff);
     await prefs.remove(_kUsername);
     await prefs.remove(kLastTabIndex);
+
+    onAuthCleared?.call();
   }
   
   static Future<void> setAvatarUrl(String? url) async {

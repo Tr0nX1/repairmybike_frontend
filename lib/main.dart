@@ -91,6 +91,47 @@ class MyApp extends ConsumerWidget {
       router.go('/auth');
     };
 
+    // Bind AppState callbacks to Riverpod's authProvider to sync AppState -> Riverpod
+    AppState.onCustomerAuthSet = ({required String phone, required String session, String? refresh}) {
+      final current = ref.read(authProvider);
+      if (current.sessionToken != session || current.refreshToken != refresh || current.phoneNumber != phone) {
+        ref.read(authProvider.notifier).setCustomerAuth(phone: phone, session: session, refresh: refresh);
+      }
+    };
+    AppState.onStaffAuthSet = ({required String username, required String session, String? refresh}) {
+      final current = ref.read(authProvider);
+      if (current.sessionToken != session || current.refreshToken != refresh || current.staffUsername != username) {
+        ref.read(authProvider.notifier).setStaffAuth(username: username, session: session, refresh: refresh);
+      }
+    };
+    AppState.onTokensUpdated = ({required String session, String? refresh}) {
+      final current = ref.read(authProvider);
+      if (current.sessionToken != session || current.refreshToken != refresh) {
+        ref.read(authProvider.notifier).updateTokens(session: session, refresh: refresh);
+      }
+    };
+    AppState.onAuthCleared = () {
+      final current = ref.read(authProvider);
+      if (current.sessionToken != null) {
+        ref.read(authProvider.notifier).logout();
+      }
+    };
+
+    // Synchronize Riverpod's authProvider to AppState static variables (Riverpod -> AppState)
+    ref.listen<AuthState>(authProvider, (previous, next) {
+      if (AppState.sessionToken != next.sessionToken || AppState.refreshToken != next.refreshToken) {
+        if (kDebugMode) {
+          debugPrint('🔄 Syncing authProvider to AppState: Token: ${next.sessionToken != null ? (next.sessionToken!.length > 10 ? next.sessionToken!.substring(0, 10) : next.sessionToken) : "null"}...');
+        }
+        AppState.sessionToken = next.sessionToken;
+        AppState.refreshToken = next.refreshToken;
+        AppState.phoneNumber = next.phoneNumber;
+        AppState.isStaff = next.isStaff;
+        AppState.staffUsername = next.staffUsername;
+        AppState.guestId = next.guestId;
+      }
+    });
+
     // Listen to session expiration globally
     ref.listen(sessionExpiredProvider, (prev, next) {
       if (next == true) {
