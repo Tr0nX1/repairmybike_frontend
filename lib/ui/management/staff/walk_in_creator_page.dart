@@ -240,16 +240,16 @@ class _WalkInCreatorPageState extends ConsumerState<WalkInCreatorPage> {
     try {
       final api = ref.read(staffApiProvider);
       final bookingData = {
-        'customer_name': _nameController.text,
-        'customer_phone': _phoneController.text,
-        'customer_email': _emailController.text,
+        'customer_name': _nameController.text.trim(),
+        'customer_phone': _phoneController.text.trim(),
+        if (_emailController.text.trim().isNotEmpty) 'customer_email': _emailController.text.trim(),
         'vehicle_model_id': _selectedVehicleId,
         'service_ids': _selectedServiceIds,
         'service_location': 'shop',
         'appointment_date': DateFormat('yyyy-MM-dd').format(_selectedDate),
-        'appointment_time': '${_selectedTime.hour}:${_selectedTime.minute}',
+        'appointment_time': '${_selectedTime.hour.toString().padLeft(2, '0')}:${_selectedTime.minute.toString().padLeft(2, '0')}:00',
         'payment_method': 'cash',
-        'notes': _notesController.text,
+        if (_notesController.text.trim().isNotEmpty) 'notes': _notesController.text.trim(),
       };
 
       final res = await api.createBooking(bookingData);

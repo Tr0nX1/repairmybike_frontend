@@ -284,15 +284,19 @@ class _BookingFormPageState extends ConsumerState<BookingFormPage> {
     );
 
     final payload = {
-      'customer_name': _nameCtrl.text.trim(), 'customer_phone': _phoneCtrl.text.trim(),
-      'customer_email': _emailCtrl.text.trim().isEmpty ? null : _emailCtrl.text.trim(),
-      'vehicle_model_id': vehicleId, 'service_ids': [widget.service.id],
+      'customer_name': _nameCtrl.text.trim(),
+      'customer_phone': _phoneCtrl.text.trim(),
+      if (_emailCtrl.text.trim().isNotEmpty) 'customer_email': _emailCtrl.text.trim(),
+      'vehicle_model_id': vehicleId,
+      'service_ids': [widget.service.id],
       'service_location': _serviceLocation,
-      'address': _serviceLocation == 'home' ? address.toFullString() : null,
-      'address_details': _serviceLocation == 'home' ? address.toJson() : null,
+      if (_serviceLocation == 'home') ...{
+        'address': address.toFullString(),
+        'address_details': address.toJson(),
+      },
       'appointment_date': '${_selectedDate!.year}-${_selectedDate!.month.toString().padLeft(2, '0')}-${_selectedDate!.day.toString().padLeft(2, '0')}',
       'appointment_time': '${_selectedTime!.hour.toString().padLeft(2, '0')}:${_selectedTime!.minute.toString().padLeft(2, '0')}:00',
-      'notes': _notesCtrl.text.trim().isEmpty ? null : _notesCtrl.text.trim(),
+      if (_notesCtrl.text.trim().isNotEmpty) 'notes': _notesCtrl.text.trim(),
     };
 
     try {
