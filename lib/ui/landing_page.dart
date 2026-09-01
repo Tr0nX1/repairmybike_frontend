@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,6 +9,8 @@ import '../providers/landing_provider.dart';
 import '../models/service.dart';
 import '../models/spare_part.dart';
 import '../models/subscription.dart';
+import '../data/quick_service_api.dart';
+import '../models/quick_service.dart';
 
 class LandingPage extends ConsumerStatefulWidget {
   const LandingPage({super.key});
@@ -86,6 +89,7 @@ class _LandingPageState extends ConsumerState<LandingPage>
               controller: _scrollController,
               child: Column(
                 children: [
+                  if (kIsWeb) _buildWebQuickServiceBanner(context, horizontalPad, isDesktop),
                   _buildHero(context, horizontalPad, isDesktop),
                   _buildTicker(),
 
@@ -218,6 +222,154 @@ class _LandingPageState extends ConsumerState<LandingPage>
         ),
       ),
       child: const Text('LOGIN'),
+    );
+  }
+
+  // --- Web Quick Service Banner ---
+  Widget _buildWebQuickServiceBanner(BuildContext context, double pad, bool isDesktop) {
+    if (!kIsWeb) return const SizedBox.shrink();
+
+    return FutureBuilder<QuickServiceConfig?>(
+      future: QuickServiceApi().getConfig(),
+      builder: (context, snapshot) {
+        final config = snapshot.data;
+        final title = config?.title.isNotEmpty == true
+            ? config!.title
+            : 'Emergency Breakdown or On-Site Repair Needed?';
+        final priceDisplay = config != null
+            ? 'Starting at ₹${double.tryParse(config.basePrice.toString())?.toStringAsFixed(0) ?? config.basePrice}'
+            : 'Starting at ₹99';
+
+        return Container(
+          width: double.infinity,
+          margin: EdgeInsets.fromLTRB(pad, isDesktop ? 100 : 80, pad, 0),
+          padding: EdgeInsets.symmetric(horizontal: isDesktop ? 32 : 20, vertical: 20),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                neonBlue.withValues(alpha: 0.15),
+                neonGreen.withValues(alpha: 0.1),
+                brandCard,
+              ],
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+            ),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: neonBlue.withValues(alpha: 0.3), width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: neonBlue.withValues(alpha: 0.1),
+                blurRadius: 20,
+                spreadRadius: 2,
+              ),
+            ],
+          ),
+          child: Flex(
+            direction: isDesktop ? Axis.horizontal : Axis.vertical,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: isDesktop ? CrossAxisAlignment.center : CrossAxisAlignment.stretch,
+            children: [
+              Expanded(
+                flex: isDesktop ? 1 : 0,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: neonBlue.withValues(alpha: 0.2),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: neonBlue, width: 1.5),
+                        boxShadow: [neonBlueGlow],
+                      ),
+                      child: const Icon(Icons.flash_on, color: neonBlue, size: 28),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: neonGreen.withValues(alpha: 0.2),
+                                  borderRadius: BorderRadius.circular(4),
+                                  border: Border.all(color: neonGreen.withValues(alpha: 0.5)),
+                                ),
+                                child: Text(
+                                  'EXPRESS SERVICE',
+                                  style: GoogleFonts.barlowCondensed(
+                                    color: neonGreen,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.5,
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              Text(
+                                priceDisplay,
+                                style: GoogleFonts.barlowCondensed(
+                                  color: brandWhite.withValues(alpha: 0.8),
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            title,
+                            softWrap: true,
+                            style: GoogleFonts.bebasNeue(
+                              color: brandWhite,
+                              fontSize: isDesktop ? 22 : 18,
+                              letterSpacing: 1.2,
+                            ),
+                          ),
+                          Text(
+                            'Mechanic dispatched within 30 mins • No login required • Pay cash after repair',
+                            softWrap: true,
+                            style: GoogleFonts.barlow(
+                              color: brandGray,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              SizedBox(height: isDesktop ? 0 : 16, width: isDesktop ? 24 : 0),
+              ElevatedButton.icon(
+                onPressed: () => context.go('/quick-service'),
+                icon: const Icon(Icons.bolt, size: 18),
+                label: const Text('GET QUICK SERVICE'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: neonBlue,
+                  foregroundColor: neonDark,
+                  padding: EdgeInsets.symmetric(
+                    horizontal: isDesktop ? 28 : 20,
+                    vertical: isDesktop ? 16 : 14,
+                  ),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  textStyle: GoogleFonts.barlowCondensed(
+                    fontWeight: FontWeight.w800,
+                    fontSize: 14,
+                    letterSpacing: 2,
+                  ),
+                  elevation: 4,
+                ),
+              ),
+            ],
+          ),
+        );
+      },
     );
   }
 

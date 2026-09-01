@@ -61,6 +61,8 @@ const Set<String> _publicRoutes = {
   '/',
   '/auth',
   '/splash',
+  '/quick-service',
+  '/quick-service-history',
   '/terms-and-conditions',
   '/privacy-policy',
   '/refund-and-cancellation-policy',
