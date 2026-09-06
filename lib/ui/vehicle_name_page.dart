@@ -139,7 +139,7 @@ class _VehicleNamePageState extends ConsumerState<VehicleNamePage> {
             brandName: widget.brandName,
             typeName: widget.vehicleTypeName,
             imageUrl: img,
-            syncToBackend: true,
+            syncToBackend: AppState.isAuthenticated,
           );
         } catch (e) {
           debugPrint('Error selecting vehicle: $e');

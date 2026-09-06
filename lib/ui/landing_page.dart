@@ -136,8 +136,8 @@ class _LandingPageState extends ConsumerState<LandingPage>
       child: Center(
         child: Container(
           constraints: const BoxConstraints(maxWidth: 900),
-          margin: EdgeInsets.symmetric(horizontal: isDesktop ? 40 : 20),
-          padding: EdgeInsets.symmetric(horizontal: isDesktop ? 32 : 16, vertical: 12),
+          margin: EdgeInsets.symmetric(horizontal: isDesktop ? 24 : 16),
+          padding: EdgeInsets.symmetric(horizontal: isDesktop ? 20 : 16, vertical: 10),
           decoration: BoxDecoration(
             color: brandBlack.withValues(alpha: 0.85),
             borderRadius: BorderRadius.circular(100),
@@ -155,15 +155,15 @@ class _LandingPageState extends ConsumerState<LandingPage>
             children: [
               Image.asset(
                 'assets/launcher icon/transparent repairmybike launcher.png',
-                width: isDesktop ? 48 : 36,
-                height: isDesktop ? 48 : 36,
+                width: isDesktop ? 40 : 32,
+                height: isDesktop ? 40 : 32,
                 fit: BoxFit.contain,
               ),
-              const SizedBox(width: 14),
+              const SizedBox(width: 10),
               RichText(
                 text: TextSpan(
                   style: GoogleFonts.bebasNeue(
-                      fontSize: isDesktop ? 22 : 18, letterSpacing: 2, color: brandWhite),
+                      fontSize: isDesktop ? 20 : 16, letterSpacing: 1.5, color: brandWhite),
                   children: [
                     const TextSpan(text: 'REPAIR'),
                     const TextSpan(
@@ -173,13 +173,20 @@ class _LandingPageState extends ConsumerState<LandingPage>
                 ),
               ),
               if (isDesktop) ...[
-                const SizedBox(width: 60),
-                _navItem('Services', () => _scrollTo(_servicesKey)),
-                _navItem('Membership', () => _scrollTo(_subscriptionsKey)),
-                _navItem('Workflow', () => _scrollTo(_howItWorksKey)),
-                _navItem('About', () => _scrollTo(_whyUsKey)),
+                const SizedBox(width: 20),
+                Flexible(
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      _navItem('Services', () => _scrollTo(_servicesKey)),
+                      _navItem('Membership', () => _scrollTo(_subscriptionsKey)),
+                      _navItem('Workflow', () => _scrollTo(_howItWorksKey)),
+                      _navItem('About', () => _scrollTo(_whyUsKey)),
+                    ],
+                  ),
+                ),
               ],
-              SizedBox(width: isDesktop ? 40 : 16),
+              SizedBox(width: isDesktop ? 20 : 12),
               _buildLoginBtn(context),
             ],
           ),
@@ -193,13 +200,13 @@ class _LandingPageState extends ConsumerState<LandingPage>
       onTap: onTap,
       hoverColor: Colors.transparent,
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
         child: Text(
           label.toUpperCase(),
           style: GoogleFonts.barlowCondensed(
             color: brandGray,
             fontSize: 13,
-            letterSpacing: 2,
+            letterSpacing: 1.5,
             fontWeight: FontWeight.w400,
           ),
         ),
@@ -213,12 +220,12 @@ class _LandingPageState extends ConsumerState<LandingPage>
       style: ElevatedButton.styleFrom(
         backgroundColor: brandPrimary,
         foregroundColor: brandBlack,
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 10),
         shape: const RoundedRectangleBorder(),
         textStyle: GoogleFonts.barlowCondensed(
           fontWeight: FontWeight.w700,
           fontSize: 13,
-          letterSpacing: 2,
+          letterSpacing: 1.5,
         ),
       ),
       child: const Text('LOGIN'),
