@@ -38,7 +38,7 @@ class AdminApi {
   Future<Map<String, dynamic>> updateServicePricing(int pricingId, double newPrice) async {
     try {
       final response = await _client.dio.patch(
-        'api/services/pricing/$pricingId/',
+        'api/services/service-pricing/$pricingId/',
         data: {'price': newPrice},
       );
       return response.data;

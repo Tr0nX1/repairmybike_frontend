@@ -9,7 +9,11 @@ final notificationsProvider = FutureProvider.autoDispose<List<NotificationItem>>
     return [];
   }
   final api = ref.read(notificationsApiProvider);
-  return api.getNotifications();
+  try {
+    return await api.getNotifications();
+  } catch (e) {
+    return [];
+  }
 });
 
 final unreadNotificationsCountProvider = FutureProvider.autoDispose<int>((ref) async {
